@@ -3,8 +3,8 @@
 # from app.config import DB_URL
 # import pandas as pd
 
-# st.set_page_config(page_title='Incident Responder', layout='wide')
-# st.title('🔧 DevOps Incident Responder — MVP')
+# st.set_page_config(page_title='OnCallAI', layout='wide')
+# st.title('OnCallAI')
 
 # engine = create_engine(DB_URL, future=True)
 
@@ -57,8 +57,8 @@ from app.db.dal import (
     get_latest_report,
 )
 
-st.set_page_config(page_title="Incident Responder", layout="wide")
-st.title("Incidents")
+st.set_page_config(page_title="OnCallAI", layout="wide")
+st.title("OnCallAI")
 
 # --- Left: incidents list ---
 incidents = list_incidents(limit=200)
@@ -128,4 +128,3 @@ with right:
         )
     else:
         st.info("No report generated yet.")
-
