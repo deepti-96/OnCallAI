@@ -1,0 +1,3 @@
+{"pattern":"connection refused|ECONNREFUSED","root_cause":"DB pod crashed / not ready","mitigation":["Restart DB pod","Increase memory"]}
+{"pattern":"OOMKilled|OutOfMemoryError","root_cause":"Service OOM","mitigation":["Increase memory limit","Investigate leak"]}
+{"pattern":"HTTP 500|NullPointerException","root_cause":"App bug/null deref","mitigation":["Rollback","Add null checks"]}
