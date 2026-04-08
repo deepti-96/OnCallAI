@@ -1,34 +1,32 @@
 # scripts/seed_incidents.py
-import os, json, datetime
-from sqlalchemy import create_engine, text
+import datetime
+import pathlib
+import sys
 
-DB_URL = os.environ.get("DB_URL", "sqlite:///dev.db")
-engine = create_engine(DB_URL, future=True)
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from app.db.dal import init_db, record_incident
 
 def iso_utc():
-    return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def seed_one():
-    with engine.begin() as conn:
-        conn.execute(
-            text("""
-                INSERT INTO incidents(status, service, environment, severity, payload_json, created_at)
-                VALUES(:status, :service, :env, :sev, :payload, :created_at)
-            """),
-            {
-                "status": "OPEN",
-                "service": "payment-service",
-                "env": "prod",
-                "sev": "CRITICAL",
-                "payload": json.dumps({
-                    "alert": "2025-09-27-seed",
-                    "details": "synthetic cloudwatch-like alert",
-                    "service": "payment-service"
-                }),
-                "created_at": iso_utc(),
-            }
-        )
+    init_db()
+    return record_incident(
+        status="OPEN",
+        service="payment-service",
+        environment="prod",
+        severity="CRITICAL",
+        payload={
+            "alert": "2025-09-27-seed",
+            "details": "synthetic cloudwatch-like alert",
+            "service": "payment-service",
+        },
+        created_at=iso_utc(),
+    )
 
 if __name__ == "__main__":
-    seed_one()
-    print("Seeded one incident.")
+    incident_id = seed_one()
+    print(f"Seeded one incident: {incident_id}")

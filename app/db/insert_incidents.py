@@ -1,5 +1,6 @@
 import time
-from dal import record_incident   # import your DAL function
+
+from app.db.dal import init_db, record_incident
 
 # Incidents to insert
 incidents = [
@@ -30,6 +31,7 @@ incidents = [
 ]
 
 if __name__ == "__main__":
+    init_db()
     for inc in incidents:
         incident_id = record_incident(
             status=inc["status"],

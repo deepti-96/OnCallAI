@@ -1,7 +1,8 @@
+import os
 import sqlite3
 import time
 
-DB_FILE = "../db/dev.db"
+DB_FILE = os.environ.get("DB_FILE", "dev.db")
 POLL_INTERVAL = 10  # check every 10 seconds
 
 def fetch_new_incidents(conn, last_seen_id):
@@ -12,7 +13,7 @@ def fetch_new_incidents(conn, last_seen_id):
 
 def main():
     conn = sqlite3.connect(DB_FILE)
-    last_seen_id = 0  # start from the beginning (change if you only want new ones)
+    last_seen_id = ""  # ids are strings in the incidents table
 
     print("🔎 Watching for new incidents... (Ctrl+C to stop)")
 

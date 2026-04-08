@@ -75,9 +75,9 @@ with left:
     st.dataframe(df, use_container_width=True, hide_index=True)
 
     # Build a friendly selector (id — service [status])
-    options = [f"{row['id']} — {row['service']} [{row['status']}]" for row in incidents]
-    choice = st.selectbox("Select an incident", options, index=0)
-    selected_id = int(choice.split(" — ")[0])
+    options = {f"{row['id']} — {row['service']} [{row['status']}]": row["id"] for row in incidents}
+    choice = st.selectbox("Select an incident", list(options), index=0)
+    selected_id = options[choice]
 
 # --- Right: details for selected incident ---
 with right:
