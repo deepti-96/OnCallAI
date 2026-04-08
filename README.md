@@ -1,4 +1,4 @@
-# OnCallAI — Agentic AI Incident Response (Hackathon MVP)
+# OnCallAI — Agentic AI Incident Response
 
 OnCallAI is an autonomous, explainable incident triage assistant for DevOps/SRE teams: it watches alerts, retrieves context + logs, performs RAG-grounded analysis, and produces a concise RCA with mitigation suggestions, all visible in a simple live UI.
 
