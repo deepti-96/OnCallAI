@@ -1,6 +1,12 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # Optional during lightweight local runs
+    load_dotenv = None
+
+if load_dotenv is not None:
+    load_dotenv()
 
 ENV = os.getenv("ENV", "dev")
 POLL_INTERVAL_SECONDS = int(os.getenv("POLL_INTERVAL_SECONDS", "10"))
