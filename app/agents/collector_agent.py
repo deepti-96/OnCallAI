@@ -3,10 +3,22 @@ from app.config import LOGS_MODE, LOGS_LOCAL_ROOT
 from app.db.dal import record_step
 
 def choose_log_folder(incident):
-    alert_type = (incident.get('alert_type') or '').lower()
-    if 'db' in alert_type:
+    payload = incident.get("payload") or {}
+    signal = " ".join(
+        str(value)
+        for value in (
+            incident.get("alert_type"),
+            payload.get("alert_type"),
+            payload.get("alert"),
+            payload.get("source"),
+            incident.get("service"),
+        )
+        if value
+    ).lower()
+
+    if any(token in signal for token in ("db", "database", "sql", "postgres", "mysql")):
         return 'db'
-    if 'cpu' in alert_type or 'oom' in alert_type or 'infra' in alert_type:
+    if any(token in signal for token in ("cpu", "oom", "infra", "memory", "node", "host")):
         return 'infra'
     return 'web'
 
