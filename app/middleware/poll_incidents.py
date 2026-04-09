@@ -5,24 +5,34 @@ import time
 DB_FILE = os.environ.get("DB_FILE", "dev.db")
 POLL_INTERVAL = 10  # check every 10 seconds
 
-def fetch_new_incidents(conn, last_seen_id):
+def fetch_new_incidents(conn, last_seen_created_at, last_seen_id):
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM incidents WHERE id > ? ORDER BY id ASC", (last_seen_id,))
+    cursor.execute(
+        """
+        SELECT * FROM incidents
+        WHERE created_at > ?
+           OR (created_at = ? AND id > ?)
+        ORDER BY created_at ASC, id ASC
+        """,
+        (last_seen_created_at, last_seen_created_at, last_seen_id),
+    )
     rows = cursor.fetchall()
     return rows
 
 def main():
     conn = sqlite3.connect(DB_FILE)
-    last_seen_id = ""  # ids are strings in the incidents table
+    last_seen_created_at = ""
+    last_seen_id = ""
 
     print("🔎 Watching for new incidents... (Ctrl+C to stop)")
 
     while True:
-        new_incidents = fetch_new_incidents(conn, last_seen_id)
+        new_incidents = fetch_new_incidents(conn, last_seen_created_at, last_seen_id)
         if new_incidents:
             for row in new_incidents:
                 print("🚨 New Incident:", row)
-                last_seen_id = row[0]  # update last seen ID
+                last_seen_id = row[0]
+                last_seen_created_at = row[6]
                 incident = row[5] # payload json
                 # Feed incident to agent
                 
