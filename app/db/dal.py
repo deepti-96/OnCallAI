@@ -28,6 +28,19 @@ def _conn(rowdict: bool = False) -> sqlite3.Connection:
         con.row_factory = sqlite3.Row
     return con
 
+
+def _decode_payload(row: sqlite3.Row | Dict[str, Any] | None) -> Optional[Dict[str, Any]]:
+    if not row:
+        return None
+
+    data = dict(row)
+    payload_json = data.pop("payload_json", None)
+    try:
+        data["payload"] = json.loads(payload_json or "{}")
+    except Exception:
+        data["payload"] = {}
+    return data
+
 def init_db() -> None:
     sql = SCHEMA_FILE.read_text(encoding="utf-8")
     with _conn() as con:
@@ -85,7 +98,7 @@ def save_report(incident_id: int, report_json: Dict[str, Any], report_md: str) -
 
 def list_incidents(limit: int = 200) -> List[Dict[str, Any]]:
     sql = """SELECT id, status, service, environment, severity, created_at
-             FROM incidents ORDER BY id DESC LIMIT ?"""
+             FROM incidents ORDER BY created_at DESC, id DESC LIMIT ?"""
     with _conn(rowdict=True) as con:
         rows = con.execute(sql, (limit,)).fetchall()
     return [dict(r) for r in rows]
@@ -93,7 +106,7 @@ def list_incidents(limit: int = 200) -> List[Dict[str, Any]]:
 def get_incident(incident_id: str) -> Optional[Dict[str, Any]]:
     with _conn(rowdict=True) as con:
         r = con.execute("SELECT * FROM incidents WHERE id=?", (incident_id,)).fetchone()
-    return dict(r) if r else None
+    return _decode_payload(r)
 
 def list_steps(incident_id: str) -> List[Dict[str, Any]]:
     sql = """SELECT id, agent, phase, status, message, ts, data_json
@@ -128,8 +141,10 @@ def get_latest_report(incident_id: str) -> Optional[Dict[str, Any]]:
 
 def get_open_incidents() -> List[Dict[str, Any]]:
     with _conn(rowdict=True) as con:
-        rows = con.execute("SELECT * FROM incidents WHERE status='OPEN' ORDER BY id ASC").fetchall()
-    return [dict(r) for r in rows]
+        rows = con.execute(
+            "SELECT * FROM incidents WHERE status='OPEN' ORDER BY created_at ASC, id ASC"
+        ).fetchall()
+    return [_decode_payload(r) for r in rows]
 
 def mark_in_progress(incident_id: str) -> None:
     with _conn() as con:
