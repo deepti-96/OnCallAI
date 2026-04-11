@@ -6,6 +6,9 @@ run:
 ui:
 	streamlit run ui/streamlit_app.py
 
+test:
+	$(PYTHON) -m unittest discover -s tests
+
 seed:
 	$(PYTHON) scripts/seed_rag_examples.py && \
 	$(PYTHON) scripts/seed_logs.py && \
