@@ -18,9 +18,9 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 
 - Incident intake backed by SQLite for simple local development.
 - Step-by-step execution tracking for collector, analyst, and supervisor stages.
-- Log-driven analysis with a rule-based analyst that can be replaced with RAG or LLM workflows.
+- Retrieval-assisted log analysis that combines heuristic rules with example-based incident context.
 - Downloadable incident reports in both JSON and Markdown formats.
-- Streamlit dashboard for browsing incidents, agent steps, and generated reports.
+- Streamlit dashboard for filtering incidents, reviewing agent timelines, and inspecting generated reports.
 - Environment-based configuration for polling, models, logging mode, and optional cloud integrations.
 
 ## Architecture
@@ -38,10 +38,11 @@ OnCallAI follows a simple agent-inspired pipeline:
 - [`app/runner.py`](app/runner.py): Main polling loop and incident execution flow.
 - [`app/db/dal.py`](app/db/dal.py): Database access layer for incidents, steps, and reports.
 - [`app/agents/collector_agent.py`](app/agents/collector_agent.py): Log selection and retrieval logic.
-- [`app/agents/analyst_agent.py`](app/agents/analyst_agent.py): Heuristic analysis and mitigation generation.
+- [`app/agents/analyst_agent.py`](app/agents/analyst_agent.py): Retrieval-assisted analysis and mitigation generation.
 - [`app/agents/supervisor.py`](app/agents/supervisor.py): Report compilation and workflow completion.
 - [`ui/streamlit_app.py`](ui/streamlit_app.py): Operator-facing incident dashboard.
 - [`app/db/schema.sql`](app/db/schema.sql): SQLite schema for incidents, agent steps, and reports.
+- [`tests/`](tests): Lightweight unit and flow tests using `unittest`.
 
 ## Repository Structure
 
@@ -56,6 +57,7 @@ OnCallAI/
 │   └── runner.py       # Main incident processing loop
 ├── rag_pipeline/       # Experimental retrieval pipeline components
 ├── scripts/            # Seeding and local setup helpers
+├── tests/              # Lightweight unit and incident-flow tests
 ├── ui/                 # Streamlit application
 ├── Makefile
 ├── requirements.txt
@@ -120,7 +122,13 @@ make run
 In a separate terminal:
 
 ```bash
-streamlit run ui/streamlit_app.py
+make ui
+```
+
+### 7. Run tests
+
+```bash
+make test
 ```
 
 ## Make Targets
@@ -129,6 +137,7 @@ streamlit run ui/streamlit_app.py
 make seed   # Seed sample data
 make run    # Start incident polling and processing
 make ui     # Launch the Streamlit app
+make test   # Run the unit and incident-flow test suite
 make clean  # Remove the local SQLite db and generated reports
 ```
 
@@ -166,9 +175,11 @@ The current demo path is intentionally simple and transparent:
 
 - Incidents are stored in SQLite.
 - The runner picks up incidents with `OPEN` status.
+- The runner dispatches the incident through collector, analyst, and supervisor stages.
+- The analyst combines rule-based matching with retrieved examples from the bundled incident corpus.
 - Agent steps are written back to the database as the incident is processed.
 - Reports are stored in structured JSON plus Markdown.
-- The UI reads directly from the database and lets you inspect the full workflow.
+- The UI reads directly from the database and lets you inspect filters, timelines, payloads, and final reports.
 
 This makes the project easy to demo, debug, and extend locally.
 
@@ -177,10 +188,10 @@ This makes the project easy to demo, debug, and extend locally.
 This repository is best understood as a strong prototype rather than a production-ready incident response platform.
 
 - The default runner currently uses a simplified processing path.
-- The analyst is rule-based and does not yet perform full RAG-grounded reasoning in the main execution flow.
+- The analyst uses lightweight local retrieval rather than a full production retrieval pipeline or LLM-backed reasoning engine.
 - Cloud integrations are present as stubs or optional extensions.
 - Authentication, authorization, retries, and multi-tenant concerns are not implemented.
-- The UI is optimized for local inspection rather than operational scale.
+- The UI is optimized for local inspection and demos rather than operational scale.
 
 ## Extension Ideas
 
