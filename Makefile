@@ -9,6 +9,9 @@ ui:
 test:
 	$(PYTHON) -m unittest discover -s tests
 
+simulate-alert:
+	$(PYTHON) app/middleware/cloudwatch_simulator.py
+
 seed:
 	$(PYTHON) scripts/seed_rag_examples.py && \
 	$(PYTHON) scripts/seed_logs.py && \
