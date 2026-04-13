@@ -41,6 +41,17 @@ def _decode_payload(row: sqlite3.Row | Dict[str, Any] | None) -> Optional[Dict[s
         data["payload"] = {}
     return data
 
+
+def _incident_summary(row: sqlite3.Row | Dict[str, Any]) -> Dict[str, Any]:
+    data = _decode_payload(row) or {}
+    payload = data.get("payload") or {}
+    data["source"] = payload.get("source", "manual")
+    data["alert_type"] = payload.get("alert_type", "incident")
+    data["alert_state"] = payload.get("state", "")
+    data["alarm_name"] = payload.get("alarm_name", "")
+    data["region"] = payload.get("region", "")
+    return data
+
 def init_db() -> None:
     sql = SCHEMA_FILE.read_text(encoding="utf-8")
     with _conn() as con:
@@ -97,11 +108,11 @@ def save_report(incident_id: int, report_json: Dict[str, Any], report_md: str) -
 # ---------- reads (for UI) ----------
 
 def list_incidents(limit: int = 200) -> List[Dict[str, Any]]:
-    sql = """SELECT id, status, service, environment, severity, created_at
+    sql = """SELECT id, status, service, environment, severity, payload_json, created_at
              FROM incidents ORDER BY created_at DESC, id DESC LIMIT ?"""
     with _conn(rowdict=True) as con:
         rows = con.execute(sql, (limit,)).fetchall()
-    return [dict(r) for r in rows]
+    return [_incident_summary(r) for r in rows]
 
 def get_incident(incident_id: str) -> Optional[Dict[str, Any]]:
     with _conn(rowdict=True) as con:
