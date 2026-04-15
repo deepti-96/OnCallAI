@@ -21,6 +21,13 @@ st.set_page_config(page_title="OnCallAI", layout="wide")
 st.title("OnCallAI")
 st.caption("AI-assisted incident triage workspace for reviewing alerts, agent activity, and RCA reports.")
 
+toolbar_left, toolbar_right = st.columns([3, 1])
+with toolbar_left:
+    st.caption("Use the filters to narrow the queue and inspect ingested alert context alongside agent output.")
+with toolbar_right:
+    if st.button("Refresh Data", use_container_width=True):
+        st.rerun()
+
 incidents = list_incidents(limit=200)
 if not incidents:
     st.info("No incidents yet. Seed or ingest an alert and refresh the page.")
@@ -101,6 +108,8 @@ with right:
     steps = list_steps(selected_id)
     payload = incident.get("payload") or {}
     raw_alert = payload.get("raw_alert") or {}
+    severity = incident["severity"]
+    status = incident["status"]
 
     st.subheader(f"Incident {selected_id}")
     summary_cols = st.columns(5)
@@ -111,14 +120,23 @@ with right:
     summary_cols[4].metric("Source", payload.get("source", "manual"))
     st.caption(f"Created at {incident['created_at']}")
 
-    st.markdown("### Alert Summary")
-    alert_cols = st.columns(4)
-    alert_cols[0].metric("Alert Type", payload.get("alert_type", "incident"))
-    alert_cols[1].metric("Alarm State", payload.get("state", "n/a"))
-    alert_cols[2].metric("Region", payload.get("region", "n/a"))
-    alert_cols[3].metric("Alarm Name", payload.get("alarm_name", "n/a"))
+    if severity == "CRITICAL":
+        st.error(f"Critical incident for {incident['service']} is currently {status}.")
+    elif status == "OPEN":
+        st.warning(f"Open incident for {incident['service']} awaiting or undergoing response.")
+    else:
+        st.success(f"Incident status is {status}.")
 
-    with st.expander("Alert Details", expanded=True):
+    overview_tab, timeline_tab, report_tab, raw_tab = st.tabs(["Overview", "Timeline", "Report", "Raw Data"])
+
+    with overview_tab:
+        st.markdown("### Alert Summary")
+        alert_cols = st.columns(4)
+        alert_cols[0].metric("Alert Type", payload.get("alert_type", "incident"))
+        alert_cols[1].metric("Alarm State", payload.get("state", "n/a"))
+        alert_cols[2].metric("Region", payload.get("region", "n/a"))
+        alert_cols[3].metric("Alarm Name", payload.get("alarm_name", "n/a"))
+
         _render_key_value_table(
             [
                 ("Alarm Name", _text(payload.get("alarm_name"))),
@@ -131,87 +149,92 @@ with right:
             ]
         )
 
-    with st.expander("Incident Payload", expanded=False):
+    with timeline_tab:
+        st.markdown("### Agent Timeline")
+        if steps:
+            for step in steps:
+                label = f"{step['agent'].upper()} · {step['phase']} · {step.get('status') or 'N/A'}"
+                with st.expander(label, expanded=step == steps[-1]):
+                    st.write(step["message"])
+                    st.caption(step["ts"])
+                    if step.get("data"):
+                        st.json(step["data"])
+        else:
+            st.info("No agent steps recorded yet.")
+
+    with report_tab:
+        st.markdown("### Final Report")
+        if report:
+            report_body = report.get("report") or {}
+            report_cols = st.columns(4)
+            report_cols[0].metric("Issue", report_body.get("issue", "Unknown"))
+            report_cols[1].metric("Confidence", str(report_body.get("confidence", "n/a")))
+            report_cols[2].metric("Mitigations", len(report_body.get("mitigations", [])))
+            report_cols[3].metric("Evidence Items", len(report_body.get("evidence", [])))
+
+            evidence = report_body.get("evidence", [])
+            mitigations = report_body.get("mitigations", [])
+            retrieved_examples = report_body.get("retrieved_examples", [])
+
+            insight_left, insight_right = st.columns(2, gap="large")
+            with insight_left:
+                st.markdown("#### Recommended Mitigations")
+                if mitigations:
+                    for item in mitigations:
+                        st.write(f"- {item}")
+                else:
+                    st.write("No mitigations recorded.")
+
+                st.markdown("#### Evidence")
+                if evidence:
+                    for item in evidence:
+                        st.write(f"- {item}")
+                else:
+                    st.write("No evidence recorded.")
+
+            with insight_right:
+                st.markdown("#### Retrieved Context")
+                if retrieved_examples:
+                    for example in retrieved_examples:
+                        st.write(
+                            f"- `{example.get('pattern', 'unknown')}` -> {example.get('root_cause', 'unknown cause')}"
+                        )
+                else:
+                    st.write("No retrieved context available.")
+
+                st.markdown("#### Markdown Report")
+                st.markdown(report["report_md"])
+
+            with st.expander("Structured Report JSON", expanded=False):
+                st.json(report_body)
+
+            download_cols = st.columns(2)
+            download_cols[0].download_button(
+                "Download JSON",
+                data=json.dumps(report_body, indent=2),
+                file_name=f"incident_{selected_id}_report.json",
+                mime="application/json",
+                use_container_width=True,
+            )
+            download_cols[1].download_button(
+                "Download Markdown",
+                data=report["report_md"],
+                file_name=f"incident_{selected_id}_report.md",
+                mime="text/markdown",
+                use_container_width=True,
+            )
+        else:
+            st.info("No report generated yet for this incident.")
+
+    with raw_tab:
+        st.markdown("### Incident Payload")
         if payload:
             st.json(payload)
         else:
             st.write("No structured payload recorded for this incident.")
 
-    if raw_alert:
-        with st.expander("Raw Alert JSON", expanded=False):
+        if raw_alert:
+            st.markdown("### Raw Alert JSON")
             st.json(raw_alert)
-
-    st.markdown("### Agent Timeline")
-    if steps:
-        for step in steps:
-            label = f"{step['agent'].upper()} · {step['phase']} · {step.get('status') or 'N/A'}"
-            with st.expander(label, expanded=step == steps[-1]):
-                st.write(step["message"])
-                st.caption(step["ts"])
-                if step.get("data"):
-                    st.json(step["data"])
-    else:
-        st.info("No agent steps recorded yet.")
-
-    st.markdown("### Final Report")
-    if report:
-        report_body = report.get("report") or {}
-        report_cols = st.columns(4)
-        report_cols[0].metric("Issue", report_body.get("issue", "Unknown"))
-        report_cols[1].metric("Confidence", str(report_body.get("confidence", "n/a")))
-        report_cols[2].metric("Mitigations", len(report_body.get("mitigations", [])))
-        report_cols[3].metric("Evidence Items", len(report_body.get("evidence", [])))
-
-        evidence = report_body.get("evidence", [])
-        mitigations = report_body.get("mitigations", [])
-        retrieved_examples = report_body.get("retrieved_examples", [])
-
-        insight_left, insight_right = st.columns(2, gap="large")
-        with insight_left:
-            st.markdown("#### Recommended Mitigations")
-            if mitigations:
-                for item in mitigations:
-                    st.write(f"- {item}")
-            else:
-                st.write("No mitigations recorded.")
-
-            st.markdown("#### Evidence")
-            if evidence:
-                for item in evidence:
-                    st.write(f"- {item}")
-            else:
-                st.write("No evidence recorded.")
-
-        with insight_right:
-            st.markdown("#### Retrieved Context")
-            if retrieved_examples:
-                for example in retrieved_examples:
-                    st.write(
-                        f"- `{example.get('pattern', 'unknown')}` -> {example.get('root_cause', 'unknown cause')}"
-                    )
-            else:
-                st.write("No retrieved context available.")
-
-            st.markdown("#### Markdown Report")
-            st.markdown(report["report_md"])
-
-        with st.expander("Structured Report JSON", expanded=False):
-            st.json(report_body)
-
-        download_cols = st.columns(2)
-        download_cols[0].download_button(
-            "Download JSON",
-            data=json.dumps(report_body, indent=2),
-            file_name=f"incident_{selected_id}_report.json",
-            mime="application/json",
-            use_container_width=True,
-        )
-        download_cols[1].download_button(
-            "Download Markdown",
-            data=report["report_md"],
-            file_name=f"incident_{selected_id}_report.md",
-            mime="text/markdown",
-            use_container_width=True,
-        )
-    else:
-        st.info("No report generated yet for this incident.")
+        else:
+            st.caption("No raw alert payload available for this incident.")
