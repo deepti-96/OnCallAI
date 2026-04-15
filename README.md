@@ -1,6 +1,6 @@
 # OnCallAI
 
-OnCallAI is an AI-powered incident triage and root cause analysis prototype for DevOps and SRE workflows. It ingests incidents, gathers surrounding context, analyzes logs, records agent activity, and produces a structured incident report through a lightweight Streamlit interface.
+OnCallAI is an AI-powered incident triage and root cause analysis prototype for DevOps and SRE workflows. It ingests alerts or incidents, gathers surrounding context, analyzes logs, records agent activity, and produces a structured incident report through a lightweight Streamlit interface.
 
 This project is designed as an explainable, hackathon-friendly foundation for building an autonomous on-call assistant. The current implementation focuses on local execution, deterministic workflows, and a clear architecture that can be extended with real alert sources, richer retrieval, and production-grade orchestration.
 
@@ -17,6 +17,7 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 ## Core Capabilities
 
 - Incident intake backed by SQLite for simple local development.
+- CloudWatch-style alert ingestion through simulator and JSON file entrypoints.
 - Step-by-step execution tracking for collector, analyst, and supervisor stages.
 - Retrieval-assisted log analysis that combines heuristic rules with example-based incident context.
 - Downloadable incident reports in both JSON and Markdown formats.
@@ -37,6 +38,8 @@ OnCallAI follows a simple agent-inspired pipeline:
 
 - [`app/runner.py`](app/runner.py): Main polling loop and incident execution flow.
 - [`app/db/dal.py`](app/db/dal.py): Database access layer for incidents, steps, and reports.
+- [`app/middleware/alert_normalizer.py`](app/middleware/alert_normalizer.py): CloudWatch-style alert normalization into the incident schema.
+- [`app/middleware/alert_ingest.py`](app/middleware/alert_ingest.py): Ingestion path for normalized alerts.
 - [`app/agents/collector_agent.py`](app/agents/collector_agent.py): Log selection and retrieval logic.
 - [`app/agents/analyst_agent.py`](app/agents/analyst_agent.py): Retrieval-assisted analysis and mitigation generation.
 - [`app/agents/supervisor.py`](app/agents/supervisor.py): Report compilation and workflow completion.
@@ -51,7 +54,7 @@ OnCallAI/
 ├── app/
 │   ├── agents/         # Collector, analyst, and supervisor logic
 │   ├── db/             # Schema and data access layer
-│   ├── middleware/     # CloudWatch and polling adapters
+│   ├── middleware/     # Alert normalization, ingestion, and CloudWatch adapters
 │   ├── rag/            # RAG-related stubs and loaders
 │   ├── config.py       # Environment-driven configuration
 │   └── runner.py       # Main incident processing loop
@@ -111,13 +114,25 @@ make seed
 
 This populates sample incident data and uses the bundled log examples already stored in the repository.
 
-### 5. Start the incident runner
+### 5. Ingest a sample alert
+
+```bash
+make simulate-alert
+```
+
+You can also ingest a saved CloudWatch-style JSON payload directly:
+
+```bash
+python3 scripts/ingest_alert.py path/to/alert.json
+```
+
+### 6. Start the incident runner
 
 ```bash
 make run
 ```
 
-### 6. Launch the UI
+### 7. Launch the UI
 
 In a separate terminal:
 
@@ -125,7 +140,7 @@ In a separate terminal:
 make ui
 ```
 
-### 7. Run tests
+### 8. Run tests
 
 ```bash
 make test
@@ -135,6 +150,7 @@ make test
 
 ```bash
 make seed   # Seed sample data
+make simulate-alert   # Ingest a sample CloudWatch-style alert
 make run    # Start incident polling and processing
 make ui     # Launch the Streamlit app
 make test   # Run the unit and incident-flow test suite
@@ -174,12 +190,13 @@ The project is configured primarily through environment variables.
 The current demo path is intentionally simple and transparent:
 
 - Incidents are stored in SQLite.
+- Alerts can be ingested from CloudWatch-style payloads through the simulator or JSON file entrypoint.
 - The runner picks up incidents with `OPEN` status.
 - The runner dispatches the incident through collector, analyst, and supervisor stages.
 - The analyst combines rule-based matching with retrieved examples from the bundled incident corpus.
 - Agent steps are written back to the database as the incident is processed.
 - Reports are stored in structured JSON plus Markdown.
-- The UI reads directly from the database and lets you inspect filters, timelines, payloads, and final reports.
+- The UI reads directly from the database and lets you inspect filters, alert metadata, timelines, payloads, and final reports.
 
 This makes the project easy to demo, debug, and extend locally.
 
@@ -189,7 +206,7 @@ This repository is best understood as a strong prototype rather than a productio
 
 - The default runner currently uses a simplified processing path.
 - The analyst uses lightweight local retrieval rather than a full production retrieval pipeline or LLM-backed reasoning engine.
-- Cloud integrations are present as stubs or optional extensions.
+- Live cloud polling and production-grade deduplication are still limited; the strongest current path is local CloudWatch-style ingestion.
 - Authentication, authorization, retries, and multi-tenant concerns are not implemented.
 - The UI is optimized for local inspection and demos rather than operational scale.
 
