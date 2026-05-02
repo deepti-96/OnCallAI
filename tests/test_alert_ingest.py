@@ -21,6 +21,8 @@ class AlertIngestTestCase(unittest.TestCase):
         self.dal.DB_FILE = self.db_path
         self.alert_ingest.init_db = self.dal.init_db
         self.alert_ingest.record_incident = self.dal.record_incident
+        self.alert_ingest.get_open_incidents = self.dal.get_open_incidents
+        self.alert_ingest.update_incident = self.dal.update_incident
         self.dal.init_db()
 
     def tearDown(self):
@@ -51,6 +53,20 @@ class AlertIngestTestCase(unittest.TestCase):
 
         self.assertEqual(incident["service"], "orders-service")
         self.assertEqual(incident["payload"]["alarm_name"], alert["AlarmName"])
+
+    def test_repeated_alert_reuses_existing_open_incident(self):
+        alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(service="payments-service")
+
+        first_id = self.alert_ingest.ingest_cloudwatch_alert(alert)
+        second_id = self.alert_ingest.ingest_cloudwatch_alert(alert)
+
+        incident = self.dal.get_incident(first_id)
+        incidents = self.dal.list_incidents(limit=10)
+
+        self.assertEqual(first_id, second_id)
+        self.assertEqual(len(incidents), 1)
+        self.assertEqual(incident["payload"]["occurrence_count"], 2)
+        self.assertEqual(len(incident["payload"]["alert_history"]), 1)
 
 
 if __name__ == "__main__":
