@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 from typing import Any, Dict, Iterable
 
 
@@ -101,6 +102,15 @@ def infer_severity(alert: Dict[str, Any]) -> str:
 
 
 def normalize_cloudwatch_alarm(alert: Dict[str, Any]) -> Dict[str, Any]:
+    dedupe_source = "|".join(
+        [
+            infer_service(alert),
+            infer_environment(alert),
+            str(alert.get("AlarmArn") or alert.get("AlarmName") or ""),
+            str(alert.get("NewStateValue") or ""),
+        ]
+    )
+    dedupe_key = hashlib.sha256(dedupe_source.encode("utf-8")).hexdigest()[:16]
     payload = {
         "source": "cloudwatch",
         "alert_type": "cloudwatch_alarm",
@@ -110,6 +120,10 @@ def normalize_cloudwatch_alarm(alert: Dict[str, Any]) -> Dict[str, Any]:
         "reason": alert.get("NewStateReason"),
         "region": alert.get("Region"),
         "trigger": alert.get("Trigger"),
+        "dedupe_key": dedupe_key,
+        "occurrence_count": 1,
+        "first_seen_at": _normalize_timestamp(alert.get("StateChangeTime")),
+        "last_seen_at": _normalize_timestamp(alert.get("StateChangeTime")),
         "raw_alert": alert,
     }
 
