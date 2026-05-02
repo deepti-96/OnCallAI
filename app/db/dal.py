@@ -86,6 +86,38 @@ def record_incident(
         )
         return incident_id
 
+
+def update_incident(
+    incident_id: str,
+    *,
+    status: str | None = None,
+    severity: str | None = None,
+    payload: Dict[str, Any] | None = None,
+    created_at: str | None = None,
+) -> None:
+    updates: list[str] = []
+    params: list[Any] = []
+
+    if status is not None:
+        updates.append("status=?")
+        params.append(status)
+    if severity is not None:
+        updates.append("severity=?")
+        params.append(severity)
+    if payload is not None:
+        updates.append("payload_json=?")
+        params.append(json.dumps(payload))
+    if created_at is not None:
+        updates.append("created_at=?")
+        params.append(created_at)
+
+    if not updates:
+        return
+
+    params.append(incident_id)
+    with _conn() as con:
+        con.execute(f"UPDATE incidents SET {', '.join(updates)} WHERE id=?", tuple(params))
+
 def record_step(
     incident_id: int, agent: str, phase: str, message: str,
     data: Dict[str, Any] | None = None, status: str | None = None
