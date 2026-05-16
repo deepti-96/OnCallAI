@@ -21,3 +21,5 @@ LOGS_LOCAL_ROOT = os.getenv("LOGS_LOCAL_ROOT", "app/logs")
 
 USE_REAL_CLOUDWATCH = os.getenv("USE_REAL_CLOUDWATCH", "false").lower() == "true"
 CLOUDWATCH_LOG_GROUP = os.getenv("CLOUDWATCH_LOG_GROUP", "/aws/lambda/demo")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+CLOUDWATCH_MAX_RECORDS = int(os.getenv("CLOUDWATCH_MAX_RECORDS", "25"))
