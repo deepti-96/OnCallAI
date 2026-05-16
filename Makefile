@@ -12,6 +12,9 @@ test:
 simulate-alert:
 	$(PYTHON) app/middleware/cloudwatch_simulator.py
 
+poll-cloudwatch:
+	$(PYTHON) app/middleware/cloudwatch_boto.py
+
 seed:
 	$(PYTHON) scripts/seed_rag_examples.py && \
 	$(PYTHON) scripts/seed_logs.py && \
