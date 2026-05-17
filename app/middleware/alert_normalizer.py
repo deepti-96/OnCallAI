@@ -107,7 +107,6 @@ def normalize_cloudwatch_alarm(alert: Dict[str, Any]) -> Dict[str, Any]:
             infer_service(alert),
             infer_environment(alert),
             str(alert.get("AlarmArn") or alert.get("AlarmName") or ""),
-            str(alert.get("NewStateValue") or ""),
         ]
     )
     dedupe_key = hashlib.sha256(dedupe_source.encode("utf-8")).hexdigest()[:16]
