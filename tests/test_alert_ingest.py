@@ -68,6 +68,28 @@ class AlertIngestTestCase(unittest.TestCase):
         self.assertEqual(incident["payload"]["occurrence_count"], 2)
         self.assertEqual(len(incident["payload"]["alert_history"]), 1)
 
+    def test_ok_alert_resolves_existing_open_incident(self):
+        open_alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(
+            service="inventory-service",
+            state="ALARM",
+        )
+        resolved_alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(
+            service="inventory-service",
+            state="OK",
+        )
+
+        incident_id = self.alert_ingest.ingest_cloudwatch_alert(open_alert)
+        resolved_id = self.alert_ingest.ingest_cloudwatch_alert(resolved_alert)
+
+        incident = self.dal.get_incident(incident_id)
+        incidents = self.dal.list_incidents(limit=10)
+
+        self.assertEqual(incident_id, resolved_id)
+        self.assertEqual(len(incidents), 1)
+        self.assertEqual(incident["status"], "DONE")
+        self.assertEqual(incident["payload"]["state"], "OK")
+        self.assertEqual(incident["payload"]["occurrence_count"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
