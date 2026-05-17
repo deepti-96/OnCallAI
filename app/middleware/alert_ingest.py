@@ -8,7 +8,7 @@ from app.middleware.alert_normalizer import normalize_cloudwatch_alarm
 
 def _find_deduped_incident(normalized: Dict[str, Any]) -> Dict[str, Any] | None:
     dedupe_key = (normalized.get("payload") or {}).get("dedupe_key")
-    if not dedupe_key or normalized.get("status") != "OPEN":
+    if not dedupe_key:
         return None
 
     for incident in get_open_incidents():
@@ -49,6 +49,7 @@ def ingest_cloudwatch_alert(alert: Dict[str, Any]) -> str:
         )
         update_incident(
             existing["id"],
+            status=normalized["status"],
             severity=normalized["severity"],
             payload=merged_payload,
             created_at=normalized["created_at"],
