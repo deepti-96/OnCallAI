@@ -18,6 +18,7 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 
 - Incident intake backed by SQLite for simple local development.
 - CloudWatch-style alert ingestion through simulator and JSON file entrypoints.
+- Real CloudWatch alarm polling through a boto3-backed middleware adapter.
 - Step-by-step execution tracking for collector, analyst, and supervisor stages.
 - Retrieval-assisted log analysis that combines heuristic rules with example-based incident context.
 - Downloadable incident reports in both JSON and Markdown formats.
@@ -40,6 +41,7 @@ OnCallAI follows a simple agent-inspired pipeline:
 - [`app/db/dal.py`](app/db/dal.py): Database access layer for incidents, steps, and reports.
 - [`app/middleware/alert_normalizer.py`](app/middleware/alert_normalizer.py): CloudWatch-style alert normalization into the incident schema.
 - [`app/middleware/alert_ingest.py`](app/middleware/alert_ingest.py): Ingestion path for normalized alerts.
+- [`app/middleware/cloudwatch_boto.py`](app/middleware/cloudwatch_boto.py): Real CloudWatch polling and alarm-to-incident ingestion.
 - [`app/agents/collector_agent.py`](app/agents/collector_agent.py): Log selection and retrieval logic.
 - [`app/agents/analyst_agent.py`](app/agents/analyst_agent.py): Retrieval-assisted analysis and mitigation generation.
 - [`app/agents/supervisor.py`](app/agents/supervisor.py): Report compilation and workflow completion.
@@ -126,13 +128,23 @@ You can also ingest a saved CloudWatch-style JSON payload directly:
 python3 scripts/ingest_alert.py path/to/alert.json
 ```
 
-### 6. Start the incident runner
+### 6. Poll real CloudWatch alarms
+
+If you have AWS credentials configured and want to ingest live alarms:
+
+```bash
+make poll-cloudwatch
+```
+
+This polls current alarms in the `ALARM` state, normalizes them, and routes them through the same ingestion and deduplication path as local alert payloads.
+
+### 7. Start the incident runner
 
 ```bash
 make run
 ```
 
-### 7. Launch the UI
+### 8. Launch the UI
 
 In a separate terminal:
 
@@ -140,7 +152,7 @@ In a separate terminal:
 make ui
 ```
 
-### 8. Run tests
+### 9. Run tests
 
 ```bash
 make test
@@ -151,6 +163,7 @@ make test
 ```bash
 make seed   # Seed sample data
 make simulate-alert   # Ingest a sample CloudWatch-style alert
+make poll-cloudwatch  # Poll live CloudWatch alarms and ingest them
 make run    # Start incident polling and processing
 make ui     # Launch the Streamlit app
 make test   # Run the unit and incident-flow test suite
@@ -184,6 +197,8 @@ The project is configured primarily through environment variables.
 - `LOGS_LOCAL_ROOT`: Path to bundled local logs
 - `USE_REAL_CLOUDWATCH`: Enables real CloudWatch integration when set to `true`
 - `CLOUDWATCH_LOG_GROUP`: CloudWatch log group name
+- `AWS_REGION`: AWS region for real CloudWatch polling
+- `CLOUDWATCH_MAX_RECORDS`: Maximum number of alarms to fetch per polling cycle
 
 ## How the Demo Works
 
@@ -191,6 +206,7 @@ The current demo path is intentionally simple and transparent:
 
 - Incidents are stored in SQLite.
 - Alerts can be ingested from CloudWatch-style payloads through the simulator or JSON file entrypoint.
+- Live CloudWatch alarms can also be polled through the boto3-backed middleware adapter.
 - The runner picks up incidents with `OPEN` status.
 - The runner dispatches the incident through collector, analyst, and supervisor stages.
 - The analyst combines rule-based matching with retrieved examples from the bundled incident corpus.
@@ -206,7 +222,7 @@ This repository is best understood as a strong prototype rather than a productio
 
 - The default runner currently uses a simplified processing path.
 - The analyst uses lightweight local retrieval rather than a full production retrieval pipeline or LLM-backed reasoning engine.
-- Live cloud polling and production-grade deduplication are still limited; the strongest current path is local CloudWatch-style ingestion.
+- CloudWatch polling currently focuses on ingesting active alarms; richer recovery handling and broader provider support can be extended further.
 - Authentication, authorization, retries, and multi-tenant concerns are not implemented.
 - The UI is optimized for local inspection and demos rather than operational scale.
 
