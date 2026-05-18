@@ -2,6 +2,7 @@ from app.db.dal import record_step, save_report, mark_done
 
 def compile_report(incident, analysis):
     # analysis is expected from analyst: {'issue':..., 'root_cause':..., 'mitigations':[...],'evidence':[...]}
+    enrichment = (incident.get("payload") or {}).get("enrichment", {})
     retrieved_examples = analysis.get("retrieved_examples", [])
     retrieved_section = "\n".join(
         [
@@ -9,6 +10,15 @@ def compile_report(incident, analysis):
             for example in retrieved_examples
         ]
     ) or "- No retrieved examples"
+    enrichment_section = "\n".join(
+        [
+            f"- Owner team: {enrichment.get('owner_team', 'n/a')}",
+            f"- Primary contact: {enrichment.get('primary_contact', 'n/a')}",
+            f"- Runbook: {enrichment.get('runbook_url', 'n/a')}",
+            f"- Dashboard: {enrichment.get('dashboard_url', 'n/a')}",
+            f"- Deploy hint: {enrichment.get('recent_deploy_hint', 'n/a')}"
+        ]
+    )
     report_md = f"""
 # Incident {incident['id']} — {incident.get('service','unknown')}
 
@@ -23,6 +33,9 @@ def compile_report(incident, analysis):
 
 **Evidence**
 {chr(10).join([f'- {e}' for e in analysis.get('evidence',[])]) or '- TBD'}
+
+**Service Context**
+{enrichment_section}
 
 **Retrieved Context**
 {retrieved_section}
