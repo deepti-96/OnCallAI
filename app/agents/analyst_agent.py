@@ -13,6 +13,7 @@ RULES = [
 
 def _incident_context(incident, collected) -> str:
     payload = incident.get("payload") or {}
+    enrichment = payload.get("enrichment") or {}
     incident_fields = [
         incident.get("service", ""),
         incident.get("environment", ""),
@@ -21,6 +22,11 @@ def _incident_context(incident, collected) -> str:
         payload.get("details", ""),
         payload.get("source", ""),
         payload.get("alert_type", ""),
+        enrichment.get("owner_team", ""),
+        enrichment.get("primary_contact", ""),
+        enrichment.get("runbook_url", ""),
+        enrichment.get("dashboard_url", ""),
+        enrichment.get("recent_deploy_hint", ""),
     ]
     logs = collected.get("logs", [])
     return "\n".join(str(value) for value in incident_fields + logs if value)[:20000]
