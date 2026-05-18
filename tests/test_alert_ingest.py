@@ -43,6 +43,10 @@ class AlertIngestTestCase(unittest.TestCase):
         self.assertEqual(incident["severity"], "HIGH")
         self.assertEqual(incident["status"], "OPEN")
         self.assertEqual(incident["payload"]["source"], "cloudwatch")
+        self.assertEqual(
+            incident["payload"]["enrichment"]["owner_team"],
+            "checkout-experience",
+        )
 
     def test_ingest_cloudwatch_alert_file_reads_json_payload(self):
         alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(service="orders-service")

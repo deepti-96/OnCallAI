@@ -93,7 +93,15 @@ class OnCallAITestCase(unittest.TestCase):
             service="payment-service",
             environment="prod",
             severity="CRITICAL",
-            payload={"source": "database-cpu", "details": "ECONNREFUSED from service"},
+            payload={
+                "source": "database-cpu",
+                "details": "ECONNREFUSED from service",
+                "enrichment": {
+                    "owner_team": "payments-platform",
+                    "primary_contact": "payments-oncall",
+                    "runbook_url": "https://internal.example/runbooks/payment-service"
+                }
+            },
         )
         incident = self.dal.get_incident(incident_id)
 
@@ -109,6 +117,7 @@ class OnCallAITestCase(unittest.TestCase):
         self.assertIsNotNone(report)
         self.assertEqual(report["report"]["issue"], "Database connection errors")
         self.assertIn("Retrieved Context", report["report_md"])
+        self.assertIn("Service Context", report["report_md"])
 
 
 if __name__ == "__main__":
