@@ -107,6 +107,7 @@ with right:
     report = get_latest_report(selected_id)
     steps = list_steps(selected_id)
     payload = incident.get("payload") or {}
+    enrichment = payload.get("enrichment") or {}
     raw_alert = payload.get("raw_alert") or {}
     severity = incident["severity"]
     status = incident["status"]
@@ -146,6 +147,19 @@ with right:
                 ("Alert Type", _text(payload.get("alert_type"))),
                 ("Region", _text(payload.get("region"))),
                 ("State", _text(payload.get("state"))),
+            ]
+        )
+
+        st.markdown("### Service Context")
+        _render_key_value_table(
+            [
+                ("Owner Team", _text(enrichment.get("owner_team"))),
+                ("Primary Contact", _text(enrichment.get("primary_contact"))),
+                ("Runbook", _text(enrichment.get("runbook_url"))),
+                ("Dashboard", _text(enrichment.get("dashboard_url"))),
+                ("Service Tier", _text(enrichment.get("service_tier"))),
+                ("Escalation Policy", _text(enrichment.get("escalation_policy"))),
+                ("Deploy Hint", _text(enrichment.get("recent_deploy_hint")))
             ]
         )
 
@@ -191,6 +205,14 @@ with right:
                         st.write(f"- {item}")
                 else:
                     st.write("No evidence recorded.")
+
+                st.markdown("#### Service Context")
+                if enrichment:
+                    st.write(f"- Owner team: {enrichment.get('owner_team', 'n/a')}")
+                    st.write(f"- Primary contact: {enrichment.get('primary_contact', 'n/a')}")
+                    st.write(f"- Runbook: {enrichment.get('runbook_url', 'n/a')}")
+                else:
+                    st.write("No service enrichment available.")
 
             with insight_right:
                 st.markdown("#### Retrieved Context")
