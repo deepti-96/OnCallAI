@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from app.db.dal import get_open_incidents, init_db, record_incident, update_incident
 from app.middleware.alert_normalizer import normalize_cloudwatch_alarm
+from app.models.service_registry import get_service_enrichment
 
 
 def _find_deduped_incident(normalized: Dict[str, Any]) -> Dict[str, Any] | None:
@@ -37,8 +38,20 @@ def _merge_payload(existing_payload: Dict[str, Any], new_payload: Dict[str, Any]
     return merged
 
 
+def _apply_enrichment(normalized: Dict[str, Any]) -> Dict[str, Any]:
+    payload = dict(normalized.get("payload") or {})
+    enrichment = get_service_enrichment(
+        normalized["service"],
+        normalized.get("environment"),
+    )
+    if enrichment:
+        payload["enrichment"] = enrichment
+    normalized["payload"] = payload
+    return normalized
+
+
 def ingest_cloudwatch_alert(alert: Dict[str, Any]) -> str:
-    normalized = normalize_cloudwatch_alarm(alert)
+    normalized = _apply_enrichment(normalize_cloudwatch_alarm(alert))
     init_db()
     existing = _find_deduped_incident(normalized)
     if existing:
