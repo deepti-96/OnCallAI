@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict
 
-from app.db.dal import get_open_incidents, init_db, record_incident, update_incident
+from app.db.dal import get_open_incidents, init_db, record_incident, record_step, update_incident
 from app.middleware.alert_normalizer import normalize_cloudwatch_alarm
 from app.models.service_registry import get_service_enrichment
 
@@ -67,8 +67,42 @@ def ingest_cloudwatch_alert(alert: Dict[str, Any]) -> str:
             payload=merged_payload,
             created_at=normalized["created_at"],
         )
+        phase = "resolve" if normalized["status"] == "DONE" else "dedupe"
+        message = (
+            "Resolved existing incident from recovery alert"
+            if normalized["status"] == "DONE"
+            else "Merged repeated alert into existing incident"
+        )
+        record_step(
+            existing["id"],
+            "ingest",
+            phase,
+            message,
+            {
+                "source": merged_payload.get("source"),
+                "alarm_name": merged_payload.get("alarm_name"),
+                "state": merged_payload.get("state"),
+                "occurrence_count": merged_payload.get("occurrence_count"),
+            },
+            status="OK",
+        )
         return existing["id"]
-    return record_incident(**normalized)
+    incident_id = record_incident(**normalized)
+    payload = normalized.get("payload") or {}
+    record_step(
+        incident_id,
+        "ingest",
+        "create",
+        "Created incident from incoming alert",
+        {
+            "source": payload.get("source"),
+            "alarm_name": payload.get("alarm_name"),
+            "state": payload.get("state"),
+            "occurrence_count": payload.get("occurrence_count", 1),
+        },
+        status="OK",
+    )
+    return incident_id
 
 
 def ingest_cloudwatch_alert_file(path: str) -> str:
