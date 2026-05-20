@@ -21,6 +21,7 @@ class AlertIngestTestCase(unittest.TestCase):
         self.dal.DB_FILE = self.db_path
         self.alert_ingest.init_db = self.dal.init_db
         self.alert_ingest.record_incident = self.dal.record_incident
+        self.alert_ingest.record_step = self.dal.record_step
         self.alert_ingest.get_open_incidents = self.dal.get_open_incidents
         self.alert_ingest.update_incident = self.dal.update_incident
         self.dal.init_db()
@@ -47,6 +48,9 @@ class AlertIngestTestCase(unittest.TestCase):
             incident["payload"]["enrichment"]["owner_team"],
             "checkout-experience",
         )
+        steps = self.dal.list_steps(incident_id)
+        self.assertEqual(steps[0]["agent"], "ingest")
+        self.assertEqual(steps[0]["phase"], "create")
 
     def test_ingest_cloudwatch_alert_file_reads_json_payload(self):
         alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(service="orders-service")
@@ -71,6 +75,8 @@ class AlertIngestTestCase(unittest.TestCase):
         self.assertEqual(len(incidents), 1)
         self.assertEqual(incident["payload"]["occurrence_count"], 2)
         self.assertEqual(len(incident["payload"]["alert_history"]), 1)
+        steps = self.dal.list_steps(first_id)
+        self.assertEqual(steps[-1]["phase"], "dedupe")
 
     def test_ok_alert_resolves_existing_open_incident(self):
         open_alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(
@@ -93,6 +99,8 @@ class AlertIngestTestCase(unittest.TestCase):
         self.assertEqual(incident["status"], "DONE")
         self.assertEqual(incident["payload"]["state"], "OK")
         self.assertEqual(incident["payload"]["occurrence_count"], 2)
+        steps = self.dal.list_steps(incident_id)
+        self.assertEqual(steps[-1]["phase"], "resolve")
 
 
 if __name__ == "__main__":
