@@ -119,6 +119,30 @@ class OnCallAITestCase(unittest.TestCase):
         self.assertIn("Retrieved Context", report["report_md"])
         self.assertIn("Service Context", report["report_md"])
 
+    def test_process_incident_skips_recovered_alerts(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="inventory-service",
+            environment="prod",
+            severity="HIGH",
+            payload={
+                "source": "cloudwatch",
+                "state": "OK",
+                "alert_type": "cloudwatch_alarm",
+            },
+        )
+        incident = self.dal.get_incident(incident_id)
+
+        self.runner.process_incident(incident)
+
+        processed_incident = self.dal.get_incident(incident_id)
+        steps = self.dal.list_steps(incident_id)
+        report = self.dal.get_latest_report(incident_id)
+
+        self.assertEqual(processed_incident["status"], "DONE")
+        self.assertEqual(steps[-1]["phase"], "skip")
+        self.assertIsNone(report)
+
 
 if __name__ == "__main__":
     unittest.main()
