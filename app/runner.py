@@ -11,6 +11,7 @@ from app.db.dal import (
     init_db,
     mark_failed,
     mark_in_progress,
+    mark_done,
     record_step,
 )
 
@@ -19,6 +20,19 @@ POLL_INTERVAL_SECONDS = int(os.getenv("POLL_INTERVAL_SECONDS", "10"))
 def process_incident(inc: dict):
     iid = inc["id"]
     try:
+        payload = inc.get("payload") or {}
+        if str(payload.get("state", "")).upper() == "OK":
+            record_step(
+                iid,
+                "supervisor",
+                "skip",
+                "Skipping analysis because alert is already in a recovered state",
+                {"state": payload.get("state")},
+                status="OK",
+            )
+            mark_done(iid)
+            return
+
         mark_in_progress(iid)
         record_step(iid, "supervisor", "dispatch", "Dispatching incident to collector", status="STARTED")
 
