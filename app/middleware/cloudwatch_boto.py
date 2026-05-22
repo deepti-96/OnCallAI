@@ -1,7 +1,7 @@
 import pathlib
 import sys
 import time
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -63,10 +63,38 @@ def list_alarm_events(
     return [build_cloudwatch_alarm_event(alarm, region) for alarm in alarms[:max_records]]
 
 
+def list_alarm_events_for_states(
+    client: Any,
+    *,
+    state_values: Sequence[str],
+    max_records: int = CLOUDWATCH_MAX_RECORDS,
+    region: str = AWS_REGION,
+) -> List[Dict[str, Any]]:
+    events: List[Dict[str, Any]] = []
+    seen_keys: set[tuple[str, str]] = set()
+
+    for state_value in state_values:
+        for event in list_alarm_events(
+            client,
+            state_value=state_value,
+            max_records=max_records,
+            region=region,
+        ):
+            key = (event.get("AlarmArn") or "", event.get("NewStateValue") or "")
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            events.append(event)
+            if len(events) >= max_records:
+                return events
+
+    return events
+
+
 def poll_cloudwatch_once(
     *,
     client: Any | None = None,
-    state_value: str = "ALARM",
+    state_values: Sequence[str] = ("ALARM", "OK"),
     max_records: int = CLOUDWATCH_MAX_RECORDS,
     region: str = AWS_REGION,
 ) -> List[str]:
@@ -76,9 +104,9 @@ def poll_cloudwatch_once(
         client = boto3.client("cloudwatch", region_name=region)
 
     incident_ids: List[str] = []
-    for event in list_alarm_events(
+    for event in list_alarm_events_for_states(
         client,
-        state_value=state_value,
+        state_values=state_values,
         max_records=max_records,
         region=region,
     ):
