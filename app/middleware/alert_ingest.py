@@ -65,7 +65,6 @@ def ingest_cloudwatch_alert(alert: Dict[str, Any]) -> str:
             status=normalized["status"],
             severity=normalized["severity"],
             payload=merged_payload,
-            created_at=normalized["created_at"],
         )
         phase = "resolve" if normalized["status"] == "DONE" else "dedupe"
         message = (

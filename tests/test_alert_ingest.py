@@ -102,6 +102,26 @@ class AlertIngestTestCase(unittest.TestCase):
         steps = self.dal.list_steps(incident_id)
         self.assertEqual(steps[-1]["phase"], "resolve")
 
+    def test_repeated_alert_keeps_original_created_at(self):
+        first_alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(
+            service="checkout-service",
+            state="ALARM",
+        )
+        second_alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(
+            service="checkout-service",
+            state="ALARM",
+        )
+        second_alert["StateChangeTime"] = "2026-05-12T10:30:00Z"
+
+        incident_id = self.alert_ingest.ingest_cloudwatch_alert(first_alert)
+        original_created_at = self.dal.get_incident(incident_id)["created_at"]
+
+        self.alert_ingest.ingest_cloudwatch_alert(second_alert)
+
+        incident = self.dal.get_incident(incident_id)
+        self.assertEqual(incident["created_at"], original_created_at)
+        self.assertEqual(incident["payload"]["last_seen_at"], "2026-05-12T10:30:00Z")
+
 
 if __name__ == "__main__":
     unittest.main()
