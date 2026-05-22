@@ -25,7 +25,7 @@ toolbar_left, toolbar_right = st.columns([3, 1])
 with toolbar_left:
     st.caption("Use the filters to narrow the queue and inspect ingested alert context alongside agent output.")
 with toolbar_right:
-    if st.button("Refresh Data", use_container_width=True):
+    if st.button("Refresh Data", width="stretch"):
         st.rerun()
 
 incidents = list_incidents(limit=200)
@@ -87,7 +87,7 @@ with left:
         filtered_df[
             ["id", "status", "service", "environment", "severity", "source", "created_at"]
         ],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         height=400,
     )
@@ -236,14 +236,14 @@ with right:
                 data=json.dumps(report_body, indent=2),
                 file_name=f"incident_{selected_id}_report.json",
                 mime="application/json",
-                use_container_width=True,
+                width="stretch",
             )
             download_cols[1].download_button(
                 "Download Markdown",
                 data=report["report_md"],
                 file_name=f"incident_{selected_id}_report.md",
                 mime="text/markdown",
-                use_container_width=True,
+                width="stretch",
             )
         else:
             st.info("No report generated yet for this incident.")
