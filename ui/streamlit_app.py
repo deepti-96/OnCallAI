@@ -114,20 +114,37 @@ left, right = st.columns([1.05, 1.95], gap="large")
 
 with left:
     st.subheader("Incident Queue")
-    st.caption("Filtered incidents ordered by most recent creation time.")
+    st.caption("Filtered incidents with repeat-alert and age context for triage.")
     st.dataframe(
         filtered_df[
-            ["id", "status", "service", "environment", "severity", "source", "created_at"]
+            [
+                "id",
+                "status",
+                "service",
+                "severity",
+                "occurrence_count",
+                "age_minutes",
+                "owner_team",
+            ]
         ],
         width="stretch",
         hide_index=True,
         height=400,
+        column_config={
+            "id": "Incident ID",
+            "status": "Status",
+            "service": "Service",
+            "severity": "Severity",
+            "occurrence_count": st.column_config.NumberColumn("Repeats"),
+            "age_minutes": st.column_config.NumberColumn("Age (min)"),
+            "owner_team": "Owner Team",
+        },
     )
 
     options = {
         (
             f"{row['service']} | {row['severity']} | {row['status']} | "
-            f"{_text(row['alarm_name'])} | {row['created_at']}"
+            f"{row['occurrence_count']}x | {_format_age_minutes(row['age_minutes'])} | {_text(row['alarm_name'])}"
         ): row["id"]
         for row in filtered_df.to_dict(orient="records")
     }
