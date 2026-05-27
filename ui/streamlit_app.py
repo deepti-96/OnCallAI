@@ -58,6 +58,12 @@ with st.sidebar:
     selected_severities = st.multiselect("Severity", severities, default=severities)
     selected_environments = st.multiselect("Environment", environments, default=environments)
     selected_sources = st.multiselect("Source", sources, default=sources)
+    noisy_only = st.checkbox("Repeated alerts only", value=False)
+    stale_threshold_minutes = st.slider("Stale threshold (minutes)", min_value=15, max_value=240, value=60, step=15)
+    sort_option = st.selectbox(
+        "Queue Sort",
+        ["Newest first", "Oldest first", "Highest severity", "Most repeated"],
+    )
     search = st.text_input("Search incidents", placeholder="id, service, alarm, severity")
 
 filtered_df = incident_df[
@@ -77,6 +83,22 @@ if search:
         )
     ]
 
+if noisy_only:
+    filtered_df = filtered_df[filtered_df["occurrence_count"] > 1]
+
+severity_rank = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
+filtered_df["severity_rank"] = filtered_df["severity"].map(severity_rank).fillna(0)
+filtered_df["age_minutes"] = pd.to_numeric(filtered_df["age_minutes"], errors="coerce").fillna(0).astype(int)
+
+if sort_option == "Newest first":
+    filtered_df = filtered_df.sort_values(by=["created_at", "id"], ascending=[False, False])
+elif sort_option == "Oldest first":
+    filtered_df = filtered_df.sort_values(by=["created_at", "id"], ascending=[True, True])
+elif sort_option == "Highest severity":
+    filtered_df = filtered_df.sort_values(by=["severity_rank", "created_at"], ascending=[False, True])
+else:
+    filtered_df = filtered_df.sort_values(by=["occurrence_count", "created_at"], ascending=[False, False])
+
 if filtered_df.empty:
     st.warning("No incidents match the current filters.")
     st.stop()
@@ -85,8 +107,8 @@ metric_cols = st.columns(5)
 metric_cols[0].metric("Visible Incidents", int(len(filtered_df)))
 metric_cols[1].metric("Open", int((filtered_df["status"] == "OPEN").sum()))
 metric_cols[2].metric("Critical", int((filtered_df["severity"] == "CRITICAL").sum()))
-metric_cols[3].metric("CloudWatch", int((filtered_df["source"] == "cloudwatch").sum()))
-metric_cols[4].metric("Services", int(filtered_df["service"].nunique()))
+metric_cols[3].metric("Repeated", int((filtered_df["occurrence_count"] > 1).sum()))
+metric_cols[4].metric("Stale", int((filtered_df["age_minutes"] >= stale_threshold_minutes).sum()))
 
 left, right = st.columns([1.05, 1.95], gap="large")
 
