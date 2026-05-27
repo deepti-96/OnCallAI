@@ -55,6 +55,33 @@ class DalTestCase(unittest.TestCase):
         self.assertEqual(incidents[0]["id"], newer_id)
         self.assertEqual(incidents[1]["id"], older_id)
 
+    def test_list_incidents_exposes_summary_fields_from_payload(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={
+                "source": "cloudwatch",
+                "state": "ALARM",
+                "alarm_name": "payment-service-critical-latency",
+                "occurrence_count": 3,
+                "last_seen_at": "2026-02-01T00:05:00Z",
+                "enrichment": {"owner_team": "payments-platform"},
+            },
+            created_at="2026-02-01T00:00:00Z",
+        )
+
+        incidents = self.dal.list_incidents(limit=10)
+        incident = next(item for item in incidents if item["id"] == incident_id)
+
+        self.assertEqual(incident["source"], "cloudwatch")
+        self.assertEqual(incident["alert_state"], "ALARM")
+        self.assertEqual(incident["occurrence_count"], 3)
+        self.assertEqual(incident["last_seen_at"], "2026-02-01T00:05:00Z")
+        self.assertEqual(incident["owner_team"], "payments-platform")
+        self.assertIsInstance(incident["age_minutes"], int)
+
 
 if __name__ == "__main__":
     unittest.main()
