@@ -10,6 +10,16 @@ def _text(value):
     return str(value) if value not in (None, "") else "n/a"
 
 
+def _format_age_minutes(value):
+    if value in (None, ""):
+        return "n/a"
+    minutes = int(value)
+    hours, remaining_minutes = divmod(minutes, 60)
+    if hours:
+        return f"{hours}h {remaining_minutes}m"
+    return f"{remaining_minutes}m"
+
+
 def _render_key_value_table(rows):
     if not rows:
         st.write("No additional details available.")
@@ -119,6 +129,10 @@ with right:
     summary_cols[2].metric("Severity", incident["severity"])
     summary_cols[3].metric("Status", incident["status"])
     summary_cols[4].metric("Source", payload.get("source", "manual"))
+    activity_cols = st.columns(3)
+    activity_cols[0].metric("Occurrences", incident.get("occurrence_count", 1))
+    activity_cols[1].metric("Last Seen", _text(incident.get("last_seen_at")))
+    activity_cols[2].metric("Age", _format_age_minutes(incident.get("age_minutes")))
     st.caption(f"Created at {incident['created_at']}")
 
     if severity == "CRITICAL":
@@ -147,6 +161,8 @@ with right:
                 ("Alert Type", _text(payload.get("alert_type"))),
                 ("Region", _text(payload.get("region"))),
                 ("State", _text(payload.get("state"))),
+                ("Occurrence Count", _text(incident.get("occurrence_count"))),
+                ("Last Seen", _text(incident.get("last_seen_at"))),
             ]
         )
 
