@@ -21,6 +21,15 @@ SCHEMA_FILE = pathlib.Path(__file__).with_name("schema.sql")
 def _now_iso() -> str:
     return datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+
+def _parse_iso(value: str | None) -> datetime.datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.UTC)
+    except ValueError:
+        return None
+
 def _conn(rowdict: bool = False) -> sqlite3.Connection:
     con = sqlite3.connect(DB_FILE)
     con.execute("PRAGMA foreign_keys = ON")
@@ -45,11 +54,24 @@ def _decode_payload(row: sqlite3.Row | Dict[str, Any] | None) -> Optional[Dict[s
 def _incident_summary(row: sqlite3.Row | Dict[str, Any]) -> Dict[str, Any]:
     data = _decode_payload(row) or {}
     payload = data.get("payload") or {}
+    enrichment = payload.get("enrichment") or {}
+    created_at = _parse_iso(data.get("created_at"))
+    last_seen_at = _parse_iso(payload.get("last_seen_at"))
+    reference_ts = last_seen_at or created_at
+    age_minutes = None
+    if reference_ts is not None:
+        delta = datetime.datetime.now(datetime.UTC) - reference_ts
+        age_minutes = max(int(delta.total_seconds() // 60), 0)
+
     data["source"] = payload.get("source", "manual")
     data["alert_type"] = payload.get("alert_type", "incident")
     data["alert_state"] = payload.get("state", "")
     data["alarm_name"] = payload.get("alarm_name", "")
     data["region"] = payload.get("region", "")
+    data["occurrence_count"] = int(payload.get("occurrence_count", 1) or 1)
+    data["last_seen_at"] = payload.get("last_seen_at", data.get("created_at"))
+    data["owner_team"] = enrichment.get("owner_team", "")
+    data["age_minutes"] = age_minutes
     return data
 
 def init_db() -> None:

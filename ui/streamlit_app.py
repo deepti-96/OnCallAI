@@ -10,6 +10,16 @@ def _text(value):
     return str(value) if value not in (None, "") else "n/a"
 
 
+def _format_age_minutes(value):
+    if value in (None, ""):
+        return "n/a"
+    minutes = int(value)
+    hours, remaining_minutes = divmod(minutes, 60)
+    if hours:
+        return f"{hours}h {remaining_minutes}m"
+    return f"{remaining_minutes}m"
+
+
 def _render_key_value_table(rows):
     if not rows:
         st.write("No additional details available.")
@@ -48,6 +58,12 @@ with st.sidebar:
     selected_severities = st.multiselect("Severity", severities, default=severities)
     selected_environments = st.multiselect("Environment", environments, default=environments)
     selected_sources = st.multiselect("Source", sources, default=sources)
+    noisy_only = st.checkbox("Repeated alerts only", value=False)
+    stale_threshold_minutes = st.slider("Stale threshold (minutes)", min_value=15, max_value=240, value=60, step=15)
+    sort_option = st.selectbox(
+        "Queue Sort",
+        ["Newest first", "Oldest first", "Highest severity", "Most repeated"],
+    )
     search = st.text_input("Search incidents", placeholder="id, service, alarm, severity")
 
 filtered_df = incident_df[
@@ -67,6 +83,22 @@ if search:
         )
     ]
 
+if noisy_only:
+    filtered_df = filtered_df[filtered_df["occurrence_count"] > 1]
+
+severity_rank = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
+filtered_df["severity_rank"] = filtered_df["severity"].map(severity_rank).fillna(0)
+filtered_df["age_minutes"] = pd.to_numeric(filtered_df["age_minutes"], errors="coerce").fillna(0).astype(int)
+
+if sort_option == "Newest first":
+    filtered_df = filtered_df.sort_values(by=["created_at", "id"], ascending=[False, False])
+elif sort_option == "Oldest first":
+    filtered_df = filtered_df.sort_values(by=["created_at", "id"], ascending=[True, True])
+elif sort_option == "Highest severity":
+    filtered_df = filtered_df.sort_values(by=["severity_rank", "created_at"], ascending=[False, True])
+else:
+    filtered_df = filtered_df.sort_values(by=["occurrence_count", "created_at"], ascending=[False, False])
+
 if filtered_df.empty:
     st.warning("No incidents match the current filters.")
     st.stop()
@@ -75,27 +107,44 @@ metric_cols = st.columns(5)
 metric_cols[0].metric("Visible Incidents", int(len(filtered_df)))
 metric_cols[1].metric("Open", int((filtered_df["status"] == "OPEN").sum()))
 metric_cols[2].metric("Critical", int((filtered_df["severity"] == "CRITICAL").sum()))
-metric_cols[3].metric("CloudWatch", int((filtered_df["source"] == "cloudwatch").sum()))
-metric_cols[4].metric("Services", int(filtered_df["service"].nunique()))
+metric_cols[3].metric("Repeated", int((filtered_df["occurrence_count"] > 1).sum()))
+metric_cols[4].metric("Stale", int((filtered_df["age_minutes"] >= stale_threshold_minutes).sum()))
 
 left, right = st.columns([1.05, 1.95], gap="large")
 
 with left:
     st.subheader("Incident Queue")
-    st.caption("Filtered incidents ordered by most recent creation time.")
+    st.caption("Filtered incidents with repeat-alert and age context for triage.")
     st.dataframe(
         filtered_df[
-            ["id", "status", "service", "environment", "severity", "source", "created_at"]
+            [
+                "id",
+                "status",
+                "service",
+                "severity",
+                "occurrence_count",
+                "age_minutes",
+                "owner_team",
+            ]
         ],
         width="stretch",
         hide_index=True,
         height=400,
+        column_config={
+            "id": "Incident ID",
+            "status": "Status",
+            "service": "Service",
+            "severity": "Severity",
+            "occurrence_count": st.column_config.NumberColumn("Repeats"),
+            "age_minutes": st.column_config.NumberColumn("Age (min)"),
+            "owner_team": "Owner Team",
+        },
     )
 
     options = {
         (
             f"{row['service']} | {row['severity']} | {row['status']} | "
-            f"{_text(row['alarm_name'])} | {row['created_at']}"
+            f"{row['occurrence_count']}x | {_format_age_minutes(row['age_minutes'])} | {_text(row['alarm_name'])}"
         ): row["id"]
         for row in filtered_df.to_dict(orient="records")
     }
@@ -119,6 +168,10 @@ with right:
     summary_cols[2].metric("Severity", incident["severity"])
     summary_cols[3].metric("Status", incident["status"])
     summary_cols[4].metric("Source", payload.get("source", "manual"))
+    activity_cols = st.columns(3)
+    activity_cols[0].metric("Occurrences", incident.get("occurrence_count", 1))
+    activity_cols[1].metric("Last Seen", _text(incident.get("last_seen_at")))
+    activity_cols[2].metric("Age", _format_age_minutes(incident.get("age_minutes")))
     st.caption(f"Created at {incident['created_at']}")
 
     if severity == "CRITICAL":
@@ -147,6 +200,8 @@ with right:
                 ("Alert Type", _text(payload.get("alert_type"))),
                 ("Region", _text(payload.get("region"))),
                 ("State", _text(payload.get("state"))),
+                ("Occurrence Count", _text(incident.get("occurrence_count"))),
+                ("Last Seen", _text(incident.get("last_seen_at"))),
             ]
         )
 
