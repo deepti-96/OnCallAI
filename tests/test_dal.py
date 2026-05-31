@@ -67,7 +67,11 @@ class DalTestCase(unittest.TestCase):
                 "alarm_name": "payment-service-critical-latency",
                 "occurrence_count": 3,
                 "last_seen_at": "2026-02-01T00:05:00Z",
-                "enrichment": {"owner_team": "payments-platform"},
+                "enrichment": {
+                    "owner_team": "payments-platform",
+                    "primary_contact": "payments-oncall",
+                    "escalation_policy": "page-payments-primary",
+                },
             },
             created_at="2026-02-01T00:00:00Z",
         )
@@ -81,6 +85,10 @@ class DalTestCase(unittest.TestCase):
         self.assertEqual(incident["last_seen_at"], "2026-02-01T00:05:00Z")
         self.assertEqual(incident["owner_team"], "payments-platform")
         self.assertIsInstance(incident["age_minutes"], int)
+        self.assertEqual(incident["escalation_priority"], "Immediate")
+        self.assertEqual(incident["escalation_target"], "payments-oncall")
+        self.assertTrue(incident["should_page"])
+        self.assertIn("3 repeated alerts", incident["escalation_reason"])
 
 
 if __name__ == "__main__":

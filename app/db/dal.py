@@ -7,6 +7,8 @@ import sqlite3
 import uuid
 from typing import Any, Dict, List, Optional
 
+from app.models.escalation_policy import compute_escalation_guidance
+
 try:
     from dotenv import load_dotenv
 except ImportError:  # Optional during lightweight local runs
@@ -72,6 +74,11 @@ def _incident_summary(row: sqlite3.Row | Dict[str, Any]) -> Dict[str, Any]:
     data["last_seen_at"] = payload.get("last_seen_at", data.get("created_at"))
     data["owner_team"] = enrichment.get("owner_team", "")
     data["age_minutes"] = age_minutes
+    escalation = compute_escalation_guidance(data)
+    data["escalation_priority"] = escalation["priority"]
+    data["escalation_target"] = escalation["target"]
+    data["escalation_reason"] = escalation["reason"]
+    data["should_page"] = escalation["should_page"]
     return data
 
 def init_db() -> None:
