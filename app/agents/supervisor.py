@@ -1,8 +1,10 @@
 from app.db.dal import record_step, save_report, mark_done
+from app.models.escalation_policy import compute_escalation_guidance
 
 def compile_report(incident, analysis):
     # analysis is expected from analyst: {'issue':..., 'root_cause':..., 'mitigations':[...],'evidence':[...]}
     enrichment = (incident.get("payload") or {}).get("enrichment", {})
+    escalation = compute_escalation_guidance(incident)
     retrieved_examples = analysis.get("retrieved_examples", [])
     retrieved_section = "\n".join(
         [
@@ -17,6 +19,14 @@ def compile_report(incident, analysis):
             f"- Runbook: {enrichment.get('runbook_url', 'n/a')}",
             f"- Dashboard: {enrichment.get('dashboard_url', 'n/a')}",
             f"- Deploy hint: {enrichment.get('recent_deploy_hint', 'n/a')}"
+        ]
+    )
+    escalation_section = "\n".join(
+        [
+            f"- Priority: {escalation.get('priority', 'n/a')}",
+            f"- Action: {escalation.get('action', 'n/a')}",
+            f"- Target: {escalation.get('target', 'n/a')}",
+            f"- Reason: {escalation.get('reason', 'n/a')}",
         ]
     )
     report_md = f"""
@@ -37,10 +47,14 @@ def compile_report(incident, analysis):
 **Service Context**
 {enrichment_section}
 
+**Escalation Guidance**
+{escalation_section}
+
 **Retrieved Context**
 {retrieved_section}
 """
-    report_json = analysis
+    report_json = dict(analysis)
+    report_json["escalation"] = escalation
     return report_json, report_md
 
 def supervisor_orchestrate(incident, analysis):

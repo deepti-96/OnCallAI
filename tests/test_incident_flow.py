@@ -99,7 +99,9 @@ class OnCallAITestCase(unittest.TestCase):
                 "enrichment": {
                     "owner_team": "payments-platform",
                     "primary_contact": "payments-oncall",
-                    "runbook_url": "https://internal.example/runbooks/payment-service"
+                    "runbook_url": "https://internal.example/runbooks/payment-service",
+                    "escalation_policy": "page-payments-primary",
+                    "service_tier": "tier-1",
                 }
             },
         )
@@ -118,6 +120,9 @@ class OnCallAITestCase(unittest.TestCase):
         self.assertEqual(report["report"]["issue"], "Database connection errors")
         self.assertIn("Retrieved Context", report["report_md"])
         self.assertIn("Service Context", report["report_md"])
+        self.assertIn("Escalation Guidance", report["report_md"])
+        self.assertEqual(report["report"]["escalation"]["priority"], "Immediate")
+        self.assertEqual(report["report"]["escalation"]["target"], "payments-oncall")
 
     def test_process_incident_skips_recovered_alerts(self):
         incident_id = self.dal.record_incident(
