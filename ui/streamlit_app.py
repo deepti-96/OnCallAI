@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from app.db.dal import get_incident, get_latest_report, list_incidents, list_steps
+from app.models.escalation_policy import compute_escalation_guidance
 
 
 def _text(value):
@@ -52,12 +53,14 @@ with st.sidebar:
     severities = sorted(incident_df["severity"].dropna().unique().tolist())
     environments = sorted(incident_df["environment"].dropna().unique().tolist())
     sources = sorted(incident_df["source"].dropna().unique().tolist())
+    priorities = sorted(incident_df["escalation_priority"].dropna().unique().tolist())
 
     selected_statuses = st.multiselect("Status", statuses, default=statuses)
     selected_services = st.multiselect("Service", services, default=services)
     selected_severities = st.multiselect("Severity", severities, default=severities)
     selected_environments = st.multiselect("Environment", environments, default=environments)
     selected_sources = st.multiselect("Source", sources, default=sources)
+    selected_priorities = st.multiselect("Escalation Priority", priorities, default=priorities)
     noisy_only = st.checkbox("Repeated alerts only", value=False)
     stale_threshold_minutes = st.slider("Stale threshold (minutes)", min_value=15, max_value=240, value=60, step=15)
     sort_option = st.selectbox(
@@ -72,6 +75,7 @@ filtered_df = incident_df[
     & incident_df["severity"].isin(selected_severities)
     & incident_df["environment"].isin(selected_environments)
     & incident_df["source"].isin(selected_sources)
+    & incident_df["escalation_priority"].isin(selected_priorities)
 ].copy()
 
 if search:
@@ -108,7 +112,7 @@ metric_cols[0].metric("Visible Incidents", int(len(filtered_df)))
 metric_cols[1].metric("Open", int((filtered_df["status"] == "OPEN").sum()))
 metric_cols[2].metric("Critical", int((filtered_df["severity"] == "CRITICAL").sum()))
 metric_cols[3].metric("Repeated", int((filtered_df["occurrence_count"] > 1).sum()))
-metric_cols[4].metric("Stale", int((filtered_df["age_minutes"] >= stale_threshold_minutes).sum()))
+metric_cols[4].metric("Needs Page", int(filtered_df["should_page"].sum()))
 
 left, right = st.columns([1.05, 1.95], gap="large")
 
@@ -122,6 +126,7 @@ with left:
                 "status",
                 "service",
                 "severity",
+                "escalation_priority",
                 "occurrence_count",
                 "age_minutes",
                 "owner_team",
@@ -135,6 +140,7 @@ with left:
             "status": "Status",
             "service": "Service",
             "severity": "Severity",
+            "escalation_priority": "Priority",
             "occurrence_count": st.column_config.NumberColumn("Repeats"),
             "age_minutes": st.column_config.NumberColumn("Age (min)"),
             "owner_team": "Owner Team",
@@ -143,7 +149,7 @@ with left:
 
     options = {
         (
-            f"{row['service']} | {row['severity']} | {row['status']} | "
+            f"{row['service']} | {row['severity']} | {row['escalation_priority']} | "
             f"{row['occurrence_count']}x | {_format_age_minutes(row['age_minutes'])} | {_text(row['alarm_name'])}"
         ): row["id"]
         for row in filtered_df.to_dict(orient="records")
@@ -160,6 +166,7 @@ with right:
     raw_alert = payload.get("raw_alert") or {}
     severity = incident["severity"]
     status = incident["status"]
+    escalation = compute_escalation_guidance(incident)
 
     st.subheader(f"Incident {selected_id}")
     summary_cols = st.columns(5)
@@ -172,6 +179,10 @@ with right:
     activity_cols[0].metric("Occurrences", incident.get("occurrence_count", 1))
     activity_cols[1].metric("Last Seen", _text(incident.get("last_seen_at")))
     activity_cols[2].metric("Age", _format_age_minutes(incident.get("age_minutes")))
+    escalation_cols = st.columns(3)
+    escalation_cols[0].metric("Escalation Priority", escalation.get("priority", "n/a"))
+    escalation_cols[1].metric("Escalation Target", escalation.get("target", "n/a"))
+    escalation_cols[2].metric("Page Required", "Yes" if escalation.get("should_page") else "No")
     st.caption(f"Created at {incident['created_at']}")
 
     if severity == "CRITICAL":
@@ -218,6 +229,17 @@ with right:
             ]
         )
 
+        st.markdown("### Escalation Guidance")
+        _render_key_value_table(
+            [
+                ("Priority", _text(escalation.get("priority"))),
+                ("Action", _text(escalation.get("action"))),
+                ("Target", _text(escalation.get("target"))),
+                ("Reason", _text(escalation.get("reason"))),
+                ("Policy", _text(escalation.get("policy"))),
+            ]
+        )
+
     with timeline_tab:
         st.markdown("### Agent Timeline")
         if steps:
@@ -240,6 +262,7 @@ with right:
             report_cols[1].metric("Confidence", str(report_body.get("confidence", "n/a")))
             report_cols[2].metric("Mitigations", len(report_body.get("mitigations", [])))
             report_cols[3].metric("Evidence Items", len(report_body.get("evidence", [])))
+            escalation_report = report_body.get("escalation", escalation)
 
             evidence = report_body.get("evidence", [])
             mitigations = report_body.get("mitigations", [])
@@ -268,6 +291,11 @@ with right:
                     st.write(f"- Runbook: {enrichment.get('runbook_url', 'n/a')}")
                 else:
                     st.write("No service enrichment available.")
+
+                st.markdown("#### Escalation")
+                st.write(f"- Priority: {escalation_report.get('priority', 'n/a')}")
+                st.write(f"- Action: {escalation_report.get('action', 'n/a')}")
+                st.write(f"- Target: {escalation_report.get('target', 'n/a')}")
 
             with insight_right:
                 st.markdown("#### Retrieved Context")
