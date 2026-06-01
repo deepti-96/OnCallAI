@@ -1,6 +1,6 @@
 # OnCallAI
 
-OnCallAI is an AI-powered incident triage and root cause analysis prototype for DevOps and SRE workflows. It ingests alerts or incidents, gathers surrounding context, analyzes logs, records agent activity, and produces a structured incident report through a lightweight Streamlit interface.
+OnCallAI is an AI-powered incident triage and root cause analysis prototype for DevOps and SRE workflows. It ingests alerts or incidents, gathers surrounding context, analyzes logs, records agent activity, computes escalation guidance, and produces a structured incident report through a lightweight Streamlit interface.
 
 This project is designed as an explainable, hackathon-friendly foundation for building an autonomous on-call assistant. The current implementation focuses on local execution, deterministic workflows, and a clear architecture that can be extended with real alert sources, richer retrieval, and production-grade orchestration.
 
@@ -18,11 +18,13 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 
 - Incident intake backed by SQLite for simple local development.
 - CloudWatch-style alert ingestion through simulator and JSON file entrypoints.
-- Real CloudWatch alarm polling through a boto3-backed middleware adapter.
+- Real CloudWatch alarm polling through a boto3-backed middleware adapter, including recovery-state ingestion.
+- Alert deduplication for repeated alarms with occurrence tracking and recovery handling.
 - Step-by-step execution tracking for collector, analyst, and supervisor stages.
 - Retrieval-assisted log analysis that combines heuristic rules with example-based incident context.
+- Escalation guidance that recommends paging targets, priority, and next action.
 - Downloadable incident reports in both JSON and Markdown formats.
-- Streamlit dashboard for filtering incidents, reviewing agent timelines, and inspecting generated reports.
+- Streamlit dashboard for filtering incidents, reviewing agent timelines, inspecting generated reports, and triaging stale or noisy alerts.
 - Environment-based configuration for polling, models, logging mode, and optional cloud integrations.
 
 ## Architecture
@@ -32,7 +34,7 @@ OnCallAI follows a simple agent-inspired pipeline:
 1. `runner` polls for incidents with `OPEN` status.
 2. The collector stage retrieves context and logs for the incident.
 3. The analyst stage evaluates evidence and drafts findings.
-4. The supervisor stage writes the final report and marks the incident complete.
+4. The supervisor stage writes the final report, includes escalation guidance, and marks the incident complete.
 5. The UI reads the persisted data and displays incident state, steps, and outputs.
 
 ### Main Components
@@ -42,6 +44,7 @@ OnCallAI follows a simple agent-inspired pipeline:
 - [`app/middleware/alert_normalizer.py`](app/middleware/alert_normalizer.py): CloudWatch-style alert normalization into the incident schema.
 - [`app/middleware/alert_ingest.py`](app/middleware/alert_ingest.py): Ingestion path for normalized alerts.
 - [`app/middleware/cloudwatch_boto.py`](app/middleware/cloudwatch_boto.py): Real CloudWatch polling and alarm-to-incident ingestion.
+- [`app/models/escalation_policy.py`](app/models/escalation_policy.py): Escalation priority, paging, and operator action guidance.
 - [`app/agents/collector_agent.py`](app/agents/collector_agent.py): Log selection and retrieval logic.
 - [`app/agents/analyst_agent.py`](app/agents/analyst_agent.py): Retrieval-assisted analysis and mitigation generation.
 - [`app/agents/supervisor.py`](app/agents/supervisor.py): Report compilation and workflow completion.
