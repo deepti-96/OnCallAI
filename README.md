@@ -139,7 +139,7 @@ If you have AWS credentials configured and want to ingest live alarms:
 make poll-cloudwatch
 ```
 
-This polls current alarms in the `ALARM` state, normalizes them, and routes them through the same ingestion and deduplication path as local alert payloads.
+This polls current alarms in the `ALARM` and `OK` states, normalizes them, and routes them through the same ingestion and deduplication path as local alert payloads.
 
 ### 7. Start the incident runner
 
@@ -210,12 +210,15 @@ The current demo path is intentionally simple and transparent:
 - Incidents are stored in SQLite.
 - Alerts can be ingested from CloudWatch-style payloads through the simulator or JSON file entrypoint.
 - Live CloudWatch alarms can also be polled through the boto3-backed middleware adapter.
+- Repeated alarms are deduplicated into a single open incident with occurrence and last-seen tracking.
+- Recovery events update the existing incident instead of creating a duplicate record.
 - The runner picks up incidents with `OPEN` status.
 - The runner dispatches the incident through collector, analyst, and supervisor stages.
 - The analyst combines rule-based matching with retrieved examples from the bundled incident corpus.
+- The supervisor attaches escalation guidance to the final report based on severity, age, service tier, and repeat volume.
 - Agent steps are written back to the database as the incident is processed.
 - Reports are stored in structured JSON plus Markdown.
-- The UI reads directly from the database and lets you inspect filters, alert metadata, timelines, payloads, and final reports.
+- The UI reads directly from the database and lets you inspect repeat-alert triage signals, escalation guidance, alert metadata, timelines, payloads, and final reports.
 
 This makes the project easy to demo, debug, and extend locally.
 
@@ -223,9 +226,9 @@ This makes the project easy to demo, debug, and extend locally.
 
 This repository is best understood as a strong prototype rather than a production-ready incident response platform.
 
-- The default runner currently uses a simplified processing path.
+- The default runner is intentionally lightweight and optimized for local demos rather than background job scale.
 - The analyst uses lightweight local retrieval rather than a full production retrieval pipeline or LLM-backed reasoning engine.
-- CloudWatch polling currently focuses on ingesting active alarms; richer recovery handling and broader provider support can be extended further.
+- CloudWatch support is AWS-focused today; broader provider coverage and richer historical correlation can be extended further.
 - Authentication, authorization, retries, and multi-tenant concerns are not implemented.
 - The UI is optimized for local inspection and demos rather than operational scale.
 
@@ -236,9 +239,9 @@ Good next steps for evolving OnCallAI include:
 - Connect real alert providers such as CloudWatch, PagerDuty, or Opsgenie.
 - Replace heuristic analysis with retrieval-backed or model-backed reasoning.
 - Add incident enrichment from dashboards, deploy metadata, and service ownership data.
-- Introduce alert deduplication and correlation across multiple signals.
+- Introduce broader correlation across multiple signals and incidents.
 - Add automated remediation suggestions with human approval gates.
-- Expand the UI into a richer operations console with filtering and search.
+- Expand the UI into a richer operations console with deeper search, collaboration, and audit views.
 
 ## Professional Use Cases
 
