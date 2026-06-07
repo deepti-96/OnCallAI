@@ -81,6 +81,12 @@ def _incident_summary(row: sqlite3.Row | Dict[str, Any]) -> Dict[str, Any]:
     data["should_page"] = escalation["should_page"]
     return data
 
+
+def _enrich_incident_record(row: sqlite3.Row | Dict[str, Any] | None) -> Optional[Dict[str, Any]]:
+    if not row:
+        return None
+    return _incident_summary(row)
+
 def init_db() -> None:
     sql = SCHEMA_FILE.read_text(encoding="utf-8")
     with _conn() as con:
@@ -178,7 +184,7 @@ def list_incidents(limit: int = 200) -> List[Dict[str, Any]]:
 def get_incident(incident_id: str) -> Optional[Dict[str, Any]]:
     with _conn(rowdict=True) as con:
         r = con.execute("SELECT * FROM incidents WHERE id=?", (incident_id,)).fetchone()
-    return _decode_payload(r)
+    return _enrich_incident_record(r)
 
 def list_steps(incident_id: str) -> List[Dict[str, Any]]:
     sql = """SELECT id, agent, phase, status, message, ts, data_json
@@ -216,7 +222,7 @@ def get_open_incidents() -> List[Dict[str, Any]]:
         rows = con.execute(
             "SELECT * FROM incidents WHERE status='OPEN' ORDER BY created_at ASC, id ASC"
         ).fetchall()
-    return [_decode_payload(r) for r in rows]
+    return [_enrich_incident_record(r) for r in rows]
 
 def mark_in_progress(incident_id: str) -> None:
     with _conn() as con:

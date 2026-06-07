@@ -32,6 +32,34 @@ class DalTestCase(unittest.TestCase):
         self.assertEqual(incident["payload"]["source"], "database")
         self.assertEqual(incident["payload"]["alert_type"], "db connectivity")
 
+    def test_get_incident_exposes_enriched_triage_fields(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={
+                "source": "cloudwatch",
+                "state": "ALARM",
+                "occurrence_count": 4,
+                "last_seen_at": "2026-02-01T00:05:00Z",
+                "enrichment": {
+                    "owner_team": "payments-platform",
+                    "primary_contact": "payments-oncall",
+                    "escalation_policy": "page-payments-primary",
+                },
+            },
+            created_at="2026-02-01T00:00:00Z",
+        )
+
+        incident = self.dal.get_incident(incident_id)
+
+        self.assertEqual(incident["occurrence_count"], 4)
+        self.assertEqual(incident["last_seen_at"], "2026-02-01T00:05:00Z")
+        self.assertEqual(incident["escalation_priority"], "Immediate")
+        self.assertEqual(incident["escalation_target"], "payments-oncall")
+        self.assertTrue(incident["should_page"])
+
     def test_list_incidents_sorts_by_created_at_desc(self):
         older_id = self.dal.record_incident(
             status="OPEN",
