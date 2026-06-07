@@ -28,6 +28,13 @@ def _render_key_value_table(rows):
     st.table(pd.DataFrame(rows, columns=["Field", "Value"]))
 
 
+def _render_link_row(label, url):
+    if url in (None, ""):
+        st.write(f"{label}: n/a")
+        return
+    st.markdown(f"**{label}:** [{url}]({url})")
+
+
 st.set_page_config(page_title="OnCallAI", layout="wide")
 st.title("OnCallAI")
 st.caption("AI-assisted incident triage workspace for reviewing alerts, agent activity, and RCA reports.")
@@ -112,7 +119,7 @@ metric_cols[0].metric("Visible Incidents", int(len(filtered_df)))
 metric_cols[1].metric("Open", int((filtered_df["status"] == "OPEN").sum()))
 metric_cols[2].metric("Critical", int((filtered_df["severity"] == "CRITICAL").sum()))
 metric_cols[3].metric("Repeated", int((filtered_df["occurrence_count"] > 1).sum()))
-metric_cols[4].metric("Needs Page", int(filtered_df["should_page"].sum()))
+metric_cols[4].metric("Stale", int((filtered_df["age_minutes"] >= stale_threshold_minutes).sum()))
 
 left, right = st.columns([1.05, 1.95], gap="large")
 
@@ -185,7 +192,12 @@ with right:
     escalation_cols[2].metric("Page Required", "Yes" if escalation.get("should_page") else "No")
     st.caption(f"Created at {incident['created_at']}")
 
-    if severity == "CRITICAL":
+    if escalation.get("should_page"):
+        st.error(
+            f"Escalation recommended: {escalation.get('action', 'Page the service owner')}. "
+            f"Reason: {escalation.get('reason', 'n/a')}."
+        )
+    elif severity == "CRITICAL":
         st.error(f"Critical incident for {incident['service']} is currently {status}.")
     elif status == "OPEN":
         st.warning(f"Open incident for {incident['service']} awaiting or undergoing response.")
@@ -221,13 +233,16 @@ with right:
             [
                 ("Owner Team", _text(enrichment.get("owner_team"))),
                 ("Primary Contact", _text(enrichment.get("primary_contact"))),
-                ("Runbook", _text(enrichment.get("runbook_url"))),
-                ("Dashboard", _text(enrichment.get("dashboard_url"))),
                 ("Service Tier", _text(enrichment.get("service_tier"))),
                 ("Escalation Policy", _text(enrichment.get("escalation_policy"))),
                 ("Deploy Hint", _text(enrichment.get("recent_deploy_hint")))
             ]
         )
+        link_cols = st.columns(2)
+        with link_cols[0]:
+            _render_link_row("Runbook", enrichment.get("runbook_url"))
+        with link_cols[1]:
+            _render_link_row("Dashboard", enrichment.get("dashboard_url"))
 
         st.markdown("### Escalation Guidance")
         _render_key_value_table(
@@ -289,6 +304,7 @@ with right:
                     st.write(f"- Owner team: {enrichment.get('owner_team', 'n/a')}")
                     st.write(f"- Primary contact: {enrichment.get('primary_contact', 'n/a')}")
                     st.write(f"- Runbook: {enrichment.get('runbook_url', 'n/a')}")
+                    st.write(f"- Dashboard: {enrichment.get('dashboard_url', 'n/a')}")
                 else:
                     st.write("No service enrichment available.")
 
