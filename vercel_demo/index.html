@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OnCallAI | AI Incident Triage Copilot</title>
+    <meta
+      name="description"
+      content="OnCallAI is an AI-assisted incident triage copilot for DevOps and SRE teams. It ingests alerts, analyzes context, recommends escalation, and produces explainable incident reports."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./script.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <nav class="topbar">
+          <div class="brand">OnCallAI</div>
+          <a class="ghost-link" href="https://github.com/deepti-96/OnCallAI" target="_blank" rel="noreferrer">
+            View Repository
+          </a>
+        </nav>
+
+        <div class="hero-grid">
+          <section class="hero-copy">
+            <p class="eyebrow">AI Incident Triage Copilot</p>
+            <h1>From alert noise to a usable incident narrative in one place.</h1>
+            <p class="hero-text">
+              OnCallAI is a prototype for DevOps and SRE teams that ingests alerts, analyzes logs and service context,
+              recommends escalation, and generates explainable incident reports.
+            </p>
+
+            <div class="hero-actions">
+              <a class="primary-button" href="#interactive-demo">Launch Scenario Demo</a>
+              <a class="secondary-button" href="#sample-report">View Sample Output</a>
+            </div>
+
+            <div class="signal-row">
+              <div class="signal-card">
+                <span class="signal-label">Use case</span>
+                <strong>First-response incident triage</strong>
+              </div>
+              <div class="signal-card">
+                <span class="signal-label">Experience</span>
+                <strong>Explainable, operator-friendly workflow</strong>
+              </div>
+            </div>
+          </section>
+
+          <aside class="hero-panel">
+            <div class="panel-window">
+              <div class="panel-header">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+              <div class="incident-card critical">
+                <div class="incident-title-row">
+                  <span class="badge critical">Critical</span>
+                  <span class="meta">payment-service</span>
+                </div>
+                <h3>Latency alert firing repeatedly</h3>
+                <p class="incident-subtext">CloudWatch alarm ingested, deduplicated, escalated, and summarized.</p>
+                <ul class="stack-list">
+                  <li><span>Likely issue</span><strong>Database connection errors</strong></li>
+                  <li><span>Escalation</span><strong>Page payments-oncall</strong></li>
+                  <li><span>Evidence</span><strong>Retrieved examples + matched logs</strong></li>
+                </ul>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </header>
+
+      <main>
+        <section class="section" id="why">
+          <div class="section-heading">
+            <p class="eyebrow">Why it matters</p>
+            <h2>On-call teams lose time switching across alerts, logs, dashboards, and tribal knowledge.</h2>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <h3>Alert intake</h3>
+              <p>Supports CloudWatch-style payloads, simulated alerts, and deduplicated repeated alarms.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Explainable RCA</h3>
+              <p>Combines heuristic detection with retrieval-backed context to produce grounded findings.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Escalation guidance</h3>
+              <p>Recommends who should be paged and why, based on severity, age, service tier, and repeat volume.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Operator workspace</h3>
+              <p>Surfaces queue health, incident history, timeline steps, reports, and service context in one UI.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section section-alt" id="demo-flow">
+          <div class="section-heading">
+            <p class="eyebrow">Demo flow</p>
+            <h2>A simple, reliable workflow for walking through the product live.</h2>
+          </div>
+          <div class="timeline">
+            <div class="timeline-step">
+              <span class="timeline-number">1</span>
+              <div>
+                <h3>Ingest alert</h3>
+                <p>CloudWatch-style alarms are normalized and stored as incidents with alert metadata.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-number">2</span>
+              <div>
+                <h3>Collect context</h3>
+                <p>The system pulls relevant logs and service enrichment such as owners, runbooks, and dashboards.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-number">3</span>
+              <div>
+                <h3>Analyze evidence</h3>
+                <p>Heuristic rules and retrieved examples produce likely issue, root cause hints, and mitigations.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-number">4</span>
+              <div>
+                <h3>Recommend escalation</h3>
+                <p>The app computes priority, paging target, and suggested next action for first responders.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-number">5</span>
+              <div>
+                <h3>Present the incident</h3>
+                <p>A transparent dashboard shows queue signals, agent timeline, report output, and raw evidence.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section interactive-section" id="interactive-demo">
+          <div class="section-heading">
+            <p class="eyebrow">Scenario Demo</p>
+            <h2>Walk through how OnCallAI responds in a real incident scenario.</h2>
+            <p class="section-copy">
+              Pick a situation below and the page will simulate what the operator sees: the alert, the workflow stages,
+              the escalation decision, and the final incident summary.
+            </p>
+          </div>
+
+          <div class="scenario-picker" id="scenario-picker" role="tablist" aria-label="Incident scenarios">
+            <button class="scenario-chip active" data-scenario="database" role="tab" aria-selected="true">
+              Database outage
+            </button>
+            <button class="scenario-chip" data-scenario="memory" role="tab" aria-selected="false">
+              Memory spike
+            </button>
+            <button class="scenario-chip" data-scenario="deploy" role="tab" aria-selected="false">
+              Bad deploy
+            </button>
+            <button class="scenario-chip" data-scenario="recovery" role="tab" aria-selected="false">
+              Recovered alert
+            </button>
+          </div>
+
+          <div class="demo-grid">
+            <article class="demo-panel">
+              <div class="demo-panel-header">
+                <div>
+                  <p class="eyebrow">Incoming alert</p>
+                  <h3 id="scenario-title">Payment-service latency alert</h3>
+                </div>
+                <span class="badge critical" id="scenario-severity">Critical</span>
+              </div>
+
+              <div class="mini-metrics">
+                <div class="mini-metric">
+                  <span>Source</span>
+                  <strong id="scenario-source">CloudWatch</strong>
+                </div>
+                <div class="mini-metric">
+                  <span>Repeat alerts</span>
+                  <strong id="scenario-repeats">4x</strong>
+                </div>
+                <div class="mini-metric">
+                  <span>Escalation</span>
+                  <strong id="scenario-priority">Immediate</strong>
+                </div>
+              </div>
+
+              <p class="scenario-summary" id="scenario-summary">
+                Latency alarms are firing repeatedly for a tier-1 payment dependency during checkout traffic spikes.
+              </p>
+
+              <div class="stepper" id="scenario-steps"></div>
+            </article>
+
+            <article class="demo-panel demo-panel-accent">
+              <div class="demo-panel-header">
+                <div>
+                  <p class="eyebrow">Operator output</p>
+                  <h3 id="output-headline">Page payments-oncall and validate database readiness.</h3>
+                </div>
+                <span class="meta" id="output-confidence">Confidence 0.86</span>
+              </div>
+
+              <div class="output-card">
+                <div class="output-block">
+                  <span class="output-label">Likely issue</span>
+                  <strong id="output-issue">Database connection errors</strong>
+                </div>
+                <div class="output-block">
+                  <span class="output-label">Root cause hint</span>
+                  <strong id="output-root-cause">DB pod not ready or crashed after elevated load.</strong>
+                </div>
+                <div class="output-block">
+                  <span class="output-label">Recommended action</span>
+                  <strong id="output-action">Page payments-oncall and validate DB readiness before rollback.</strong>
+                </div>
+              </div>
+
+              <div class="evidence-grid">
+                <div class="evidence-card">
+                  <h4>Why the system thinks this</h4>
+                  <ul class="bullet-list" id="output-evidence"></ul>
+                </div>
+                <div class="evidence-card">
+                  <h4>What the operator can do next</h4>
+                  <ul class="bullet-list" id="output-next-steps"></ul>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="sample-report">
+          <div class="section-heading">
+            <p class="eyebrow">Sample output</p>
+            <h2>What a human-friendly incident summary looks like.</h2>
+          </div>
+          <div class="report-grid">
+            <article class="report-card">
+              <div class="report-header">
+                <span class="badge priority">Immediate</span>
+                <span class="meta">Incident report</span>
+              </div>
+              <h3>Payment-service latency incident</h3>
+              <p><strong>Likely issue:</strong> Database connection errors</p>
+              <p><strong>Likely root cause:</strong> DB pod not ready or crashed after elevated load.</p>
+              <p><strong>Recommended next action:</strong> Page payments-oncall and validate DB readiness before rollback.</p>
+            </article>
+
+            <article class="report-card muted">
+              <h3>Why the system thinks this</h3>
+              <ul class="bullet-list">
+                <li>Matched log signals such as <code>ECONNREFUSED</code>.</li>
+                <li>Retrieved similar prior incident patterns from the bundled corpus.</li>
+                <li>Detected repeated alerts and tier-1 service ownership.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section section-alt">
+          <div class="section-heading">
+            <p class="eyebrow">Positioning</p>
+            <h2>Built as a strong prototype for internal operations tooling.</h2>
+          </div>
+          <div class="position-grid">
+            <div class="position-card">
+              <h3>Good fit for demo conversations</h3>
+              <p>Clear user problem, visible workflow, explainable output, and practical operator value.</p>
+            </div>
+            <div class="position-card">
+              <h3>Honest current scope</h3>
+              <p>Prototype-grade reliability, local-first architecture, and retrieval-assisted analysis instead of a full production AI agent.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
