@@ -54,7 +54,7 @@ function renderRecentRuns(incidents = []) {
   el.innerHTML = incidents
     .map(
       (incident) => `
-        <article class="recent-run-card">
+        <button class="recent-run-card button-reset" data-incident-id="${incident.id}" type="button">
           <div class="recent-run-row">
             <strong>${incident.service}</strong>
             <span class="badge ${String(incident.severity).toLowerCase() === "critical" ? "critical" : "priority"}">${incident.severity}</span>
@@ -65,7 +65,7 @@ function renderRecentRuns(incidents = []) {
             <span>${incident.occurrence_count || 1} alert${(incident.occurrence_count || 1) === 1 ? "" : "s"}</span>
             <span>${incident.escalation_priority || "Monitor"}</span>
           </div>
-        </article>
+        </button>
       `,
     )
     .join("");
@@ -119,6 +119,38 @@ function renderScenario(key) {
   renderSteps(scenario.steps);
 }
 
+function renderIncidentDetail({ incident, steps = [], report = null }) {
+  if (!incident) return;
+
+  setText("scenario-title", incident.title || incident.service || "Incident");
+  setText("scenario-source", incident.source || "Unknown");
+  setText("scenario-repeats", `${incident.occurrence_count || 1}x`);
+  setText("scenario-priority", incident.escalation_priority || "Monitor");
+  setText("scenario-summary", incident.summary || "Incident context is available for this run.");
+  setText("scenario-severity", incident.severity || "Unknown");
+
+  const severityBadge = document.getElementById("scenario-severity");
+  if (severityBadge) {
+    const severityClass = String(incident.severity || "").toLowerCase() === "critical" ? "critical" : "priority";
+    severityBadge.className = `badge ${severityClass}`;
+  }
+
+  setText("output-headline", report?.headline || "Incident response available");
+  setText("output-confidence", report?.confidence ? `Confidence ${Number(report.confidence).toFixed(2)}` : incident.status);
+  setText("output-issue", report?.issue || "Incident details captured");
+  setText("output-root-cause", report?.root_cause || "Root cause guidance is not available yet.");
+  setText("output-action", report?.recommended_action || "Review the incident and take the next operational step.");
+  renderList("output-evidence", report?.evidence || ["No additional evidence was stored for this incident."]);
+  renderList("output-next-steps", report?.next_steps || ["Review incident ownership and the current service state."]);
+
+  renderSteps(
+    steps.map((step) => ({
+      label: step.description,
+      detail: step.detail || step.phase,
+    })),
+  );
+}
+
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -131,26 +163,55 @@ async function fetchJson(url, options = {}) {
 function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
   const scenario = getScenario(scenarioKey);
   const severityLabel = severityMode === "auto" ? scenario.severity : severityMode[0].toUpperCase() + severityMode.slice(1);
-  const repeatLabel =
-    volumeMode === "auto" ? `${scenario.occurrenceCount} repeated alerts` : volumeMode === "repeat" ? "Repeated alerts" : "Single alert";
-  const verb = repeatLabel === "Single alert" ? "was" : "were";
+  const occurrenceCount =
+    volumeMode === "auto" ? scenario.occurrenceCount : volumeMode === "repeat" ? Math.max(3, scenario.occurrenceCount) : 1;
+  const repeatLabel = occurrenceCount === 1 ? "single alert" : `${occurrenceCount} repeated alerts`;
+  const incidentId = `local-${scenario.key}-${severityLabel.toLowerCase()}`;
+  const incident = {
+    id: incidentId,
+    title: scenario.title,
+    service: scenario.service,
+    severity: severityLabel,
+    status: scenario.alertState === "OK" ? "RESOLVED" : "DONE",
+    source: scenario.source,
+    occurrence_count: occurrenceCount,
+    escalation_priority: scenario.priority,
+    owner_team: scenario.ownerTeam,
+    alarm_name: scenario.alarmName,
+    summary: scenario.summary,
+  };
+  const report = {
+    headline: scenario.headline,
+    confidence: scenario.confidence,
+    issue: scenario.issue,
+    root_cause: scenario.rootCause,
+    recommended_action: scenario.action,
+    evidence: scenario.evidence,
+    next_steps: scenario.nextSteps,
+  };
 
   return {
     preview: {
       headline: `${severityLabel} ${scenario.title}`,
-      status: "Preview mode only",
-      summary: `${scenario.summary} ${repeatLabel} ${verb} shown in the workspace.`,
+      status: "Local sample response",
+      summary: `${scenario.summary} This local page is showing a full incident response for ${repeatLabel}.`,
       outcome: scenario.action,
       log: [
-        `Prepared ${severityLabel.toLowerCase()} preview for ${scenario.service}.`,
-        `Showing ${repeatLabel.toLowerCase()} behavior in the incident workspace.`,
-        "API is unavailable, so this run is not being durably stored yet.",
+        `Created a local sample incident for ${scenario.service}.`,
+        `Applied ${repeatLabel} behavior to the incident record.`,
+        `Prepared issue, escalation, and next-action guidance for review.`,
       ],
     },
-    incidents: [],
+    incident,
+    steps: scenario.steps.map((step) => ({
+      description: step.label,
+      detail: step.detail,
+    })),
+    report,
+    incidents: [incident],
     storage: {
-      label: "Preview mode only",
-      detail: "Local browser preview is active. Connect the hosted API to store live incident runs.",
+      label: "Local sample data",
+      detail: "This localhost page uses built-in incident data. The deployed workspace stores live runs.",
     },
   };
 }
@@ -176,6 +237,12 @@ async function refreshRecentRuns() {
   } catch (_error) {
     renderRecentRuns([]);
   }
+}
+
+async function loadIncidentDetail(incidentId) {
+  const payload = await fetchJson(`/api/incidents/${incidentId}`);
+  renderIncidentDetail(payload);
+  renderLatestIncident(payload.incident);
 }
 
 async function runSandboxScenario() {
@@ -208,6 +275,7 @@ async function runSandboxScenario() {
     renderStorageStatus(payload.storage);
     renderRecentRuns(payload.incidents || []);
     renderLatestIncident(payload.incident);
+    renderIncidentDetail(payload);
   } catch (_error) {
     const fallback = localPreviewForScenario(scenarioKey, severityMode, volumeMode);
     setText("sandbox-headline", fallback.preview.headline);
@@ -217,6 +285,8 @@ async function runSandboxScenario() {
     renderSandboxLog(fallback.preview.log);
     renderStorageStatus(fallback.storage);
     renderRecentRuns(fallback.incidents);
+    renderLatestIncident(fallback.incident);
+    renderIncidentDetail(fallback);
   }
 }
 
@@ -230,6 +300,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const scenarioKey = document.getElementById("sandbox-scenario")?.value || "database";
     renderScenario(scenarioKey);
     document.getElementById("interactive-demo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.getElementById("recent-runs")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-incident-id]");
+    if (!button) return;
+    loadIncidentDetail(button.dataset.incidentId).catch(() => {});
   });
 
   renderScenario("database");

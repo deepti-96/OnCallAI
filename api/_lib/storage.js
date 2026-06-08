@@ -126,3 +126,49 @@ export async function listRecentIncidents(limit = 6) {
     },
   );
 }
+
+export async function getIncidentDetail(incidentId) {
+  if (!hasSupabaseConfig()) {
+    const state = await readLocalState();
+    const incident = state.incidents.find((item) => item.id === incidentId) || null;
+    const steps = state.steps
+      .filter((item) => item.incident_id === incidentId)
+      .sort((left, right) => left.created_at.localeCompare(right.created_at));
+    const reportRow = [...state.reports]
+      .filter((item) => item.incident_id === incidentId)
+      .sort((left, right) => right.created_at.localeCompare(left.created_at))[0] || null;
+    return {
+      incident,
+      steps,
+      report: reportRow?.report || null,
+    };
+  }
+
+  const incidents = await supabaseFetch(
+    `/incidents?id=eq.${incidentId}&select=*`,
+    {
+      method: "GET",
+      headers: getHeaders(),
+    },
+  );
+  const steps = await supabaseFetch(
+    `/incident_steps?incident_id=eq.${incidentId}&select=*&order=created_at.asc`,
+    {
+      method: "GET",
+      headers: getHeaders(),
+    },
+  );
+  const reports = await supabaseFetch(
+    `/incident_reports?incident_id=eq.${incidentId}&select=*&order=created_at.desc&limit=1`,
+    {
+      method: "GET",
+      headers: getHeaders(),
+    },
+  );
+
+  return {
+    incident: incidents?.[0] || null,
+    steps: steps || [],
+    report: reports?.[0]?.report || null,
+  };
+}

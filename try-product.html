@@ -53,31 +53,32 @@
 
         <section class="app-hero">
           <div>
-            <p class="eyebrow">Operator Experience</p>
-            <h1 class="app-title">Run an incident and review the response like an on-call engineer would.</h1>
+            <p class="eyebrow">Incident Workspace</p>
+            <h1 class="app-title">Incident response, context, and saved runs in one place.</h1>
             <p class="hero-text app-text">
-              Choose an alert scenario, let OnCallAI generate the incident response, and inspect the saved incident,
-              explanation, and recommended next action in one place.
+              OnCallAI turns an incoming alert into a clear incident record with likely issue, escalation context,
+              and recent incident history.
             </p>
           </div>
           <div class="app-hero-card">
-            <span class="app-kicker">How to use this page</span>
+            <span class="app-kicker">Workspace Summary</span>
             <ol class="app-checklist">
-              <li>Choose the alert type and severity.</li>
-              <li>Run the incident analysis.</li>
-              <li>Review what happened, who should respond, and what to do next.</li>
+              <li>Incoming alerts are normalized into incidents.</li>
+              <li>Each incident produces a response and escalation path.</li>
+              <li>Saved runs remain visible for follow-up and review.</li>
             </ol>
           </div>
         </section>
       </header>
 
       <main class="app-main" id="workspace">
-        <section class="workspace-grid">
+        <section class="workspace-grid workspace-grid-primary">
           <article class="workspace-card workspace-card-strong">
             <div class="workspace-header">
               <div>
-                <p class="eyebrow">Controls</p>
+                <p class="eyebrow">Incident Input</p>
                 <h2>Launch an incident</h2>
+                <p class="panel-helper">Alert type, severity, and volume for the incident record.</p>
               </div>
               <span class="meta">Scenario runner</span>
             </div>
@@ -140,8 +141,9 @@
           <article class="workspace-card workspace-card-accent">
             <div class="workspace-header">
               <div>
-                <p class="eyebrow">Result</p>
+                <p class="eyebrow">Response Summary</p>
                 <h2 id="sandbox-headline">Ready to run a live incident workflow</h2>
+                <p class="panel-helper">Latest incident outcome and recommended response.</p>
               </div>
               <span class="meta" id="sandbox-status">Awaiting input</span>
             </div>
@@ -163,14 +165,13 @@
               <div class="sandbox-log-line active">Waiting for a simulated alert...</div>
             </div>
           </article>
-        </section>
 
-        <section class="workspace-grid workspace-grid-secondary">
-          <article class="workspace-card">
+          <article class="workspace-card workspace-card-history">
             <div class="workspace-header">
               <div>
-                <p class="eyebrow">Recent Runs</p>
+                <p class="eyebrow">Incident History</p>
                 <h2>Stored incidents</h2>
+                <p class="panel-helper">Recent incident records captured by the workspace.</p>
               </div>
               <span class="meta">Latest activity</span>
             </div>
@@ -178,12 +179,15 @@
               <div class="recent-run-empty">No runs recorded yet.</div>
             </div>
           </article>
+        </section>
 
-          <article class="workspace-card" id="interactive-demo">
+        <section class="workspace-grid workspace-grid-secondary">
+          <article class="workspace-card workspace-card-expected" id="interactive-demo">
             <div class="workspace-header">
               <div>
-                <p class="eyebrow">Incident View</p>
+                <p class="eyebrow">Expected Incident View</p>
                 <h2 id="scenario-title">Payment-service latency alert</h2>
+                <p class="panel-helper">This is how an alert is expected to appear once an incident is created and enriched with response details.</p>
               </div>
               <span class="badge critical" id="scenario-severity">Critical</span>
             </div>
