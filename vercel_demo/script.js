@@ -77,6 +77,17 @@ function renderStorageStatus(storage) {
   setText("storage-detail", storage.detail);
 }
 
+function renderLatestIncident(incident) {
+  if (!incident) return;
+  setText("latest-incident-id", incident.id);
+  setText("latest-incident-meta", `${incident.service} · ${incident.severity} · ${incident.status}`);
+  setText("latest-owner-team", incident.owner_team || incident.escalation_target || "Unassigned");
+  setText(
+    "latest-escalation-meta",
+    `${incident.escalation_priority || "Monitor"} priority${incident.alarm_name ? ` · ${incident.alarm_name}` : ""}`,
+  );
+}
+
 function renderScenario(key) {
   const scenario = getScenario(key);
 
@@ -122,12 +133,13 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
   const severityLabel = severityMode === "auto" ? scenario.severity : severityMode[0].toUpperCase() + severityMode.slice(1);
   const repeatLabel =
     volumeMode === "auto" ? `${scenario.occurrenceCount} repeated alerts` : volumeMode === "repeat" ? "Repeated alerts" : "Single alert";
+  const verb = repeatLabel === "Single alert" ? "was" : "were";
 
   return {
     preview: {
       headline: `${severityLabel} ${scenario.title}`,
       status: "Preview mode only",
-      summary: `${scenario.summary} ${repeatLabel} will be shown in the workspace.`,
+      summary: `${scenario.summary} ${repeatLabel} ${verb} shown in the workspace.`,
       outcome: scenario.action,
       log: [
         `Prepared ${severityLabel.toLowerCase()} preview for ${scenario.service}.`,
@@ -138,7 +150,7 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
     incidents: [],
     storage: {
       label: "Preview mode only",
-      detail: "Local browser preview is active. Deploy the API and connect Supabase for durable live runs.",
+      detail: "Local browser preview is active. Connect the hosted API to store live incident runs.",
     },
   };
 }
@@ -160,6 +172,7 @@ async function refreshRecentRuns() {
     const payload = await fetchJson("/api/incidents");
     renderRecentRuns(payload.incidents || []);
     renderStorageStatus(payload.storage);
+    renderLatestIncident(payload.incidents?.[0]);
   } catch (_error) {
     renderRecentRuns([]);
   }
@@ -194,6 +207,7 @@ async function runSandboxScenario() {
     renderSandboxLog(payload.preview.log);
     renderStorageStatus(payload.storage);
     renderRecentRuns(payload.incidents || []);
+    renderLatestIncident(payload.incident);
   } catch (_error) {
     const fallback = localPreviewForScenario(scenarioKey, severityMode, volumeMode);
     setText("sandbox-headline", fallback.preview.headline);

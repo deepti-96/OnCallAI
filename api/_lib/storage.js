@@ -66,7 +66,7 @@ export function getStorageSummary() {
     return {
       mode: "supabase-postgres",
       label: "Durable storage connected",
-      detail: "Runs are stored in Supabase Postgres on the free tier.",
+      detail: "Runs are stored in Supabase Postgres.",
     };
   }
 

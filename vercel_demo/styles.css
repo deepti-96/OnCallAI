@@ -89,6 +89,13 @@ body {
   z-index: 1;
 }
 
+.app-body {
+  background:
+    radial-gradient(circle at top left, rgba(88, 28, 135, 0.16), transparent 25%),
+    radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.14), transparent 24%),
+    linear-gradient(180deg, #f7f8fc 0%, #eef2f9 100%);
+}
+
 .hero,
 .section {
   width: min(1180px, calc(100% - 32px));
@@ -460,6 +467,156 @@ h3 {
 
 .section-alt {
   position: relative;
+}
+
+.launch-strip {
+  padding-top: 48px;
+}
+
+.launch-strip-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 28px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(244, 247, 252, 0.88));
+  border: 1px solid rgba(27, 36, 48, 0.08);
+  box-shadow: 0 24px 64px rgba(27, 36, 48, 0.08);
+}
+
+.app-header,
+.app-main {
+  width: min(1240px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.topbar-solid {
+  margin-top: 22px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 22px 55px rgba(27, 36, 48, 0.08);
+}
+
+.app-hero {
+  margin: 24px 0 16px;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 20px;
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(14, 23, 38, 0.96), rgba(25, 34, 52, 0.92));
+  color: #f6f8fc;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.22);
+}
+
+.app-title {
+  max-width: 13ch;
+  color: #f8fbff;
+}
+
+.app-text {
+  color: rgba(232, 239, 248, 0.82);
+}
+
+.app-hero-card {
+  padding: 22px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.app-kicker {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #f4c37b;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+.app-checklist {
+  margin: 0;
+  padding-left: 20px;
+  color: rgba(232, 239, 248, 0.9);
+  line-height: 1.7;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 18px;
+  margin: 24px 0 18px;
+}
+
+.workspace-grid-secondary {
+  grid-template-columns: 0.72fr 1.28fr;
+}
+
+.workspace-card {
+  padding: 24px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+  box-shadow: 0 20px 50px rgba(30, 41, 59, 0.08);
+}
+
+.workspace-card-strong {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 249, 253, 0.9));
+}
+
+.workspace-card-accent {
+  background:
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.1), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 247, 252, 0.94));
+}
+
+.workspace-header,
+.workspace-subheader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.status-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.status-card {
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(242, 246, 252, 0.95), rgba(255, 255, 255, 0.92));
+  border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.status-card p {
+  margin: 8px 0 0;
+  color: var(--slate);
+  line-height: 1.55;
+}
+
+.incident-view-grid {
+  display: grid;
+  grid-template-columns: 0.82fr 1.18fr;
+  gap: 16px;
+}
+
+.incident-pane {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(248, 250, 252, 0.78);
+  border: 1px solid rgba(27, 36, 48, 0.06);
+}
+
+.incident-pane-accent {
+  background:
+    radial-gradient(circle at top right, rgba(249, 115, 22, 0.08), transparent 28%),
+    rgba(255, 251, 246, 0.94);
 }
 
 .section-heading {
@@ -858,7 +1015,13 @@ code {
   .demo-grid,
   .feature-grid,
   .report-grid,
-  .position-grid {
+  .position-grid,
+  .workspace-grid,
+  .workspace-grid-secondary,
+  .incident-view-grid,
+  .app-hero,
+  .status-grid,
+  .launch-strip-card {
     grid-template-columns: 1fr;
   }
 
@@ -886,6 +1049,12 @@ code {
   .topbar-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .workspace-card,
+  .launch-strip-card,
+  .app-hero {
+    padding: 20px;
   }
 
   .hero-copy,

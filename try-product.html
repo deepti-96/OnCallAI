@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Try OnCallAI | Live Incident Workspace</title>
+    <meta
+      name="description"
+      content="Run a live OnCallAI incident scenario, review the generated incident output, and inspect stored runs in the hosted workspace."
+    />
+    <link rel="stylesheet" href="/vercel_demo/styles.css" />
+    <script type="module" defer src="/vercel_demo/script.js"></script>
+  </head>
+  <body class="app-body">
+    <div class="bg-orb orb-one"></div>
+    <div class="bg-orb orb-two"></div>
+    <div class="bg-grid"></div>
+    <div class="page-shell">
+      <header class="app-header">
+        <nav class="topbar topbar-solid">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 64 64" role="img">
+                <defs>
+                  <linearGradient id="brandGradientApp" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#FFB86B"></stop>
+                    <stop offset="55%" stop-color="#F97316"></stop>
+                    <stop offset="100%" stop-color="#F43F5E"></stop>
+                  </linearGradient>
+                </defs>
+                <rect x="6" y="6" width="52" height="52" rx="18" fill="url(#brandGradientApp)"></rect>
+                <path
+                  d="M20 39.5L28.5 24L35 34L43.5 20.5"
+                  fill="none"
+                  stroke="#FFF8F1"
+                  stroke-width="5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+                <circle cx="43.5" cy="20.5" r="4.5" fill="#FFF8F1"></circle>
+              </svg>
+            </div>
+            <div class="brand-copy">
+              <span class="brand-name">OnCallAI</span>
+              <span class="brand-tag">Live Incident Workspace</span>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <a class="ghost-link" href="/">Product Overview</a>
+            <a class="topbar-cta" href="#workspace">Open Workspace</a>
+          </div>
+        </nav>
+
+        <section class="app-hero">
+          <div>
+            <p class="eyebrow">Operator Experience</p>
+            <h1 class="app-title">Run an incident and review the response like an on-call engineer would.</h1>
+            <p class="hero-text app-text">
+              Choose an alert scenario, let OnCallAI generate the incident response, and inspect the saved incident,
+              explanation, and recommended next action in one place.
+            </p>
+          </div>
+          <div class="app-hero-card">
+            <span class="app-kicker">How to use this page</span>
+            <ol class="app-checklist">
+              <li>Choose the alert type and severity.</li>
+              <li>Run the incident analysis.</li>
+              <li>Review what happened, who should respond, and what to do next.</li>
+            </ol>
+          </div>
+        </section>
+      </header>
+
+      <main class="app-main" id="workspace">
+        <section class="workspace-grid">
+          <article class="workspace-card workspace-card-strong">
+            <div class="workspace-header">
+              <div>
+                <p class="eyebrow">Controls</p>
+                <h2>Launch an incident</h2>
+              </div>
+              <span class="meta">Scenario runner</span>
+            </div>
+
+            <div class="control-grid">
+              <label class="control-field">
+                <span>Scenario</span>
+                <select id="sandbox-scenario">
+                  <option value="database">Database outage</option>
+                  <option value="memory">Memory spike</option>
+                  <option value="deploy">Bad deploy</option>
+                  <option value="recovery">Recovered alert</option>
+                </select>
+              </label>
+
+              <label class="control-field">
+                <span>Severity</span>
+                <select id="sandbox-severity">
+                  <option value="auto">Use scenario default</option>
+                  <option value="critical">Critical</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                </select>
+              </label>
+
+              <label class="control-field">
+                <span>Alert volume</span>
+                <select id="sandbox-volume">
+                  <option value="auto">Use scenario default</option>
+                  <option value="single">Single alert</option>
+                  <option value="repeat">Repeated alerts</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="sandbox-actions">
+              <button class="primary-button button-reset" id="run-sandbox" type="button">Run Analysis</button>
+              <button class="secondary-button button-reset" id="open-workflow" type="button">Jump To Incident View</button>
+            </div>
+
+            <div class="status-grid">
+              <div class="status-card">
+                <span class="output-label">Storage</span>
+                <strong id="storage-label">Checking backend status...</strong>
+                <p id="storage-detail">Waiting for API health check.</p>
+              </div>
+              <div class="status-card">
+                <span class="output-label">Latest incident</span>
+                <strong id="latest-incident-id">Not created yet</strong>
+                <p id="latest-incident-meta">Run a scenario to create an incident record.</p>
+              </div>
+              <div class="status-card">
+                <span class="output-label">Owner</span>
+                <strong id="latest-owner-team">Not assigned yet</strong>
+                <p id="latest-escalation-meta">Escalation target will appear after analysis.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="workspace-card workspace-card-accent">
+            <div class="workspace-header">
+              <div>
+                <p class="eyebrow">Result</p>
+                <h2 id="sandbox-headline">Ready to run a live incident workflow</h2>
+              </div>
+              <span class="meta" id="sandbox-status">Awaiting input</span>
+            </div>
+
+            <div class="output-card">
+              <div class="output-block">
+                <span class="output-label">What happened</span>
+                <strong id="sandbox-summary">
+                  Pick a scenario and run it to see the incident intake, reasoning path, escalation, and output.
+                </strong>
+              </div>
+              <div class="output-block">
+                <span class="output-label">Recommended next action</span>
+                <strong id="sandbox-outcome">A clear next action, supporting evidence, and escalation target.</strong>
+              </div>
+            </div>
+
+            <div class="sandbox-log" id="sandbox-log">
+              <div class="sandbox-log-line active">Waiting for a simulated alert...</div>
+            </div>
+          </article>
+        </section>
+
+        <section class="workspace-grid workspace-grid-secondary">
+          <article class="workspace-card">
+            <div class="workspace-header">
+              <div>
+                <p class="eyebrow">Recent Runs</p>
+                <h2>Stored incidents</h2>
+              </div>
+              <span class="meta">Latest activity</span>
+            </div>
+            <div class="recent-run-list" id="recent-runs">
+              <div class="recent-run-empty">No runs recorded yet.</div>
+            </div>
+          </article>
+
+          <article class="workspace-card" id="interactive-demo">
+            <div class="workspace-header">
+              <div>
+                <p class="eyebrow">Incident View</p>
+                <h2 id="scenario-title">Payment-service latency alert</h2>
+              </div>
+              <span class="badge critical" id="scenario-severity">Critical</span>
+            </div>
+
+            <div class="scenario-picker" id="scenario-picker" role="tablist" aria-label="Incident workflows">
+              <button class="scenario-chip active" data-scenario="database" role="tab" aria-selected="true">
+                Database outage
+              </button>
+              <button class="scenario-chip" data-scenario="memory" role="tab" aria-selected="false">
+                Memory spike
+              </button>
+              <button class="scenario-chip" data-scenario="deploy" role="tab" aria-selected="false">
+                Bad deploy
+              </button>
+              <button class="scenario-chip" data-scenario="recovery" role="tab" aria-selected="false">
+                Recovered alert
+              </button>
+            </div>
+
+            <div class="incident-view-grid">
+              <div class="incident-pane">
+                <div class="mini-metrics">
+                  <div class="mini-metric">
+                    <span>Source</span>
+                    <strong id="scenario-source">CloudWatch</strong>
+                  </div>
+                  <div class="mini-metric">
+                    <span>Repeat alerts</span>
+                    <strong id="scenario-repeats">4x</strong>
+                  </div>
+                  <div class="mini-metric">
+                    <span>Escalation</span>
+                    <strong id="scenario-priority">Immediate</strong>
+                  </div>
+                </div>
+
+                <p class="scenario-summary" id="scenario-summary">
+                  Latency alarms are firing repeatedly for a tier-1 payment dependency during checkout traffic spikes.
+                </p>
+
+                <div class="stepper" id="scenario-steps"></div>
+              </div>
+
+              <div class="incident-pane incident-pane-accent">
+                <div class="workspace-subheader">
+                  <div>
+                    <span class="output-label">Operator output</span>
+                    <h3 id="output-headline">Page payments-oncall and validate database readiness.</h3>
+                  </div>
+                  <span class="meta" id="output-confidence">Confidence 0.86</span>
+                </div>
+
+                <div class="output-card">
+                  <div class="output-block">
+                    <span class="output-label">Likely issue</span>
+                    <strong id="output-issue">Database connection errors</strong>
+                  </div>
+                  <div class="output-block">
+                    <span class="output-label">Root cause hint</span>
+                    <strong id="output-root-cause">DB pod not ready or crashed after elevated load.</strong>
+                  </div>
+                  <div class="output-block">
+                    <span class="output-label">Recommended action</span>
+                    <strong id="output-action">Page payments-oncall and validate DB readiness before rollback.</strong>
+                  </div>
+                </div>
+
+                <div class="evidence-grid">
+                  <div class="evidence-card">
+                    <h4>Why the system thinks this</h4>
+                    <ul class="bullet-list" id="output-evidence"></ul>
+                  </div>
+                  <div class="evidence-card">
+                    <h4>What the operator can do next</h4>
+                    <ul class="bullet-list" id="output-next-steps"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -2,6 +2,7 @@
 !api
 !api/**
 !index.html
+!try-product.html
 !vercel_demo
 !vercel_demo/**
 !package.json
