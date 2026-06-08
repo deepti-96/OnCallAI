@@ -1,23 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/vercel_demo/index.html"
-    },
-    {
-      "source": "/styles.css",
-      "destination": "/vercel_demo/styles.css"
-    },
-    {
-      "source": "/script.js",
-      "destination": "/vercel_demo/script.js"
-    },
-    {
-      "source": "/scenarios.js",
-      "destination": "/vercel_demo/scenarios.js"
-    }
-  ]
+  "cleanUrls": true
 }

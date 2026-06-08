@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OnCallAI | AI Incident Triage Workspace</title>
+    <meta
+      name="description"
+      content="OnCallAI is an AI-assisted incident triage workspace for DevOps and SRE teams. It ingests alerts, analyzes context, recommends escalation, and produces explainable incident reports."
+    />
+    <link rel="stylesheet" href="/vercel_demo/styles.css" />
+    <script type="module" defer src="/vercel_demo/script.js"></script>
+  </head>
+  <body>
+    <div class="bg-orb orb-one"></div>
+    <div class="bg-orb orb-two"></div>
+    <div class="bg-grid"></div>
+    <div class="page-shell">
+      <header class="hero">
+        <nav class="topbar">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 64 64" role="img">
+                <defs>
+                  <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#FFB86B"></stop>
+                    <stop offset="55%" stop-color="#F97316"></stop>
+                    <stop offset="100%" stop-color="#F43F5E"></stop>
+                  </linearGradient>
+                </defs>
+                <rect x="6" y="6" width="52" height="52" rx="18" fill="url(#brandGradient)"></rect>
+                <path
+                  d="M20 39.5L28.5 24L35 34L43.5 20.5"
+                  fill="none"
+                  stroke="#FFF8F1"
+                  stroke-width="5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+                <circle cx="43.5" cy="20.5" r="4.5" fill="#FFF8F1"></circle>
+              </svg>
+            </div>
+            <div class="brand-copy">
+              <span class="brand-name">OnCallAI</span>
+              <span class="brand-tag">Incident Triage Workspace</span>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <span class="topbar-pill">Early Access</span>
+            <a class="topbar-cta" href="#try-product">Try Product</a>
+            <a class="ghost-link" href="https://github.com/deepti-96/OnCallAI" target="_blank" rel="noreferrer">
+              View Repository
+            </a>
+          </div>
+        </nav>
+
+        <div class="hero-grid">
+          <section class="hero-copy">
+            <div class="hero-glow"></div>
+            <p class="eyebrow">AI Incident Triage Workspace</p>
+            <h1>From alert noise to a usable incident narrative in one place.</h1>
+            <p class="hero-text">
+              OnCallAI gives DevOps and SRE teams a single workspace for ingesting alerts, reviewing evidence,
+              understanding likely root cause, and taking the right next action with confidence.
+            </p>
+
+            <div class="hero-actions">
+              <a class="primary-button" href="#try-product">Try Product</a>
+              <a class="primary-button" href="#interactive-demo">Explore The Product</a>
+              <a class="secondary-button" href="#sample-report">See Incident Output</a>
+            </div>
+
+            <div class="signal-row">
+              <div class="signal-card">
+                <span class="signal-label">Use case</span>
+                <strong>First-response incident triage</strong>
+              </div>
+              <div class="signal-card">
+                <span class="signal-label">Experience</span>
+                <strong>Explainable operator workflow</strong>
+              </div>
+            </div>
+          </section>
+
+          <aside class="hero-panel">
+            <div class="panel-window">
+              <div class="panel-header software-header">
+                <div class="header-tabs">
+                  <span class="tab active">Incident</span>
+                  <span class="tab">Timeline</span>
+                  <span class="tab">Report</span>
+                </div>
+                <span class="meta">Operator workspace</span>
+              </div>
+              <div class="incident-card critical">
+                <div class="incident-title-row">
+                  <span class="badge critical">Critical</span>
+                  <span class="meta">payment-service</span>
+                </div>
+                <h3>Latency alert firing repeatedly</h3>
+                <p class="incident-subtext">CloudWatch alarm ingested, deduplicated, escalated, and summarized.</p>
+                <ul class="stack-list">
+                  <li><span>Likely issue</span><strong>Database connection errors</strong></li>
+                  <li><span>Escalation</span><strong>Page payments-oncall</strong></li>
+                  <li><span>Evidence</span><strong>Retrieved examples + matched logs</strong></li>
+                </ul>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </header>
+
+      <main>
+        <section class="section" id="why">
+          <div class="section-heading">
+            <p class="eyebrow">Why it matters</p>
+            <h2>On-call teams lose time switching across alerts, logs, dashboards, and tribal knowledge.</h2>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <h3>Alert intake</h3>
+              <p>Supports CloudWatch-style payloads, simulated alerts, and deduplicated repeated alarms.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Explainable RCA</h3>
+              <p>Combines heuristic detection with retrieval-backed context to produce grounded findings.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Escalation guidance</h3>
+              <p>Recommends who should be paged and why, based on severity, age, service tier, and repeat volume.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Operator workspace</h3>
+              <p>Surfaces queue health, incident history, timeline steps, reports, and service context in one UI.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section section-alt" id="demo-flow">
+          <div class="section-heading">
+            <p class="eyebrow">Workflow</p>
+            <h2>How incidents move from alert ingestion to operator action.</h2>
+          </div>
+          <div class="timeline">
+            <div class="timeline-step">
+              <span class="timeline-number">1</span>
+              <div>
+                <h3>Ingest alert</h3>
+                <p>CloudWatch-style alarms are normalized and stored as incidents with alert metadata.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-number">2</span>
+              <div>
+                <h3>Collect context</h3>
+                <p>The system pulls relevant logs and service enrichment such as owners, runbooks, and dashboards.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-number">3</span>
+              <div>
+                <h3>Analyze evidence</h3>
+                <p>Heuristic rules and retrieved examples produce likely issue, root cause hints, and mitigations.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-number">4</span>
+              <div>
+                <h3>Recommend escalation</h3>
+                <p>The app computes priority, paging target, and suggested next action for first responders.</p>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-number">5</span>
+              <div>
+                <h3>Present the incident</h3>
+                <p>A transparent dashboard shows queue signals, agent timeline, report output, and raw evidence.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section try-product-section" id="try-product">
+          <div class="section-heading">
+            <p class="eyebrow">Try Product</p>
+            <h2>Test how the workspace behaves in a live incident scenario.</h2>
+            <p class="section-copy">
+              Choose a service pattern, adjust severity, and run a simulated incident. This gives you a product-like
+              testing flow you can click through during a live conversation.
+            </p>
+          </div>
+
+          <div class="try-grid">
+            <article class="demo-panel sandbox-panel">
+              <div class="demo-panel-header">
+                <div>
+                  <p class="eyebrow">Simulation Controls</p>
+                  <h3>Launch a scenario</h3>
+                </div>
+                <span class="meta">Interactive testing mode</span>
+              </div>
+
+              <div class="control-grid">
+                <label class="control-field">
+                  <span>Scenario</span>
+                  <select id="sandbox-scenario">
+                    <option value="database">Database outage</option>
+                    <option value="memory">Memory spike</option>
+                    <option value="deploy">Bad deploy</option>
+                    <option value="recovery">Recovered alert</option>
+                  </select>
+                </label>
+
+                <label class="control-field">
+                  <span>Severity</span>
+                  <select id="sandbox-severity">
+                    <option value="auto">Use scenario default</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                  </select>
+                </label>
+
+                <label class="control-field">
+                  <span>Alert volume</span>
+                  <select id="sandbox-volume">
+                    <option value="auto">Use scenario default</option>
+                    <option value="single">Single alert</option>
+                    <option value="repeat">Repeated alerts</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="sandbox-actions">
+                <button class="primary-button button-reset" id="run-sandbox" type="button">Run Analysis</button>
+                <button class="secondary-button button-reset" id="open-workflow" type="button">Show In Workspace</button>
+              </div>
+            </article>
+
+            <article class="demo-panel demo-panel-accent sandbox-preview">
+              <div class="demo-panel-header">
+                <div>
+                  <p class="eyebrow">Live Preview</p>
+                  <h3 id="sandbox-headline">Ready to simulate a product workflow</h3>
+                </div>
+                <span class="meta" id="sandbox-status">Awaiting input</span>
+              </div>
+
+              <div class="output-card">
+                <div class="output-block">
+                  <span class="output-label">What will happen</span>
+                  <strong id="sandbox-summary">
+                    Pick a scenario and run it to see the incident intake, reasoning path, escalation, and output.
+                  </strong>
+                </div>
+                <div class="output-block">
+                  <span class="output-label">Expected operator outcome</span>
+                  <strong id="sandbox-outcome">A clear next action, supporting evidence, and escalation target.</strong>
+                </div>
+              </div>
+
+              <div class="storage-strip">
+                <div>
+                  <span class="output-label">Storage mode</span>
+                  <strong id="storage-label">Checking backend status...</strong>
+                </div>
+                <span class="meta" id="storage-detail">Waiting for API health check.</span>
+              </div>
+
+              <div class="sandbox-log" id="sandbox-log">
+                <div class="sandbox-log-line active">Waiting for a simulated alert...</div>
+              </div>
+
+              <div class="recent-runs">
+                <div class="demo-panel-header compact">
+                  <div>
+                    <p class="eyebrow">Recent Runs</p>
+                    <h3>Stored incidents from this hosted app</h3>
+                  </div>
+                </div>
+                <div class="recent-run-list" id="recent-runs">
+                  <div class="recent-run-empty">No runs recorded yet.</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section interactive-section" id="interactive-demo">
+          <div class="section-heading">
+            <p class="eyebrow">Product Walkthrough</p>
+            <h2>Explore how OnCallAI responds across different incident patterns.</h2>
+            <p class="section-copy">
+              Switch between common incident patterns to see how the workspace changes the alert view, processing
+              stages, escalation decision, and final incident summary.
+            </p>
+          </div>
+
+          <div class="scenario-picker" id="scenario-picker" role="tablist" aria-label="Incident workflows">
+            <button class="scenario-chip active" data-scenario="database" role="tab" aria-selected="true">
+              Database outage
+            </button>
+            <button class="scenario-chip" data-scenario="memory" role="tab" aria-selected="false">
+              Memory spike
+            </button>
+            <button class="scenario-chip" data-scenario="deploy" role="tab" aria-selected="false">
+              Bad deploy
+            </button>
+            <button class="scenario-chip" data-scenario="recovery" role="tab" aria-selected="false">
+              Recovered alert
+            </button>
+          </div>
+
+          <div class="demo-grid">
+            <article class="demo-panel">
+              <div class="demo-panel-header">
+                <div>
+                  <p class="eyebrow">Incident Intake</p>
+                  <h3 id="scenario-title">Payment-service latency alert</h3>
+                </div>
+                <span class="badge critical" id="scenario-severity">Critical</span>
+              </div>
+
+              <div class="mini-metrics">
+                <div class="mini-metric">
+                  <span>Source</span>
+                  <strong id="scenario-source">CloudWatch</strong>
+                </div>
+                <div class="mini-metric">
+                  <span>Repeat alerts</span>
+                  <strong id="scenario-repeats">4x</strong>
+                </div>
+                <div class="mini-metric">
+                  <span>Escalation</span>
+                  <strong id="scenario-priority">Immediate</strong>
+                </div>
+              </div>
+
+              <p class="scenario-summary" id="scenario-summary">
+                Latency alarms are firing repeatedly for a tier-1 payment dependency during checkout traffic spikes.
+              </p>
+
+              <div class="stepper" id="scenario-steps"></div>
+            </article>
+
+            <article class="demo-panel demo-panel-accent">
+              <div class="demo-panel-header">
+                <div>
+                  <p class="eyebrow">Incident Output</p>
+                  <h3 id="output-headline">Page payments-oncall and validate database readiness.</h3>
+                </div>
+                <span class="meta" id="output-confidence">Confidence 0.86</span>
+              </div>
+
+              <div class="output-card">
+                <div class="output-block">
+                  <span class="output-label">Likely issue</span>
+                  <strong id="output-issue">Database connection errors</strong>
+                </div>
+                <div class="output-block">
+                  <span class="output-label">Root cause hint</span>
+                  <strong id="output-root-cause">DB pod not ready or crashed after elevated load.</strong>
+                </div>
+                <div class="output-block">
+                  <span class="output-label">Recommended action</span>
+                  <strong id="output-action">Page payments-oncall and validate DB readiness before rollback.</strong>
+                </div>
+              </div>
+
+              <div class="evidence-grid">
+                <div class="evidence-card">
+                  <h4>Why the system thinks this</h4>
+                  <ul class="bullet-list" id="output-evidence"></ul>
+                </div>
+                <div class="evidence-card">
+                  <h4>What the operator can do next</h4>
+                  <ul class="bullet-list" id="output-next-steps"></ul>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="sample-report">
+          <div class="section-heading">
+            <p class="eyebrow">Incident Report</p>
+            <h2>Readable output for fast first-response decisions.</h2>
+          </div>
+          <div class="report-grid">
+            <article class="report-card">
+              <div class="report-header">
+                <span class="badge priority">Immediate</span>
+                <span class="meta">Incident report</span>
+              </div>
+              <h3>Payment-service latency incident</h3>
+              <p><strong>Likely issue:</strong> Database connection errors</p>
+              <p><strong>Likely root cause:</strong> DB pod not ready or crashed after elevated load.</p>
+              <p><strong>Recommended next action:</strong> Page payments-oncall and validate DB readiness before rollback.</p>
+            </article>
+
+            <article class="report-card muted">
+              <h3>Why the system thinks this</h3>
+              <ul class="bullet-list">
+                <li>Matched log signals such as <code>ECONNREFUSED</code>.</li>
+                <li>Retrieved similar prior incident patterns from the bundled corpus.</li>
+                <li>Detected repeated alerts and tier-1 service ownership.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section section-alt">
+          <div class="section-heading">
+            <p class="eyebrow">Positioning</p>
+            <h2>Built as a strong prototype for internal operations tooling.</h2>
+          </div>
+          <div class="position-grid">
+            <div class="position-card">
+              <h3>Designed for on-call teams</h3>
+              <p>Clear user problem, visible workflow, explainable output, and practical operator value in one interface.</p>
+            </div>
+            <div class="position-card">
+              <h3>Built for trustworthy automation</h3>
+              <p>Transparent steps, retrieval-assisted analysis, and explicit escalation guidance make the system easier to review and adopt.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

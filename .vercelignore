@@ -1,6 +1,7 @@
 /*
 !api
 !api/**
+!index.html
 !vercel_demo
 !vercel_demo/**
 !package.json
