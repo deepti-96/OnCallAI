@@ -1,9 +1,13 @@
 .env
 .venv/
+.venv312/
 __pycache__/
 *.pyc
 dev.db
+.local/
+.DS_Store
 app/reports/*
 .chromadb/*
 app/logs/
 app/db/*.db
+.streamlit/secrets.toml

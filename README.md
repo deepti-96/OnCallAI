@@ -4,6 +4,8 @@ OnCallAI is an AI-powered incident triage and root cause analysis prototype for 
 
 This project is designed as an explainable, hackathon-friendly foundation for building an autonomous on-call assistant. The current implementation focuses on local execution, deterministic workflows, and a clear architecture that can be extended with real alert sources, richer retrieval, and production-grade orchestration.
 
+The repository now also includes a Vercel-friendly web experience with serverless API routes and a free-tier durable storage path for live hosted demos.
+
 ## Why OnCallAI
 
 Modern on-call teams lose time switching between alerts, logs, dashboards, and tribal knowledge. OnCallAI aims to shorten that path by centralizing the first-response workflow:
@@ -26,6 +28,8 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 - Downloadable incident reports in both JSON and Markdown formats.
 - Streamlit dashboard for filtering incidents, reviewing agent timelines, inspecting generated reports, and triaging stale or noisy alerts.
 - Environment-based configuration for polling, models, logging mode, and optional cloud integrations.
+- Vercel-compatible product site with interactive incident testing through serverless API routes.
+- Free-tier durable storage option through Supabase Postgres for hosted scenario runs.
 
 ## Architecture
 
@@ -49,6 +53,9 @@ OnCallAI follows a simple agent-inspired pipeline:
 - [`app/agents/analyst_agent.py`](app/agents/analyst_agent.py): Retrieval-assisted analysis and mitigation generation.
 - [`app/agents/supervisor.py`](app/agents/supervisor.py): Report compilation and workflow completion.
 - [`ui/streamlit_app.py`](ui/streamlit_app.py): Operator-facing incident dashboard.
+- [`api/`](api): Vercel serverless functions for hosted scenario execution and incident retrieval.
+- [`vercel_demo/`](vercel_demo): Product-style web frontend for the Vercel deployment path.
+- [`supabase/schema.sql`](supabase/schema.sql): Durable hosted schema for the free-tier Postgres setup.
 - [`app/db/schema.sql`](app/db/schema.sql): SQLite schema for incidents, agent steps, and reports.
 - [`tests/`](tests): Lightweight unit and flow tests using `unittest`.
 
@@ -65,8 +72,11 @@ OnCallAI/
 │   └── runner.py       # Main incident processing loop
 ├── rag_pipeline/       # Experimental retrieval pipeline components
 ├── scripts/            # Seeding and local setup helpers
+├── api/                # Vercel serverless functions
+├── supabase/           # Hosted Postgres schema for durable storage
 ├── tests/              # Lightweight unit and incident-flow tests
 ├── ui/                 # Streamlit application
+├── vercel_demo/        # Vercel-friendly product website
 ├── Makefile
 ├── requirements.txt
 └── README.md
@@ -81,6 +91,8 @@ OnCallAI/
 - LangChain and LangGraph dependencies for future orchestration expansion
 - Chroma / FAISS / Pinecone libraries for retrieval experimentation
 - Optional OpenAI and AWS integrations via environment configuration
+- Vercel serverless functions for the hosted web app
+- Supabase Postgres on the free tier for durable hosted incident storage
 
 ## Getting Started
 
@@ -161,6 +173,45 @@ make ui
 make test
 ```
 
+## Free-Tier Hosted Stack
+
+The simplest free hosted version of OnCallAI uses:
+
+- Vercel Hobby for the website and serverless API routes
+- Supabase Free for durable Postgres storage
+
+This is the safest path if you want a public product site and a live scenario flow without relying on SQLite in a deployed container.
+
+### Hosted architecture
+
+1. The frontend served from `vercel_demo/` runs on Vercel.
+2. The `Try Product` flow calls Vercel API routes in `api/`.
+3. Those API routes create incidents, steps, and reports for demo scenarios.
+4. If Supabase credentials are present, the data is stored durably in Postgres.
+5. If credentials are missing, the app falls back to local preview storage for local development only.
+
+### Supabase setup
+
+1. Create a free Supabase project.
+2. Open the SQL editor.
+3. Run the schema in [`supabase/schema.sql`](supabase/schema.sql).
+4. In Vercel project settings, add:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+5. Redeploy the Vercel app.
+
+After that, live scenario runs from the website are durably stored and can be reloaded in the hosted UI.
+
+### Vercel setup
+
+1. Import the GitHub repo into Vercel.
+2. Keep the framework preset as `Other`.
+3. Set the root directory to the repository root.
+4. Add the Supabase environment variables above.
+5. Deploy.
+
+The site root is handled by [`vercel.json`](vercel.json), which serves the product UI from [`vercel_demo/index.html`](vercel_demo/index.html) and keeps `/api/*` available for the serverless backend.
+
 ## Make Targets
 
 ```bash
@@ -193,6 +244,8 @@ The project is configured primarily through environment variables.
 
 - `DB_URL`: SQLAlchemy-style database URL for external integrations
 - `DB_FILE`: SQLite file used by the local DAL, defaults to `dev.db`
+- `SUPABASE_URL`: Supabase project URL for hosted durable storage
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase server-side key for Vercel API writes
 
 ### Logs and Cloud
 
@@ -219,6 +272,7 @@ The current demo path is intentionally simple and transparent:
 - Agent steps are written back to the database as the incident is processed.
 - Reports are stored in structured JSON plus Markdown.
 - The UI reads directly from the database and lets you inspect repeat-alert triage signals, escalation guidance, alert metadata, timelines, payloads, and final reports.
+- The Vercel product site can also run scenarios end to end and persist them in Supabase when deployed with the free-tier hosted stack.
 
 This makes the project easy to demo, debug, and extend locally.
 
@@ -231,6 +285,7 @@ This repository is best understood as a strong prototype rather than a productio
 - CloudWatch support is AWS-focused today; broader provider coverage and richer historical correlation can be extended further.
 - Authentication, authorization, retries, and multi-tenant concerns are not implemented.
 - The UI is optimized for local inspection and demos rather than operational scale.
+- The Vercel-hosted path is intentionally scenario-driven today; it demonstrates the workflow cleanly, but it does not yet replace the richer local Streamlit operator console.
 
 ## Extension Ideas
 

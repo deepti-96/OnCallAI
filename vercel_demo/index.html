@@ -3,36 +3,71 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OnCallAI | AI Incident Triage Copilot</title>
+    <title>OnCallAI | AI Incident Triage Workspace</title>
     <meta
       name="description"
-      content="OnCallAI is an AI-assisted incident triage copilot for DevOps and SRE teams. It ingests alerts, analyzes context, recommends escalation, and produces explainable incident reports."
+      content="OnCallAI is an AI-assisted incident triage workspace for DevOps and SRE teams. It ingests alerts, analyzes context, recommends escalation, and produces explainable incident reports."
     />
     <link rel="stylesheet" href="./styles.css" />
-    <script defer src="./script.js"></script>
+    <script type="module" defer src="./script.js"></script>
   </head>
   <body>
+    <div class="bg-orb orb-one"></div>
+    <div class="bg-orb orb-two"></div>
+    <div class="bg-grid"></div>
     <div class="page-shell">
       <header class="hero">
         <nav class="topbar">
-          <div class="brand">OnCallAI</div>
-          <a class="ghost-link" href="https://github.com/deepti-96/OnCallAI" target="_blank" rel="noreferrer">
-            View Repository
-          </a>
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 64 64" role="img">
+                <defs>
+                  <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#FFB86B"></stop>
+                    <stop offset="55%" stop-color="#F97316"></stop>
+                    <stop offset="100%" stop-color="#F43F5E"></stop>
+                  </linearGradient>
+                </defs>
+                <rect x="6" y="6" width="52" height="52" rx="18" fill="url(#brandGradient)"></rect>
+                <path
+                  d="M20 39.5L28.5 24L35 34L43.5 20.5"
+                  fill="none"
+                  stroke="#FFF8F1"
+                  stroke-width="5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+                <circle cx="43.5" cy="20.5" r="4.5" fill="#FFF8F1"></circle>
+              </svg>
+            </div>
+            <div class="brand-copy">
+              <span class="brand-name">OnCallAI</span>
+              <span class="brand-tag">Incident Triage Workspace</span>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <span class="topbar-pill">Early Access</span>
+            <a class="topbar-cta" href="#try-product">Try Product</a>
+            <a class="ghost-link" href="https://github.com/deepti-96/OnCallAI" target="_blank" rel="noreferrer">
+              View Repository
+            </a>
+          </div>
         </nav>
 
         <div class="hero-grid">
           <section class="hero-copy">
-            <p class="eyebrow">AI Incident Triage Copilot</p>
+            <div class="hero-glow"></div>
+            <p class="eyebrow">AI Incident Triage Workspace</p>
             <h1>From alert noise to a usable incident narrative in one place.</h1>
             <p class="hero-text">
-              OnCallAI is a prototype for DevOps and SRE teams that ingests alerts, analyzes logs and service context,
-              recommends escalation, and generates explainable incident reports.
+              OnCallAI gives DevOps and SRE teams a single workspace for ingesting alerts, reviewing evidence,
+              understanding likely root cause, and taking the right next action with confidence.
             </p>
 
             <div class="hero-actions">
-              <a class="primary-button" href="#interactive-demo">Launch Scenario Demo</a>
-              <a class="secondary-button" href="#sample-report">View Sample Output</a>
+              <a class="primary-button" href="#try-product">Try Product</a>
+              <a class="primary-button" href="#interactive-demo">Explore The Product</a>
+              <a class="secondary-button" href="#sample-report">See Incident Output</a>
             </div>
 
             <div class="signal-row">
@@ -42,17 +77,20 @@
               </div>
               <div class="signal-card">
                 <span class="signal-label">Experience</span>
-                <strong>Explainable, operator-friendly workflow</strong>
+                <strong>Explainable operator workflow</strong>
               </div>
             </div>
           </section>
 
           <aside class="hero-panel">
             <div class="panel-window">
-              <div class="panel-header">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
+              <div class="panel-header software-header">
+                <div class="header-tabs">
+                  <span class="tab active">Incident</span>
+                  <span class="tab">Timeline</span>
+                  <span class="tab">Report</span>
+                </div>
+                <span class="meta">Operator workspace</span>
               </div>
               <div class="incident-card critical">
                 <div class="incident-title-row">
@@ -100,8 +138,8 @@
 
         <section class="section section-alt" id="demo-flow">
           <div class="section-heading">
-            <p class="eyebrow">Demo flow</p>
-            <h2>A simple, reliable workflow for walking through the product live.</h2>
+            <p class="eyebrow">Workflow</p>
+            <h2>How incidents move from alert ingestion to operator action.</h2>
           </div>
           <div class="timeline">
             <div class="timeline-step">
@@ -142,17 +180,123 @@
           </div>
         </section>
 
-        <section class="section interactive-section" id="interactive-demo">
+        <section class="section try-product-section" id="try-product">
           <div class="section-heading">
-            <p class="eyebrow">Scenario Demo</p>
-            <h2>Walk through how OnCallAI responds in a real incident scenario.</h2>
+            <p class="eyebrow">Try Product</p>
+            <h2>Test how the workspace behaves in a live incident scenario.</h2>
             <p class="section-copy">
-              Pick a situation below and the page will simulate what the operator sees: the alert, the workflow stages,
-              the escalation decision, and the final incident summary.
+              Choose a service pattern, adjust severity, and run a simulated incident. This gives you a product-like
+              testing flow you can click through during a live conversation.
             </p>
           </div>
 
-          <div class="scenario-picker" id="scenario-picker" role="tablist" aria-label="Incident scenarios">
+          <div class="try-grid">
+            <article class="demo-panel sandbox-panel">
+              <div class="demo-panel-header">
+                <div>
+                  <p class="eyebrow">Simulation Controls</p>
+                  <h3>Launch a scenario</h3>
+                </div>
+                <span class="meta">Interactive testing mode</span>
+              </div>
+
+              <div class="control-grid">
+                <label class="control-field">
+                  <span>Scenario</span>
+                  <select id="sandbox-scenario">
+                    <option value="database">Database outage</option>
+                    <option value="memory">Memory spike</option>
+                    <option value="deploy">Bad deploy</option>
+                    <option value="recovery">Recovered alert</option>
+                  </select>
+                </label>
+
+                <label class="control-field">
+                  <span>Severity</span>
+                  <select id="sandbox-severity">
+                    <option value="auto">Use scenario default</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                  </select>
+                </label>
+
+                <label class="control-field">
+                  <span>Alert volume</span>
+                  <select id="sandbox-volume">
+                    <option value="auto">Use scenario default</option>
+                    <option value="single">Single alert</option>
+                    <option value="repeat">Repeated alerts</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="sandbox-actions">
+                <button class="primary-button button-reset" id="run-sandbox" type="button">Run Analysis</button>
+                <button class="secondary-button button-reset" id="open-workflow" type="button">Show In Workspace</button>
+              </div>
+            </article>
+
+            <article class="demo-panel demo-panel-accent sandbox-preview">
+              <div class="demo-panel-header">
+                <div>
+                  <p class="eyebrow">Live Preview</p>
+                  <h3 id="sandbox-headline">Ready to simulate a product workflow</h3>
+                </div>
+                <span class="meta" id="sandbox-status">Awaiting input</span>
+              </div>
+
+              <div class="output-card">
+                <div class="output-block">
+                  <span class="output-label">What will happen</span>
+                  <strong id="sandbox-summary">
+                    Pick a scenario and run it to see the incident intake, reasoning path, escalation, and output.
+                  </strong>
+                </div>
+                <div class="output-block">
+                  <span class="output-label">Expected operator outcome</span>
+                  <strong id="sandbox-outcome">A clear next action, supporting evidence, and escalation target.</strong>
+                </div>
+              </div>
+
+              <div class="storage-strip">
+                <div>
+                  <span class="output-label">Storage mode</span>
+                  <strong id="storage-label">Checking backend status...</strong>
+                </div>
+                <span class="meta" id="storage-detail">Waiting for API health check.</span>
+              </div>
+
+              <div class="sandbox-log" id="sandbox-log">
+                <div class="sandbox-log-line active">Waiting for a simulated alert...</div>
+              </div>
+
+              <div class="recent-runs">
+                <div class="demo-panel-header compact">
+                  <div>
+                    <p class="eyebrow">Recent Runs</p>
+                    <h3>Stored incidents from this hosted app</h3>
+                  </div>
+                </div>
+                <div class="recent-run-list" id="recent-runs">
+                  <div class="recent-run-empty">No runs recorded yet.</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section interactive-section" id="interactive-demo">
+          <div class="section-heading">
+            <p class="eyebrow">Product Walkthrough</p>
+            <h2>Explore how OnCallAI responds across different incident patterns.</h2>
+            <p class="section-copy">
+              Switch between common incident patterns to see how the workspace changes the alert view, processing
+              stages, escalation decision, and final incident summary.
+            </p>
+          </div>
+
+          <div class="scenario-picker" id="scenario-picker" role="tablist" aria-label="Incident workflows">
             <button class="scenario-chip active" data-scenario="database" role="tab" aria-selected="true">
               Database outage
             </button>
@@ -171,7 +315,7 @@
             <article class="demo-panel">
               <div class="demo-panel-header">
                 <div>
-                  <p class="eyebrow">Incoming alert</p>
+                  <p class="eyebrow">Incident Intake</p>
                   <h3 id="scenario-title">Payment-service latency alert</h3>
                 </div>
                 <span class="badge critical" id="scenario-severity">Critical</span>
@@ -202,7 +346,7 @@
             <article class="demo-panel demo-panel-accent">
               <div class="demo-panel-header">
                 <div>
-                  <p class="eyebrow">Operator output</p>
+                  <p class="eyebrow">Incident Output</p>
                   <h3 id="output-headline">Page payments-oncall and validate database readiness.</h3>
                 </div>
                 <span class="meta" id="output-confidence">Confidence 0.86</span>
@@ -239,8 +383,8 @@
 
         <section class="section" id="sample-report">
           <div class="section-heading">
-            <p class="eyebrow">Sample output</p>
-            <h2>What a human-friendly incident summary looks like.</h2>
+            <p class="eyebrow">Incident Report</p>
+            <h2>Readable output for fast first-response decisions.</h2>
           </div>
           <div class="report-grid">
             <article class="report-card">
@@ -272,12 +416,12 @@
           </div>
           <div class="position-grid">
             <div class="position-card">
-              <h3>Good fit for demo conversations</h3>
-              <p>Clear user problem, visible workflow, explainable output, and practical operator value.</p>
+              <h3>Designed for on-call teams</h3>
+              <p>Clear user problem, visible workflow, explainable output, and practical operator value in one interface.</p>
             </div>
             <div class="position-card">
-              <h3>Honest current scope</h3>
-              <p>Prototype-grade reliability, local-first architecture, and retrieval-assisted analysis instead of a full production AI agent.</p>
+              <h3>Built for trustworthy automation</h3>
+              <p>Transparent steps, retrieval-assisted analysis, and explicit escalation guidance make the system easier to review and adopt.</p>
             </div>
           </div>
         </section>

@@ -1,0 +1,8 @@
+{
+  "name": "oncallai-vercel-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
