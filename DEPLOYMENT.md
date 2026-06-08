@@ -40,9 +40,12 @@ Reference file:
 1. Go to [Vercel](https://vercel.com/).
 2. Import the GitHub repository.
 3. Leave the framework preset as `Other`.
-4. Set the root directory to the repo root.
-5. Add the two Supabase environment variables.
-6. Deploy.
+4. Leave the build command blank.
+5. Set the root directory to the repo root.
+6. Add the two Supabase environment variables.
+7. Deploy.
+
+The repository includes a [`.vercelignore`](/Users/deepti.r.kumar/Desktop/Documents/Projects/OnCallAI/.vercelignore) allowlist so Vercel only uploads the hosted website and JavaScript API routes, not the local Python/Streamlit prototype files.
 
 ## 4. How the hosted app behaves
 
