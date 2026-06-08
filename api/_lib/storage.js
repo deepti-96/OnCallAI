@@ -50,7 +50,11 @@ async function supabaseFetch(endpoint, options = {}) {
   if (response.status === 204) {
     return null;
   }
-  return response.json();
+  const body = await response.text();
+  if (!body) {
+    return null;
+  }
+  return JSON.parse(body);
 }
 
 export function getStorageMode() {
