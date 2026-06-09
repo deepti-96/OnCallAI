@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { BUNDLED_LOGS } from "./bundled-demo-data.js";
 
 const LOG_ROOT = path.join(process.cwd(), "app", "logs");
 
@@ -28,19 +29,23 @@ function chooseLogFolder({ incident, scenario }) {
 
 async function readLogFiles(folder) {
   const targetDir = path.join(LOG_ROOT, folder);
-  const entries = await readdir(targetDir);
-  const files = entries.filter((entry) => entry.endsWith(".log")).sort().slice(0, 5);
-  const logs = await Promise.all(
-    files.map(async (fileName) => {
-      const absolutePath = path.join(targetDir, fileName);
-      const content = await readFile(absolutePath, "utf8");
-      return {
-        file_name: fileName,
-        snippet: content.slice(0, 5000),
-      };
-    }),
-  );
-  return logs;
+  try {
+    const entries = await readdir(targetDir);
+    const files = entries.filter((entry) => entry.endsWith(".log")).sort().slice(0, 5);
+    const logs = await Promise.all(
+      files.map(async (fileName) => {
+        const absolutePath = path.join(targetDir, fileName);
+        const content = await readFile(absolutePath, "utf8");
+        return {
+          file_name: fileName,
+          snippet: content.slice(0, 5000),
+        };
+      }),
+    );
+    return logs;
+  } catch (_error) {
+    return BUNDLED_LOGS[folder] || [];
+  }
 }
 
 export async function collectIncidentLogs({ incident, scenario }) {
