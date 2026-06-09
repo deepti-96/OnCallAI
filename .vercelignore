@@ -1,6 +1,10 @@
 /*
 !api
 !api/**
+!app/logs
+!app/logs/**
+!app/rag
+!app/rag/**
 !index.html
 !try-product.html
 !vercel_demo

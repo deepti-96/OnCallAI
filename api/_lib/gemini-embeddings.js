@@ -5,7 +5,7 @@ function getEmbeddingModel() {
 export function getEmbeddingConfig() {
   return {
     model: getEmbeddingModel(),
-    dimensions: Number(process.env.GEMINI_EMBEDDING_DIMENSIONS || 768),
+    dimensions: Number(process.env.GEMINI_EMBEDDING_DIMENSIONS || 3072),
   };
 }
 
