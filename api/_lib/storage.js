@@ -1,14 +1,16 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { getGeminiReasoningModel, hasGeminiReasoning } from "./gemini-client.js";
+import { getHostedRagSummary } from "./hosted-rag.js";
 
 const LOCAL_STORAGE_DIR = path.join(process.cwd(), ".local");
 const LOCAL_STORAGE_FILE = path.join(LOCAL_STORAGE_DIR, "vercel-runs.json");
 
-function hasSupabaseConfig() {
+export function hasSupabaseConfig() {
   return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
-function getHeaders(prefer = "") {
+export function getHeaders(prefer = "") {
   const headers = {
     apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
@@ -41,7 +43,7 @@ async function writeLocalState(state) {
   await writeFile(LOCAL_STORAGE_FILE, JSON.stringify(state, null, 2));
 }
 
-async function supabaseFetch(endpoint, options = {}) {
+export async function supabaseFetch(endpoint, options = {}) {
   const response = await fetch(`${getBaseUrl()}${endpoint}`, options);
   if (!response.ok) {
     const body = await response.text();
@@ -74,6 +76,23 @@ export function getStorageSummary() {
     mode: "local-preview",
     label: "Preview storage only",
     detail: "Runs are saved to a local JSON file until Supabase environment variables are added.",
+  };
+}
+
+export function getReasoningSummary() {
+  if (hasGeminiReasoning()) {
+    const rag = getHostedRagSummary();
+    return {
+      mode: "gemini-agent-graph",
+      label: "Log + retrieval agent graph",
+      detail: `The hosted workflow is using ${getGeminiReasoningModel()} with bundled logs and ${rag.mode === "supabase-vector-rag" ? "Supabase vector retrieval" : "bundled incident retrieval"} for triage and supervisor reasoning.`,
+    };
+  }
+
+  return {
+    mode: "rules-demo",
+    label: "Structured demo reasoning",
+    detail: "The workflow uses built-in incident logic until a Gemini API key is added.",
   };
 }
 

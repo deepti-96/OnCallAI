@@ -15,6 +15,7 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
   const occurrenceCount =
     volume === "auto" ? scenario.occurrenceCount : volume === "repeat" ? Math.max(3, scenario.occurrenceCount) : 1;
   const repeatLabel = occurrenceCount > 1 ? `${occurrenceCount} repeated alerts` : "Single alert";
+  const processedLabel = occurrenceCount > 1 ? "were" : "was";
   const incidentId = crypto.randomUUID();
   const status = scenario.alertState === "OK" ? "RESOLVED" : "DONE";
 
@@ -60,6 +61,8 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
       issue: scenario.issue,
       root_cause: scenario.rootCause,
       recommended_action: scenario.action,
+      impact: scenario.impact,
+      trigger: scenario.trigger,
       evidence: scenario.evidence,
       next_steps: scenario.nextSteps,
       summary: scenario.summary,
@@ -75,10 +78,11 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
       status === "RESOLVED"
         ? "Recovered incident recorded"
         : "Incident stored and ready for operator review",
-    summary: `${scenario.summary} ${repeatLabel} were processed through the live Vercel workflow.`,
+    summary: `${scenario.summary} ${repeatLabel} ${processedLabel} processed through the live incident workflow.`,
     outcome: scenario.action,
     log: [
       `Created incident ${incidentId} for ${scenario.service}.`,
+      `Observed signal: ${scenario.trigger}`,
       `Stored alert metadata with ${occurrenceCount} occurrence${occurrenceCount === 1 ? "" : "s"}.`,
       `Attached runbook, dashboard, and owner context for ${scenario.ownerTeam}.`,
       `Generated explainable report with escalation priority ${scenario.priority}.`,

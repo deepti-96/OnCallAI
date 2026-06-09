@@ -1,3 +1,4 @@
+import { runIncidentAgentGraph } from "./_lib/agent-graph.js";
 import { buildScenarioRun } from "./_lib/scenario-runner.js";
 import { getStorageSummary, listRecentIncidents, saveScenarioRun } from "./_lib/storage.js";
 
@@ -9,7 +10,8 @@ export default async function handler(req, res) {
 
   try {
     const payload = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
-    const run = buildScenarioRun(payload);
+    const baseRun = buildScenarioRun(payload);
+    const run = await runIncidentAgentGraph(baseRun);
     await saveScenarioRun(run);
     const incidents = await listRecentIncidents(8);
 
@@ -20,6 +22,8 @@ export default async function handler(req, res) {
       report: run.report.report,
       preview: run.preview,
       incidents,
+      analysis_mode: run.analysis_mode,
+      graph_trace: run.graph_trace || [],
     });
   } catch (error) {
     return res.status(500).json({

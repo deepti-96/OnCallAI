@@ -77,15 +77,15 @@
             <div class="workspace-header">
               <div>
                 <p class="eyebrow">Incident Input</p>
-                <h2>Launch an incident</h2>
-                <p class="panel-helper">Alert type, severity, and volume for the incident record.</p>
+                <h2>Launch an incident drill</h2>
+                <p class="panel-helper">Alert source, urgency, and repeat volume for the incident record.</p>
               </div>
-              <span class="meta">Scenario runner</span>
+              <span class="meta">Alert replay</span>
             </div>
 
             <div class="control-grid">
               <label class="control-field">
-                <span>Scenario</span>
+                <span>Alert type</span>
                 <select id="sandbox-scenario">
                   <option value="database">Database outage</option>
                   <option value="memory">Memory spike</option>
@@ -115,7 +115,7 @@
             </div>
 
             <div class="sandbox-actions">
-              <button class="primary-button button-reset" id="run-sandbox" type="button">Run Analysis</button>
+              <button class="primary-button button-reset" id="run-sandbox" type="button">Send Alert</button>
               <button class="secondary-button button-reset" id="open-workflow" type="button">Jump To Incident View</button>
             </div>
 
@@ -126,11 +126,16 @@
                 <p id="storage-detail">Waiting for API health check.</p>
               </div>
               <div class="status-card">
+                <span class="output-label">Agent graph</span>
+                <strong id="reasoning-label">Checking analysis mode...</strong>
+                <p id="reasoning-detail">Waiting for API health check.</p>
+              </div>
+              <div class="status-card">
                 <span class="output-label">Latest incident</span>
                 <strong id="latest-incident-id">Not created yet</strong>
                 <p id="latest-incident-meta">Run a scenario to create an incident record.</p>
               </div>
-              <div class="status-card">
+              <div class="status-card status-card-owner">
                 <span class="output-label">Owner</span>
                 <strong id="latest-owner-team">Not assigned yet</strong>
                 <p id="latest-escalation-meta">Escalation target will appear after analysis.</p>
@@ -150,10 +155,18 @@
 
             <div class="output-card">
               <div class="output-block">
-                <span class="output-label">What happened</span>
+                <span class="output-label">Incident brief</span>
                 <strong id="sandbox-summary">
                   Pick a scenario and run it to see the incident intake, reasoning path, escalation, and output.
                 </strong>
+              </div>
+              <div class="output-block">
+                <span class="output-label">Alert signal</span>
+                <strong id="sandbox-trigger">The incoming alert signal will appear here.</strong>
+              </div>
+              <div class="output-block">
+                <span class="output-label">Operational impact</span>
+                <strong id="sandbox-impact">Expected customer or system impact will appear here.</strong>
               </div>
               <div class="output-block">
                 <span class="output-label">Recommended next action</span>

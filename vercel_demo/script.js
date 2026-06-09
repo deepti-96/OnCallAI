@@ -42,6 +42,15 @@ function renderSandboxLog(lines) {
     .join("");
 }
 
+function extendLogWithGraphTrace(lines, graphTrace = []) {
+  if (!Array.isArray(graphTrace) || !graphTrace.length) {
+    return lines;
+  }
+
+  const graphLines = graphTrace.map((entry) => `${entry.node}: ${entry.detail}`);
+  return [...lines, ...graphLines];
+}
+
 function renderRecentRuns(incidents = []) {
   const el = document.getElementById("recent-runs");
   if (!el) return;
@@ -75,6 +84,21 @@ function renderStorageStatus(storage) {
   if (!storage) return;
   setText("storage-label", storage.label);
   setText("storage-detail", storage.detail);
+}
+
+function renderReasoningStatus(reasoning) {
+  if (!reasoning) return;
+  setText("reasoning-label", reasoning.label);
+  setText("reasoning-detail", reasoning.detail);
+}
+
+function renderCombinedReasoning(reasoning, retrieval = null) {
+  if (!reasoning) return;
+  const detail = retrieval ? `${reasoning.detail} ${retrieval.detail}` : reasoning.detail;
+  renderReasoningStatus({
+    ...reasoning,
+    detail,
+  });
 }
 
 function renderLatestIncident(incident) {
@@ -114,6 +138,8 @@ function renderScenario(key) {
   setText("output-issue", scenario.issue);
   setText("output-root-cause", scenario.rootCause);
   setText("output-action", scenario.action);
+  setText("sandbox-trigger", scenario.trigger);
+  setText("sandbox-impact", scenario.impact);
   renderList("output-evidence", scenario.evidence);
   renderList("output-next-steps", scenario.nextSteps);
   renderSteps(scenario.steps);
@@ -140,6 +166,8 @@ function renderIncidentDetail({ incident, steps = [], report = null }) {
   setText("output-issue", report?.issue || "Incident details captured");
   setText("output-root-cause", report?.root_cause || "Root cause guidance is not available yet.");
   setText("output-action", report?.recommended_action || "Review the incident and take the next operational step.");
+  setText("sandbox-trigger", report?.trigger || incident.alarm_name || "Alert signal details are not available.");
+  setText("sandbox-impact", report?.impact || incident.summary || "Operational impact details are not available.");
   renderList("output-evidence", report?.evidence || ["No additional evidence was stored for this incident."]);
   renderList("output-next-steps", report?.next_steps || ["Review incident ownership and the current service state."]);
 
@@ -186,6 +214,8 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
     issue: scenario.issue,
     root_cause: scenario.rootCause,
     recommended_action: scenario.action,
+    trigger: scenario.trigger,
+    impact: scenario.impact,
     evidence: scenario.evidence,
     next_steps: scenario.nextSteps,
   };
@@ -198,6 +228,7 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
       outcome: scenario.action,
       log: [
         `Created a local sample incident for ${scenario.service}.`,
+        `Observed signal: ${scenario.trigger}`,
         `Applied ${repeatLabel} behavior to the incident record.`,
         `Prepared issue, escalation, and next-action guidance for review.`,
       ],
@@ -213,6 +244,17 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
       label: "Local sample data",
       detail: "This localhost page uses built-in incident data. The deployed workspace stores live runs.",
     },
+    reasoning: {
+      label: "Structured log-and-retrieval graph",
+      detail: "Localhost uses the built-in intake, collector, retrieval, triage, and supervisor flow unless the hosted API is available.",
+    },
+    graph_trace: [
+      { node: "intake", detail: "Alert replay normalized into the incident workflow." },
+      { node: "collector-agent", detail: "Bundled logs were selected for the alert class." },
+      { node: "retrieval-agent", detail: "Bundled incident examples were scanned for matching patterns." },
+      { node: "triage-agent", detail: "Built-in logic assessed likely issue and evidence from logs and retrieved context." },
+      { node: "supervisor-agent", detail: "Built-in response synthesis prepared the operator handoff." },
+    ],
   };
 }
 
@@ -220,10 +262,15 @@ async function refreshHealth() {
   try {
     const health = await fetchJson("/api/health");
     renderStorageStatus(health.storage);
+    renderCombinedReasoning(health.reasoning, health.retrieval);
   } catch (_error) {
     renderStorageStatus({
       label: "API not connected",
       detail: "The product walkthrough is available, but the serverless backend is not responding yet.",
+    });
+    renderCombinedReasoning({
+      label: "Structured log-and-retrieval graph",
+      detail: "The local page is using the built-in intake, collector, retrieval, triage, and supervisor flow.",
     });
   }
 }
@@ -252,7 +299,7 @@ async function runSandboxScenario() {
 
   renderScenario(scenarioKey);
   setText("sandbox-status", "Running live workflow");
-  renderSandboxLog(["Submitting scenario to the hosted app..."]);
+  renderSandboxLog(["Submitting alert replay to the hosted app..."]);
 
   try {
     const payload = await fetchJson("/api/run-scenario", {
@@ -271,8 +318,15 @@ async function runSandboxScenario() {
     setText("sandbox-status", payload.preview.status);
     setText("sandbox-summary", payload.preview.summary);
     setText("sandbox-outcome", payload.preview.outcome);
-    renderSandboxLog(payload.preview.log);
+    renderSandboxLog(extendLogWithGraphTrace(payload.preview.log, payload.graph_trace));
     renderStorageStatus(payload.storage);
+    renderCombinedReasoning({
+      label: payload.analysis_mode === "gemini-agent-graph" ? "Gemini log-and-retrieval graph active" : "Structured log-and-retrieval graph",
+      detail:
+        payload.analysis_mode === "gemini-agent-graph"
+          ? "This incident was generated through the hosted intake, collector, retrieval, triage-agent, and supervisor-agent flow."
+          : "This incident was generated through the built-in structured incident workflow.",
+    }, payload.report?.retrieval?.summary);
     renderRecentRuns(payload.incidents || []);
     renderLatestIncident(payload.incident);
     renderIncidentDetail(payload);
@@ -282,8 +336,9 @@ async function runSandboxScenario() {
     setText("sandbox-status", fallback.preview.status);
     setText("sandbox-summary", fallback.preview.summary);
     setText("sandbox-outcome", fallback.preview.outcome);
-    renderSandboxLog(fallback.preview.log);
+    renderSandboxLog(extendLogWithGraphTrace(fallback.preview.log, fallback.graph_trace));
     renderStorageStatus(fallback.storage);
+    renderCombinedReasoning(fallback.reasoning);
     renderRecentRuns(fallback.incidents);
     renderLatestIncident(fallback.incident);
     renderIncidentDetail(fallback);

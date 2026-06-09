@@ -13,6 +13,10 @@ export const SCENARIOS = {
     alertState: "ALARM",
     summary:
       "Latency alarms are firing repeatedly for a tier-1 payment dependency during checkout traffic spikes.",
+    impact:
+      "Checkout latency is rising for payment-dependent requests, increasing abandonment risk during active customer traffic.",
+    trigger:
+      "CloudWatch alarm payment-service-critical-latency entered ALARM after repeated threshold breaches on request latency.",
     confidence: 0.86,
     headline: "Page payments-oncall and validate database readiness.",
     issue: "Database connection errors",
@@ -67,6 +71,10 @@ export const SCENARIOS = {
     alertState: "ALARM",
     summary:
       "The inventory-service is showing repeated memory-related failures during a warehouse sync job window.",
+    impact:
+      "Inventory updates can lag behind operational events, creating stale stock data during sync-heavy periods.",
+    trigger:
+      "CloudWatch alarm inventory-service-memory-pressure entered ALARM after repeated memory utilization spikes.",
     confidence: 0.78,
     headline: "Notify inventory-oncall and inspect recent memory growth.",
     issue: "Service OOM",
@@ -117,6 +125,10 @@ export const SCENARIOS = {
     alertState: "ALARM",
     summary:
       "Checkout is returning elevated HTTP 500s shortly after a release, creating a high-friction customer path.",
+    impact:
+      "Customers hitting checkout can encounter failed purchases, directly affecting conversion on a revenue-critical path.",
+    trigger:
+      "CloudWatch alarm checkout-service-http-500-burn entered ALARM after sustained server-error burn rate exceeded threshold.",
     confidence: 0.82,
     headline: "Page checkout-oncall and evaluate rollback immediately.",
     issue: "HTTP 500 / Null deref",
@@ -167,6 +179,10 @@ export const SCENARIOS = {
     alertState: "OK",
     summary:
       "A previously noisy billing alarm has recovered, and the system can close the loop without creating duplicate incidents.",
+    impact:
+      "Customer-facing impact has cleared, but the incident remains useful for review and noise reduction follow-up.",
+    trigger:
+      "CloudWatch alarm billing-service-error-rate-recovered entered OK after the earlier error condition cleared.",
     confidence: 0.6,
     headline: "Log recovery, notify the owner, and keep monitoring.",
     issue: "Recovered CloudWatch alert",
