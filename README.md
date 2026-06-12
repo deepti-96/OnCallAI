@@ -6,7 +6,7 @@ This project is designed as an explainable, hackathon-friendly foundation for bu
 
 The repository also includes a Vercel-friendly web experience with serverless API routes, realistic CloudWatch event replay, free-tier durable storage through Supabase Postgres, and a fallback mode that keeps the demo usable without cloud credentials.
 
-## Why OnCallAI
+## Why OnCallAI 
 
 Modern on-call teams lose time switching between alerts, logs, dashboards, and tribal knowledge. OnCallAI aims to shorten that path by centralizing the first-response workflow:
 
