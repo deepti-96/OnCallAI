@@ -1,10 +1,10 @@
 # OnCallAI
 
-OnCallAI is an AI-powered incident triage and root cause analysis prototype for DevOps and SRE workflows. It ingests alerts or incidents, gathers surrounding context, analyzes logs, records agent activity, computes escalation guidance, and produces a structured incident report through a lightweight Streamlit interface.
+OnCallAI is an AI-powered incident triage and root cause analysis prototype for DevOps and SRE workflows. It ingests alerts or incidents, gathers surrounding context, analyzes logs, records agent activity, computes escalation guidance, and produces structured RCA-style reports and operator handoffs.
 
-This project is designed as an explainable, hackathon-friendly foundation for building an autonomous on-call assistant. The current implementation focuses on local execution, deterministic workflows, and a clear architecture that can be extended with real alert sources, richer retrieval, and production-grade orchestration.
+This project is designed as an explainable, hackathon-friendly foundation for building an autonomous on-call assistant. The current implementation has two complementary paths: a local Python pipeline optimized for deterministic development and testing, and a hosted Vercel agent graph that can use Gemini, bundled retrieval, and Supabase vector retrieval when configured.
 
-The repository now also includes a Vercel-friendly web experience with serverless API routes and a free-tier durable storage path for live hosted demos.
+The repository also includes a Vercel-friendly web experience with serverless API routes, realistic CloudWatch event replay, free-tier durable storage through Supabase Postgres, and a fallback mode that keeps the demo usable without cloud credentials.
 
 ## Why OnCallAI
 
@@ -15,6 +15,7 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 - Analyze available logs and evidence.
 - Generate an RCA-style summary with suggested mitigations.
 - Expose the full processing trail in a transparent UI.
+- Run a hosted collector, retrieval, triage, and supervisor workflow for live demos.
 
 ## Core Capabilities
 
@@ -29,17 +30,34 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 - Streamlit dashboard for filtering incidents, reviewing agent timelines, inspecting generated reports, and triaging stale or noisy alerts.
 - Environment-based configuration for polling, models, logging mode, and optional cloud integrations.
 - Vercel-compatible product site with interactive incident testing through serverless API routes.
+- Hosted agent graph with intake, collector, retrieval, triage, and supervisor nodes.
+- Optional Gemini structured JSON reasoning for hosted triage and operator handoff generation.
+- Hosted RAG that falls back to bundled incident examples or uses Supabase pgvector when configured.
+- Realistic CloudWatch Alarm State Change replay and log source metadata in hosted scenarios.
 - Free-tier durable storage option through Supabase Postgres for hosted scenario runs.
 
 ## Architecture
 
-OnCallAI follows a simple agent-inspired pipeline:
+OnCallAI follows an agent-inspired workflow in both local and hosted modes.
+
+### Local Python pipeline
 
 1. `runner` polls for incidents with `OPEN` status.
 2. The collector stage retrieves context and logs for the incident.
 3. The analyst stage evaluates evidence and drafts findings.
 4. The supervisor stage writes the final report, includes escalation guidance, and marks the incident complete.
 5. The UI reads the persisted data and displays incident state, steps, and outputs.
+
+### Hosted Vercel agent graph
+
+1. `/api/run-scenario` creates a realistic incident scenario and CloudWatch alarm event.
+2. The collector agent loads matching bundled log snippets and CloudWatch log-source metadata.
+3. The retrieval agent retrieves grounding context from bundled examples or Supabase pgvector.
+4. The triage agent produces the incident summary, likely issue, root-cause hypothesis, evidence, next checks, and confidence.
+5. The supervisor agent produces the operator handoff, escalation priority, recommended action, timeline summary, and handoff note.
+6. The run is stored in Supabase Postgres when configured, or in local preview storage for development.
+
+If `GEMINI_API_KEY` is present, the hosted triage and supervisor agents use Gemini structured JSON output. If it is missing, the hosted flow falls back to built-in demo reasoning while preserving the same graph trace shape.
 
 ### Main Components
 
@@ -53,9 +71,15 @@ OnCallAI follows a simple agent-inspired pipeline:
 - [`app/agents/analyst_agent.py`](app/agents/analyst_agent.py): Retrieval-assisted analysis and mitigation generation.
 - [`app/agents/supervisor.py`](app/agents/supervisor.py): Report compilation and workflow completion.
 - [`ui/streamlit_app.py`](ui/streamlit_app.py): Operator-facing incident dashboard.
-- [`api/`](api): Vercel serverless functions for hosted scenario execution and incident retrieval.
+- [`api/`](api): Vercel serverless functions for hosted scenario execution, incident retrieval, agent graph orchestration, hosted RAG, and health checks.
+- [`api/_lib/agent-graph.js`](api/_lib/agent-graph.js): Hosted collector, retrieval, triage, and supervisor graph.
+- [`api/_lib/hosted-rag.js`](api/_lib/hosted-rag.js): Bundled retrieval and optional Supabase vector retrieval.
+- [`api/_lib/gemini-client.js`](api/_lib/gemini-client.js): Gemini structured JSON reasoning client.
+- [`api/_lib/gemini-embeddings.js`](api/_lib/gemini-embeddings.js): Gemini embedding client for hosted vector retrieval.
+- [`api/_lib/cloudwatch-event.js`](api/_lib/cloudwatch-event.js): CloudWatch alarm event and log-source shaping for hosted scenarios.
 - [`vercel_demo/`](vercel_demo): Product-style web frontend for the Vercel deployment path.
 - [`supabase/schema.sql`](supabase/schema.sql): Durable hosted schema for the free-tier Postgres setup.
+- [`supabase/vector_rag.sql`](supabase/vector_rag.sql): Optional pgvector schema and matching RPC for hosted RAG.
 - [`app/db/schema.sql`](app/db/schema.sql): SQLite schema for incidents, agent steps, and reports.
 - [`tests/`](tests): Lightweight unit and flow tests using `unittest`.
 
@@ -72,8 +96,8 @@ OnCallAI/
 │   └── runner.py       # Main incident processing loop
 ├── rag_pipeline/       # Experimental retrieval pipeline components
 ├── scripts/            # Seeding and local setup helpers
-├── api/                # Vercel serverless functions
-├── supabase/           # Hosted Postgres schema for durable storage
+├── api/                # Vercel serverless functions and hosted agent graph
+├── supabase/           # Hosted Postgres and optional pgvector schemas
 ├── tests/              # Lightweight unit and incident-flow tests
 ├── ui/                 # Streamlit application
 ├── vercel_demo/        # Vercel-friendly product website
@@ -91,8 +115,11 @@ OnCallAI/
 - LangChain and LangGraph dependencies for future orchestration expansion
 - Chroma / FAISS / Pinecone libraries for retrieval experimentation
 - Optional OpenAI and AWS integrations via environment configuration
-- Vercel serverless functions for the hosted web app
+- Vercel serverless functions for the hosted web app and agent graph
+- Gemini generateContent for hosted structured triage and supervisor reasoning
+- Gemini embeddings for optional hosted vector retrieval
 - Supabase Postgres on the free tier for durable hosted incident storage
+- Supabase pgvector for optional hosted RAG
 
 ## Getting Started
 
@@ -121,7 +148,8 @@ At minimum, review these values in `.env`:
 - `DB_URL`
 - `LOGS_LOCAL_ROOT`
 - `USE_REAL_CLOUDWATCH`
-- `OPENAI_API_KEY` if you plan to extend the project with hosted models
+- `OPENAI_API_KEY` if you plan to extend the local Python flow with OpenAI-backed reasoning
+- `GEMINI_API_KEY` if you want the hosted Vercel agent graph to use Gemini reasoning
 
 ### 4. Seed local demo data
 
@@ -189,18 +217,36 @@ This is the safest path if you want a public product site and a live scenario fl
 3. Those API routes create incidents, steps, and reports for demo scenarios.
 4. If Supabase credentials are present, the data is stored durably in Postgres.
 5. If credentials are missing, the app falls back to local preview storage for local development only.
+6. If Gemini is configured, hosted scenarios run the Gemini-backed agent graph. Otherwise they run in rules-demo mode.
+7. If Supabase vector RAG is configured, hosted scenarios retrieve grounding documents from pgvector. Otherwise they use bundled examples.
 
 ### Supabase setup
 
 1. Create a free Supabase project.
 2. Open the SQL editor.
 3. Run the schema in [`supabase/schema.sql`](supabase/schema.sql).
-4. In Vercel project settings, add:
+4. Optional: run [`supabase/vector_rag.sql`](supabase/vector_rag.sql) if you want hosted vector retrieval.
+5. In Vercel project settings, add:
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
-5. Redeploy the Vercel app.
+6. Optional: add the Gemini variables for hosted model reasoning and vector retrieval:
+   - `GEMINI_API_KEY`
+   - `GEMINI_MODEL`
+   - `GEMINI_EMBEDDING_MODEL`
+   - `GEMINI_EMBEDDING_DIMENSIONS=768`
+7. Redeploy the Vercel app.
 
 After that, live scenario runs from the website are durably stored and can be reloaded in the hosted UI.
+
+To seed hosted vector RAG documents after creating the vector schema, run:
+
+```bash
+GEMINI_API_KEY=... \
+SUPABASE_URL=... \
+SUPABASE_SERVICE_ROLE_KEY=... \
+GEMINI_EMBEDDING_DIMENSIONS=768 \
+node scripts/seed_supabase_rag.mjs
+```
 
 ### Vercel setup
 
@@ -239,6 +285,11 @@ The project is configured primarily through environment variables.
 - `EMBEDDINGS_MODEL`: Embedding model identifier
 - `LLM_MODEL`: Chat model identifier
 - `VECTOR_BACKEND`: Retrieval backend, such as `chroma` or `faiss`
+- `GEMINI_API_KEY`: Enables hosted Gemini triage and supervisor reasoning
+- `GEMINI_MODEL`: Hosted Gemini reasoning model, defaults to `gemini-2.5-flash`
+- `GEMINI_EMBEDDING_MODEL`: Hosted embedding model, defaults to `gemini-embedding-001`
+- `GEMINI_EMBEDDING_DIMENSIONS`: Hosted embedding dimensions. Use `768` with the provided `supabase/vector_rag.sql` schema.
+- `SUPABASE_VECTOR_RPC`: Optional hosted vector search RPC name, defaults to `match_rag_documents`
 
 ### Database
 
@@ -272,9 +323,22 @@ The current demo path is intentionally simple and transparent:
 - Agent steps are written back to the database as the incident is processed.
 - Reports are stored in structured JSON plus Markdown.
 - The UI reads directly from the database and lets you inspect repeat-alert triage signals, escalation guidance, alert metadata, timelines, payloads, and final reports.
-- The Vercel product site can also run scenarios end to end and persist them in Supabase when deployed with the free-tier hosted stack.
+- The Vercel product site can also run scenarios end to end, replay CloudWatch-style events, collect bundled logs, retrieve grounding context, run a hosted agent graph, and persist results in Supabase when deployed with the free-tier hosted stack.
 
 This makes the project easy to demo, debug, and extend locally.
+
+## Hosted Agent Modes
+
+The hosted runtime is designed to degrade gracefully based on environment configuration.
+
+| Mode | Requirements | Behavior |
+| --- | --- | --- |
+| `rules-demo` | No `GEMINI_API_KEY` | Uses built-in scenario reasoning while preserving the intake, collector, retrieval, triage, and supervisor trace. |
+| `gemini-agent-graph` | `GEMINI_API_KEY` | Uses Gemini structured JSON output for triage and supervisor reasoning. |
+| `bundled-rag` | Default retrieval mode | Retrieves matching examples from bundled incident patterns. |
+| `supabase-vector-rag` | `GEMINI_API_KEY`, Supabase env vars, vector schema | Embeds the incident corpus and retrieves grounding documents through Supabase pgvector. |
+
+The health endpoint at `/api/health` reports the active storage, reasoning, and retrieval modes.
 
 ## Current Scope and Limitations
 
@@ -282,19 +346,21 @@ This repository is best understood as a strong prototype rather than a productio
 
 - The default runner is intentionally lightweight and optimized for local demos rather than background job scale.
 - The analyst uses lightweight local retrieval rather than a full production retrieval pipeline or LLM-backed reasoning engine.
-- CloudWatch support is AWS-focused today; broader provider coverage and richer historical correlation can be extended further.
+- CloudWatch support is the first concrete adapter. PagerDuty, Datadog, Grafana, New Relic, Opsgenie, or custom anomaly detectors can be added by normalizing their events into the same incident schema.
+- The hosted Gemini and vector RAG paths require external credentials and careful embedding-dimension alignment with the Supabase schema.
 - Authentication, authorization, retries, and multi-tenant concerns are not implemented.
 - The UI is optimized for local inspection and demos rather than operational scale.
-- The Vercel-hosted path is intentionally scenario-driven today; it demonstrates the workflow cleanly, but it does not yet replace the richer local Streamlit operator console.
+- The Vercel-hosted path is intentionally scenario-driven today; it demonstrates the workflow cleanly, but it does not yet replace a full production incident console.
 
 ## Extension Ideas
 
 Good next steps for evolving OnCallAI include:
 
-- Connect real alert providers such as CloudWatch, PagerDuty, or Opsgenie.
-- Replace heuristic analysis with retrieval-backed or model-backed reasoning.
+- Connect real alert providers such as CloudWatch, PagerDuty, Datadog, Grafana, New Relic, or Opsgenie.
+- Replace more heuristic analysis paths with retrieval-backed or model-backed reasoning.
 - Add incident enrichment from dashboards, deploy metadata, and service ownership data.
 - Introduce broader correlation across multiple signals and incidents.
+- Formalize the local Python workflow with LangGraph for typed state, conditional routing, retries, and human review checkpoints.
 - Add automated remediation suggestions with human approval gates.
 - Expand the UI into a richer operations console with deeper search, collaboration, and audit views.
 
