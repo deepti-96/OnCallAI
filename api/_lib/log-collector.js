@@ -54,5 +54,10 @@ export async function collectIncidentLogs({ incident, scenario }) {
   return {
     folder,
     logs,
+    source: {
+      log_group: scenario?.cloudWatchLogGroup || null,
+      stream_prefix: scenario?.cloudWatchStreamPrefix || null,
+      region: scenario?.awsRegion || null,
+    },
   };
 }
