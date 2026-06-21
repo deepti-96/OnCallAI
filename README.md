@@ -151,7 +151,6 @@ At minimum, review these values in `.env`:
 - `DB_URL`
 - `LOGS_LOCAL_ROOT`
 - `USE_REAL_CLOUDWATCH`
-- `OPENAI_API_KEY` if you plan to extend the local Python flow with OpenAI-backed reasoning
 - `GEMINI_API_KEY` if you want the hosted Vercel agent graph to use Gemini reasoning
 
 ### 4. Seed local demo data
@@ -215,13 +214,14 @@ This is the safest path if you want a public product site and a live scenario fl
 
 ### Hosted architecture
 
-1. The frontend served from `vercel_demo/` runs on Vercel.
-2. The `Try Product` flow calls Vercel API routes in `api/`.
-3. Those API routes create incidents, steps, and reports for demo scenarios.
+1. The product overview page and live workspace run on Vercel.
+2. The hosted workspace calls Vercel API routes in `api/`.
+3. Those API routes create incidents, steps, and reports for CloudWatch-style demo scenarios.
 4. If Supabase credentials are present, the data is stored durably in Postgres.
 5. If credentials are missing, the app falls back to local preview storage for local development only.
-6. If Gemini is configured, hosted scenarios run the Gemini-backed agent graph. Otherwise they run in rules-demo mode.
+6. If Gemini is configured, hosted scenarios run the Gemini-backed collector, retrieval, triage, and supervisor graph. Otherwise they run in rules-demo mode.
 7. If Supabase vector RAG is configured, hosted scenarios retrieve grounding documents from pgvector. Otherwise they use bundled examples.
+8. If filesystem-hosted demo logs are unavailable in the serverless runtime, the API falls back to bundled log and incident-example data so the hosted workflow stays usable.
 
 ### Supabase setup
 
@@ -236,7 +236,8 @@ This is the safest path if you want a public product site and a live scenario fl
    - `GEMINI_API_KEY`
    - `GEMINI_MODEL`
    - `GEMINI_EMBEDDING_MODEL`
-   - `GEMINI_EMBEDDING_DIMENSIONS=768`
+   - `GEMINI_EMBEDDING_DIMENSIONS=3072`
+   - `SUPABASE_VECTOR_RPC=match_rag_documents`
 7. Redeploy the Vercel app.
 
 After that, live scenario runs from the website are durably stored and can be reloaded in the hosted UI.
@@ -247,7 +248,7 @@ To seed hosted vector RAG documents after creating the vector schema, run:
 GEMINI_API_KEY=... \
 SUPABASE_URL=... \
 SUPABASE_SERVICE_ROLE_KEY=... \
-GEMINI_EMBEDDING_DIMENSIONS=768 \
+GEMINI_EMBEDDING_DIMENSIONS=3072 \
 node scripts/seed_supabase_rag.mjs
 ```
 
@@ -259,7 +260,7 @@ node scripts/seed_supabase_rag.mjs
 4. Add the Supabase environment variables above.
 5. Deploy.
 
-The site root is handled by [`vercel.json`](vercel.json), which serves the product UI from [`vercel_demo/index.html`](vercel_demo/index.html) and keeps `/api/*` available for the serverless backend.
+The site root is handled by [`vercel.json`](vercel.json), which keeps `/api/*` available for the serverless backend and bundles the hosted log and RAG assets for the Vercel runtime.
 
 ## Make Targets
 
@@ -291,7 +292,7 @@ The project is configured primarily through environment variables.
 - `GEMINI_API_KEY`: Enables hosted Gemini triage and supervisor reasoning
 - `GEMINI_MODEL`: Hosted Gemini reasoning model, defaults to `gemini-2.5-flash`
 - `GEMINI_EMBEDDING_MODEL`: Hosted embedding model, defaults to `gemini-embedding-001`
-- `GEMINI_EMBEDDING_DIMENSIONS`: Hosted embedding dimensions. Use `768` with the provided `supabase/vector_rag.sql` schema.
+- `GEMINI_EMBEDDING_DIMENSIONS`: Hosted embedding dimensions. Use `3072` with the current seeded pgvector setup.
 - `SUPABASE_VECTOR_RPC`: Optional hosted vector search RPC name, defaults to `match_rag_documents`
 
 ### Database
@@ -326,7 +327,7 @@ The current demo path is intentionally simple and transparent:
 - Agent steps are written back to the database as the incident is processed.
 - Reports are stored in structured JSON plus Markdown.
 - The UI reads directly from the database and lets you inspect repeat-alert triage signals, escalation guidance, alert metadata, timelines, payloads, and final reports.
-- The Vercel product site can also run scenarios end to end, replay CloudWatch-style events, collect bundled logs, retrieve grounding context, run a hosted agent graph, and persist results in Supabase when deployed with the free-tier hosted stack.
+- The hosted product site can also run scenarios end to end, replay CloudWatch Alarm State Change-style events, collect bundled logs, retrieve grounding context, run a hosted agent graph, and persist results in Supabase when deployed with the free-tier hosted stack.
 
 This makes the project easy to demo, debug, and extend locally.
 
@@ -349,7 +350,7 @@ This repository is best understood as a strong prototype rather than a productio
 
 - The default runner is intentionally lightweight and optimized for local demos rather than background job scale.
 - The analyst uses lightweight local retrieval rather than a full production retrieval pipeline or LLM-backed reasoning engine.
-- CloudWatch support is the first concrete adapter. PagerDuty, Datadog, Grafana, New Relic, Opsgenie, or custom anomaly detectors can be added by normalizing their events into the same incident schema.
+- CloudWatch support is the first concrete adapter. The hosted workspace currently replays CloudWatch-style alarm events rather than receiving live AWS alarms directly. PagerDuty, Datadog, Grafana, New Relic, Opsgenie, or custom anomaly detectors can be added by normalizing their events into the same incident schema.
 - The hosted Gemini and vector RAG paths require external credentials and careful embedding-dimension alignment with the Supabase schema.
 - Authentication, authorization, retries, and multi-tenant concerns are not implemented.
 - The UI is optimized for local inspection and demos rather than operational scale.
