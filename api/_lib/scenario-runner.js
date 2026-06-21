@@ -1,6 +1,13 @@
 import { getScenario } from "../../vercel_demo/scenarios.js";
 import { buildCloudWatchEvent, buildCloudWatchLogSource } from "./cloudwatch-event.js";
 
+const INGESTION_SOURCE_LABELS = {
+  cloudwatch: "CloudWatch",
+  pagerduty: "PagerDuty",
+  datadog: "Datadog",
+  grafana: "Grafana",
+};
+
 function titleCase(value) {
   return value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : value;
 }
@@ -9,8 +16,14 @@ function getSeverityClass(severity) {
   return severity.toLowerCase() === "critical" ? "critical" : "priority";
 }
 
-export function buildScenarioRun({ scenario: scenarioKey = "database", severity = "auto", volume = "auto" } = {}) {
+export function buildScenarioRun({
+  scenario: scenarioKey = "database",
+  severity = "auto",
+  volume = "auto",
+  ingestion_source: ingestionSource = "cloudwatch",
+} = {}) {
   const scenario = getScenario(scenarioKey);
+  const sourceLabel = INGESTION_SOURCE_LABELS[ingestionSource] || INGESTION_SOURCE_LABELS.cloudwatch;
   const createdAt = new Date().toISOString();
   const resolvedSeverity = severity === "auto" ? scenario.severity : titleCase(severity);
   const occurrenceCount =
@@ -34,7 +47,7 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
     status,
     severity: resolvedSeverity,
     severity_class: getSeverityClass(resolvedSeverity),
-    source: scenario.source,
+    source: sourceLabel,
     alert_state: scenario.alertState,
     occurrence_count: occurrenceCount,
     owner_team: scenario.ownerTeam,
@@ -70,11 +83,12 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
       root_cause: scenario.rootCause,
       recommended_action: scenario.action,
       impact: scenario.impact,
-      trigger: scenario.trigger,
+      trigger: `${sourceLabel} alert · ${scenario.trigger}`,
       evidence: scenario.evidence,
       next_steps: scenario.nextSteps,
       summary: scenario.summary,
       repeat_label: repeatLabel,
+      ingestion_source: ingestionSource,
       cloudwatch_event: cloudwatchEvent,
       cloudwatch_logs: cloudwatchLogs,
       storage_ready_message:
@@ -92,7 +106,8 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
     outcome: scenario.action,
     log: [
       `Created incident ${incidentId} for ${scenario.service}.`,
-      `Observed signal: ${scenario.trigger}`,
+      `Observed signal from ${sourceLabel}: ${scenario.trigger}`,
+      `Normalized ${sourceLabel} payload into the hosted incident schema.`,
       `CloudWatch source: ${scenario.cloudWatchLogGroup} (${scenario.awsRegion})`,
       `Stored alert metadata with ${occurrenceCount} occurrence${occurrenceCount === 1 ? "" : "s"}.`,
       `Attached runbook, dashboard, and owner context for ${scenario.ownerTeam}.`,

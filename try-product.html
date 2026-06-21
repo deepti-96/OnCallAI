@@ -83,6 +83,27 @@
               <span class="meta">Alert intake</span>
             </div>
 
+            <div class="integration-strip" aria-label="Alert ingestion integrations">
+              <div class="integration-strip-copy">
+                <span class="output-label">Alert integrations</span>
+                <strong>Normalize multiple signal sources into one incident schema.</strong>
+              </div>
+              <div class="integration-button-row" id="integration-buttons">
+                <button class="integration-button active button-reset" data-integration="cloudwatch" type="button">
+                  CloudWatch
+                </button>
+                <button class="integration-button button-reset" data-integration="pagerduty" type="button">
+                  PagerDuty
+                </button>
+                <button class="integration-button button-reset" data-integration="datadog" type="button">
+                  Datadog
+                </button>
+                <button class="integration-button button-reset" data-integration="grafana" type="button">
+                  Grafana
+                </button>
+              </div>
+            </div>
+
             <div class="control-grid">
               <label class="control-field">
                 <span>Alert type</span>
@@ -120,6 +141,11 @@
             </div>
 
             <div class="status-grid">
+              <div class="status-card">
+                <span class="output-label">Ingestion</span>
+                <strong id="integration-label">CloudWatch alarm intake</strong>
+                <p id="integration-detail">AWS CloudWatch alarms are normalized directly into the hosted incident workflow.</p>
+              </div>
               <div class="status-card">
                 <span class="output-label">Storage</span>
                 <strong id="storage-label">Checking backend status...</strong>

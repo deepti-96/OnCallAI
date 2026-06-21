@@ -1,5 +1,36 @@
 import { SCENARIOS, getScenario } from "./scenarios.js";
 
+const INGESTION_INTEGRATIONS = {
+  cloudwatch: {
+    key: "cloudwatch",
+    label: "CloudWatch alarm intake",
+    detail: "AWS CloudWatch alarms are normalized directly into the hosted incident workflow.",
+    submitLabel: "Submitting CloudWatch alarm to the hosted app...",
+    sourceLabel: "CloudWatch",
+  },
+  pagerduty: {
+    key: "pagerduty",
+    label: "PagerDuty event intake",
+    detail: "PagerDuty webhooks can be normalized into the same incident schema and operator workflow.",
+    submitLabel: "Submitting PagerDuty event to the hosted app...",
+    sourceLabel: "PagerDuty",
+  },
+  datadog: {
+    key: "datadog",
+    label: "Datadog monitor intake",
+    detail: "Datadog alerts can flow through the same collector, retrieval, triage, and supervisor path.",
+    submitLabel: "Submitting Datadog monitor alert to the hosted app...",
+    sourceLabel: "Datadog",
+  },
+  grafana: {
+    key: "grafana",
+    label: "Grafana alert intake",
+    detail: "Grafana-managed alerts can be mapped into the shared incident record and escalation flow.",
+    submitLabel: "Submitting Grafana alert to the hosted app...",
+    sourceLabel: "Grafana",
+  },
+};
+
 function setText(id, value) {
   const el = document.getElementById(id);
   if (el) {
@@ -112,8 +143,32 @@ function renderLatestIncident(incident) {
   );
 }
 
+function getSelectedIntegrationKey() {
+  return document.querySelector(".integration-button.active")?.dataset.integration || "cloudwatch";
+}
+
+function getSelectedIntegration() {
+  return INGESTION_INTEGRATIONS[getSelectedIntegrationKey()] || INGESTION_INTEGRATIONS.cloudwatch;
+}
+
+function renderIntegrationStatus(integration) {
+  setText("integration-label", integration.label);
+  setText("integration-detail", integration.detail);
+}
+
+function setActiveIntegration(integrationKey) {
+  const integration = INGESTION_INTEGRATIONS[integrationKey] || INGESTION_INTEGRATIONS.cloudwatch;
+
+  document.querySelectorAll(".integration-button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.integration === integration.key);
+  });
+
+  renderIntegrationStatus(integration);
+}
+
 function renderScenario(key) {
   const scenario = getScenario(key);
+  const integration = getSelectedIntegration();
 
   document.querySelectorAll(".scenario-chip").forEach((button) => {
     const isActive = button.dataset.scenario === key;
@@ -122,7 +177,7 @@ function renderScenario(key) {
   });
 
   setText("scenario-title", scenario.title);
-  setText("scenario-source", scenario.source);
+  setText("scenario-source", integration.sourceLabel);
   setText("scenario-repeats", `${scenario.occurrenceCount}x`);
   setText("scenario-priority", scenario.priority);
   setText("scenario-alarm-name", scenario.alarmName);
@@ -141,7 +196,7 @@ function renderScenario(key) {
   setText("output-issue", scenario.issue);
   setText("output-root-cause", scenario.rootCause);
   setText("output-action", scenario.action);
-  setText("sandbox-trigger", scenario.trigger);
+  setText("sandbox-trigger", `${integration.sourceLabel} alert · ${scenario.trigger}`);
   setText("sandbox-impact", scenario.impact);
   setText("sandbox-alarm-name", scenario.alarmName);
   setText(
@@ -222,6 +277,7 @@ async function fetchJson(url, options = {}) {
 
 function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
   const scenario = getScenario(scenarioKey);
+  const integration = getSelectedIntegration();
   const severityLabel = severityMode === "auto" ? scenario.severity : severityMode[0].toUpperCase() + severityMode.slice(1);
   const occurrenceCount =
     volumeMode === "auto" ? scenario.occurrenceCount : volumeMode === "repeat" ? Math.max(3, scenario.occurrenceCount) : 1;
@@ -233,7 +289,7 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
     service: scenario.service,
     severity: severityLabel,
     status: scenario.alertState === "OK" ? "RESOLVED" : "DONE",
-    source: scenario.source,
+    source: integration.sourceLabel,
     occurrence_count: occurrenceCount,
     escalation_priority: scenario.priority,
     owner_team: scenario.ownerTeam,
@@ -246,7 +302,7 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
     issue: scenario.issue,
     root_cause: scenario.rootCause,
     recommended_action: scenario.action,
-    trigger: scenario.trigger,
+      trigger: `${integration.sourceLabel} alert · ${scenario.trigger}`,
     impact: scenario.impact,
     evidence: scenario.evidence,
     next_steps: scenario.nextSteps,
@@ -286,7 +342,7 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
       outcome: scenario.action,
       log: [
         `Created a local sample incident for ${scenario.service}.`,
-        `Observed signal: ${scenario.trigger}`,
+        `Observed signal from ${integration.sourceLabel}: ${scenario.trigger}`,
         `Applied ${repeatLabel} behavior to the incident record.`,
         `Prepared issue, escalation, and next-action guidance for review.`,
       ],
@@ -354,10 +410,11 @@ async function runSandboxScenario() {
   const scenarioKey = document.getElementById("sandbox-scenario")?.value || "database";
   const severityMode = document.getElementById("sandbox-severity")?.value || "auto";
   const volumeMode = document.getElementById("sandbox-volume")?.value || "auto";
+  const integration = getSelectedIntegration();
 
   renderScenario(scenarioKey);
   setText("sandbox-status", "Running live workflow");
-  renderSandboxLog(["Submitting alert replay to the hosted app..."]);
+  renderSandboxLog([integration.submitLabel]);
 
   try {
     const payload = await fetchJson("/api/run-scenario", {
@@ -369,6 +426,7 @@ async function runSandboxScenario() {
         scenario: scenarioKey,
         severity: severityMode,
         volume: volumeMode,
+        ingestion_source: integration.key,
       }),
     });
 
@@ -404,6 +462,13 @@ async function runSandboxScenario() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".integration-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      setActiveIntegration(button.dataset.integration);
+      renderScenario(document.getElementById("sandbox-scenario")?.value || "database");
+    });
+  });
+
   document.querySelectorAll(".scenario-chip").forEach((button) => {
     button.addEventListener("click", () => renderScenario(button.dataset.scenario));
   });
@@ -420,6 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadIncidentDetail(button.dataset.incidentId).catch(() => {});
   });
 
+  setActiveIntegration("cloudwatch");
   renderScenario("database");
   refreshHealth();
   refreshRecentRuns();
