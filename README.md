@@ -6,6 +6,27 @@ This project is designed as an explainable, hackathon-friendly foundation for bu
 
 The repository also includes a Vercel-friendly web experience with serverless API routes, a CloudWatch Alarm State Change-style event envelope, durable storage through Supabase Postgres, and bundled runtime fallbacks that keep the hosted demo usable even when filesystem-hosted logs are unavailable in serverless deployments.
 
+## Index
+
+- [Why OnCallAI](#why-oncallai)
+- [Core Capabilities](#core-capabilities)
+- [Hosted Workspace](#hosted-workspace)
+- [Hosted Flow Diagrams](#hosted-flow-diagrams)
+- [Architecture](#architecture)
+- [Repository Structure](#repository-structure)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Free-Tier Hosted Stack](#free-tier-hosted-stack)
+- [Make Targets](#make-targets)
+- [Configuration](#configuration)
+- [How the Demo Works](#how-the-demo-works)
+- [Hosted Agent Modes](#hosted-agent-modes)
+- [Current Scope and Limitations](#current-scope-and-limitations)
+- [Extension Ideas](#extension-ideas)
+- [Professional Use Cases](#professional-use-cases)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Why OnCallAI 
 
 Modern on-call teams lose time switching between alerts, logs, dashboards, and tribal knowledge. OnCallAI aims to shorten that path by centralizing the first-response workflow:
