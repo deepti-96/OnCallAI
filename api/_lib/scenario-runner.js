@@ -1,4 +1,5 @@
 import { getScenario } from "../../vercel_demo/scenarios.js";
+import { buildCloudWatchEvent, buildCloudWatchLogSource } from "./cloudwatch-event.js";
 
 function titleCase(value) {
   return value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : value;
@@ -18,6 +19,13 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
   const processedLabel = occurrenceCount > 1 ? "were" : "was";
   const incidentId = crypto.randomUUID();
   const status = scenario.alertState === "OK" ? "RESOLVED" : "DONE";
+  const cloudwatchEvent = buildCloudWatchEvent({
+    scenario,
+    incident: { created_at: createdAt, alert_state: scenario.alertState },
+    occurrenceCount,
+    severity: resolvedSeverity,
+  });
+  const cloudwatchLogs = buildCloudWatchLogSource({ scenario });
 
   const incident = {
     id: incidentId,
@@ -67,6 +75,8 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
       next_steps: scenario.nextSteps,
       summary: scenario.summary,
       repeat_label: repeatLabel,
+      cloudwatch_event: cloudwatchEvent,
+      cloudwatch_logs: cloudwatchLogs,
       storage_ready_message:
         "When Supabase is connected, this incident is stored durably in Postgres and can be reloaded from the hosted app.",
     },
@@ -83,6 +93,7 @@ export function buildScenarioRun({ scenario: scenarioKey = "database", severity 
     log: [
       `Created incident ${incidentId} for ${scenario.service}.`,
       `Observed signal: ${scenario.trigger}`,
+      `CloudWatch source: ${scenario.cloudWatchLogGroup} (${scenario.awsRegion})`,
       `Stored alert metadata with ${occurrenceCount} occurrence${occurrenceCount === 1 ? "" : "s"}.`,
       `Attached runbook, dashboard, and owner context for ${scenario.ownerTeam}.`,
       `Generated explainable report with escalation priority ${scenario.priority}.`,
