@@ -125,6 +125,9 @@ function renderScenario(key) {
   setText("scenario-source", scenario.source);
   setText("scenario-repeats", `${scenario.occurrenceCount}x`);
   setText("scenario-priority", scenario.priority);
+  setText("scenario-alarm-name", scenario.alarmName);
+  setText("scenario-region", scenario.awsRegion || "us-east-1");
+  setText("scenario-log-group", scenario.cloudWatchLogGroup || "n/a");
   setText("scenario-summary", scenario.summary);
   setText("scenario-severity", scenario.severity);
 
@@ -140,6 +143,15 @@ function renderScenario(key) {
   setText("output-action", scenario.action);
   setText("sandbox-trigger", scenario.trigger);
   setText("sandbox-impact", scenario.impact);
+  setText("sandbox-alarm-name", scenario.alarmName);
+  setText(
+    "sandbox-metric-signal",
+    `${scenario.metricNamespace}/${scenario.metricName} > ${scenario.threshold} ${scenario.metricUnit || ""}`.trim(),
+  );
+  setText(
+    "sandbox-log-source",
+    `${scenario.cloudWatchLogGroup} · ${scenario.cloudWatchStreamPrefix} · ${scenario.awsRegion || "us-east-1"}`,
+  );
   renderList("output-evidence", scenario.evidence);
   renderList("output-next-steps", scenario.nextSteps);
   renderSteps(scenario.steps);
@@ -147,11 +159,18 @@ function renderScenario(key) {
 
 function renderIncidentDetail({ incident, steps = [], report = null }) {
   if (!incident) return;
+  const cloudwatchEvent = report?.cloudwatch_event || null;
+  const cloudwatchLogs = report?.cloudwatch_logs || report?.log_context?.source || null;
+  const metric = cloudwatchEvent?.detail?.configuration?.metrics?.[0]?.metricStat?.metric;
+  const alarmReason = cloudwatchEvent?.detail?.state?.reason;
 
   setText("scenario-title", incident.title || incident.service || "Incident");
   setText("scenario-source", incident.source || "Unknown");
   setText("scenario-repeats", `${incident.occurrence_count || 1}x`);
   setText("scenario-priority", incident.escalation_priority || "Monitor");
+  setText("scenario-alarm-name", incident.alarm_name || cloudwatchEvent?.detail?.alarmName || "Unknown");
+  setText("scenario-region", cloudwatchEvent?.region || cloudwatchLogs?.region || "us-east-1");
+  setText("scenario-log-group", cloudwatchLogs?.log_group || "n/a");
   setText("scenario-summary", incident.summary || "Incident context is available for this run.");
   setText("scenario-severity", incident.severity || "Unknown");
 
@@ -168,6 +187,19 @@ function renderIncidentDetail({ incident, steps = [], report = null }) {
   setText("output-action", report?.recommended_action || "Review the incident and take the next operational step.");
   setText("sandbox-trigger", report?.trigger || incident.alarm_name || "Alert signal details are not available.");
   setText("sandbox-impact", report?.impact || incident.summary || "Operational impact details are not available.");
+  setText("sandbox-alarm-name", incident.alarm_name || cloudwatchEvent?.detail?.alarmName || "Unknown");
+  setText(
+    "sandbox-metric-signal",
+    metric
+      ? `${metric.namespace}/${metric.name} · ${alarmReason || "Threshold breached"}`
+      : "The triggering metric and threshold will appear here.",
+  );
+  setText(
+    "sandbox-log-source",
+    cloudwatchLogs
+      ? `${cloudwatchLogs.log_group || "n/a"} · ${cloudwatchLogs.stream_prefix || "n/a"} · ${cloudwatchLogs.region || "us-east-1"}`
+      : "The CloudWatch log group and stream prefix will appear here.",
+  );
   renderList("output-evidence", report?.evidence || ["No additional evidence was stored for this incident."]);
   renderList("output-next-steps", report?.next_steps || ["Review incident ownership and the current service state."]);
 
@@ -218,6 +250,32 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
     impact: scenario.impact,
     evidence: scenario.evidence,
     next_steps: scenario.nextSteps,
+    cloudwatch_event: {
+      region: scenario.awsRegion || "us-east-1",
+      detail: {
+        alarmName: scenario.alarmName,
+        state: {
+          reason: scenario.trigger,
+        },
+        configuration: {
+          metrics: [
+            {
+              metricStat: {
+                metric: {
+                  namespace: scenario.metricNamespace,
+                  name: scenario.metricName,
+                },
+              },
+            },
+          ],
+        },
+      },
+    },
+    cloudwatch_logs: {
+      log_group: scenario.cloudWatchLogGroup,
+      stream_prefix: scenario.cloudWatchStreamPrefix,
+      region: scenario.awsRegion || "us-east-1",
+    },
   };
 
   return {
