@@ -38,6 +38,41 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 - Realistic CloudWatch Alarm State Change replay and log source metadata in hosted scenarios.
 - Free-tier durable storage option through Supabase Postgres for hosted scenario runs.
 
+## Hosted Workspace
+
+The hosted workspace is designed to feel like a real internal incident response tool: alert intake on the left, the latest response summary in the center, and saved incident history on the right.
+
+![Hosted OnCallAI workspace with CloudWatch-style incident context](docs/images/hosted-workspace-cloudwatch.png)
+
+## Hosted Flow Diagrams
+
+### Product flow
+
+```mermaid
+flowchart TD
+    A["CloudWatch-style alert intake"] --> B["Create incident record"]
+    B --> C["Collect relevant logs"]
+    C --> D["Retrieve similar incidents and runbook context"]
+    D --> E["Triage likely issue and impact"]
+    E --> F["Generate operator handoff and escalation"]
+    F --> G["Store incident, steps, and report"]
+    G --> H["Show result in the hosted workspace"]
+```
+
+### Agent graph
+
+```mermaid
+flowchart LR
+    A["Alert payload"] --> B["Collector agent"]
+    B --> C["Retrieval agent"]
+    C --> D["Triage agent"]
+    D --> E["Supervisor agent"]
+    E --> F["Supabase Postgres"]
+    C --> G["Supabase pgvector"]
+    F --> H["Stored incidents and reports"]
+    H --> I["Vercel workspace UI"]
+```
+
 ## Architecture
 
 OnCallAI follows an agent-inspired workflow in both local and hosted modes.
