@@ -164,6 +164,26 @@ body {
   gap: 14px;
 }
 
+.theme-toggle {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+  color: var(--ink);
+  font-weight: 700;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  border-color: rgba(194, 65, 12, 0.18);
+}
+
 .topbar-cta,
 .topbar-cta:visited {
   display: inline-flex;
@@ -643,6 +663,130 @@ h3 {
 .workspace-card-expected .step-marker {
   background: linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(203, 213, 225, 0.92));
   color: #0f172a;
+}
+
+.app-body[data-theme="dark"] {
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.15), transparent 24%),
+    radial-gradient(circle at 100% 0%, rgba(244, 63, 94, 0.12), transparent 20%),
+    linear-gradient(180deg, #09111d 0%, #0f1727 46%, #131d2f 100%);
+  color: #e5eefc;
+}
+
+.app-body[data-theme="dark"] .bg-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+}
+
+.app-body[data-theme="dark"] .topbar {
+  background: rgba(9, 17, 29, 0.72);
+  border-color: rgba(148, 163, 184, 0.14);
+  box-shadow: 0 22px 48px rgba(2, 6, 23, 0.28);
+}
+
+.app-body[data-theme="dark"] .brand-mark,
+.app-body[data-theme="dark"] .theme-toggle {
+  background: rgba(15, 23, 39, 0.92);
+  border-color: rgba(148, 163, 184, 0.16);
+  color: #f8fafc;
+}
+
+.app-body[data-theme="dark"] .brand-tag,
+.app-body[data-theme="dark"] .ghost-link,
+.app-body[data-theme="dark"] .panel-helper,
+.app-body[data-theme="dark"] .control-field,
+.app-body[data-theme="dark"] .status-card p,
+.app-body[data-theme="dark"] .recent-run-card p,
+.app-body[data-theme="dark"] .recent-run-meta,
+.app-body[data-theme="dark"] .scenario-summary,
+.app-body[data-theme="dark"] .mini-metric span,
+.app-body[data-theme="dark"] .output-label,
+.app-body[data-theme="dark"] .step-card p,
+.app-body[data-theme="dark"] .sandbox-log-line,
+.app-body[data-theme="dark"] .app-text {
+  color: rgba(203, 213, 225, 0.84);
+}
+
+.app-body[data-theme="dark"] .ghost-link {
+  border-bottom-color: rgba(203, 213, 225, 0.42);
+}
+
+.app-body[data-theme="dark"] .app-hero {
+  background: linear-gradient(145deg, rgba(10, 18, 30, 0.96), rgba(19, 31, 50, 0.92));
+  box-shadow: 0 30px 70px rgba(2, 6, 23, 0.32);
+}
+
+.app-body[data-theme="dark"] .app-hero-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+.app-body[data-theme="dark"] .workspace-card,
+.app-body[data-theme="dark"] .workspace-card-strong,
+.app-body[data-theme="dark"] .workspace-card-accent,
+.app-body[data-theme="dark"] .workspace-card-history {
+  background: linear-gradient(180deg, rgba(15, 23, 39, 0.96), rgba(18, 28, 45, 0.94));
+  border-color: rgba(148, 163, 184, 0.12);
+  box-shadow: 0 20px 48px rgba(2, 6, 23, 0.24);
+}
+
+.app-body[data-theme="dark"] .workspace-card-expected {
+  background: linear-gradient(145deg, rgba(3, 7, 18, 0.98), rgba(20, 27, 39, 0.96));
+  border-color: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 30px 70px rgba(2, 6, 23, 0.34);
+}
+
+.app-body[data-theme="dark"] .workspace-card h2,
+.app-body[data-theme="dark"] .workspace-card h3,
+.app-body[data-theme="dark"] .workspace-card strong,
+.app-body[data-theme="dark"] .workspace-card .meta,
+.app-body[data-theme="dark"] .workspace-card .brand-name {
+  color: #f8fafc;
+}
+
+.app-body[data-theme="dark"] .integration-strip,
+.app-body[data-theme="dark"] .status-card,
+.app-body[data-theme="dark"] .incident-pane,
+.app-body[data-theme="dark"] .mini-metric,
+.app-body[data-theme="dark"] .step-card,
+.app-body[data-theme="dark"] .output-block,
+.app-body[data-theme="dark"] .output-card,
+.app-body[data-theme="dark"] .recent-run-card,
+.app-body[data-theme="dark"] .recent-run-empty {
+  background: rgba(21, 31, 49, 0.86);
+  border-color: rgba(148, 163, 184, 0.12);
+}
+
+.app-body[data-theme="dark"] .incident-pane-accent {
+  background:
+    radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 28%),
+    rgba(30, 41, 59, 0.92);
+  border-color: rgba(249, 115, 22, 0.18);
+}
+
+.app-body[data-theme="dark"] .integration-button,
+.app-body[data-theme="dark"] .scenario-chip,
+.app-body[data-theme="dark"] .control-field select {
+  background: rgba(15, 23, 39, 0.96);
+  border-color: rgba(148, 163, 184, 0.16);
+  color: #e5eefc;
+}
+
+.app-body[data-theme="dark"] .integration-button:hover,
+.app-body[data-theme="dark"] .scenario-chip:hover,
+.app-body[data-theme="dark"] .theme-toggle:hover {
+  border-color: rgba(249, 115, 22, 0.24);
+}
+
+.app-body[data-theme="dark"] .sandbox-log-line.active {
+  background: rgba(24, 42, 70, 0.92);
+  border-color: rgba(59, 130, 246, 0.24);
+  color: #f8fafc;
+}
+
+.app-body[data-theme="dark"] .recent-run-card:hover {
+  box-shadow: 0 16px 30px rgba(59, 130, 246, 0.12);
 }
 
 .workspace-header,

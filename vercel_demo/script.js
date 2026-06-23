@@ -31,10 +31,40 @@ const INGESTION_INTEGRATIONS = {
   },
 };
 
+const THEME_STORAGE_KEY = "oncallai-theme";
+
 function setText(id, value) {
   const el = document.getElementById(id);
   if (el) {
     el.textContent = value;
+  }
+}
+
+function applyTheme(theme) {
+  const resolvedTheme = theme === "dark" ? "dark" : "light";
+  document.body.dataset.theme = resolvedTheme;
+
+  const toggle = document.getElementById("theme-toggle");
+  if (toggle) {
+    const darkMode = resolvedTheme === "dark";
+    toggle.textContent = darkMode ? "Light mode" : "Dark mode";
+    toggle.setAttribute("aria-pressed", String(darkMode));
+  }
+}
+
+function getStoredTheme() {
+  try {
+    return window.localStorage.getItem(THEME_STORAGE_KEY);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function persistTheme(theme) {
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (_error) {
+    // Ignore storage failures; theme still applies for the current session.
   }
 }
 
@@ -462,6 +492,14 @@ async function runSandboxScenario() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyTheme(getStoredTheme() || "light");
+
+  document.getElementById("theme-toggle")?.addEventListener("click", () => {
+    const nextTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    persistTheme(nextTheme);
+  });
+
   document.querySelectorAll(".integration-button").forEach((button) => {
     button.addEventListener("click", () => {
       setActiveIntegration(button.dataset.integration);
