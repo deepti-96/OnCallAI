@@ -340,6 +340,60 @@
               </div>
             </div>
           </article>
+
+          <article class="workspace-card workspace-card-evidence" id="incident-evidence">
+            <div class="workspace-header">
+              <div>
+                <p class="eyebrow">Evidence & Reasoning</p>
+                <h2>Inspect the incident inputs behind the response</h2>
+                <p class="panel-helper">
+                  Review the raw alert payload, collected logs, retrieved context, and the agent trace used to build
+                  the operator handoff.
+                </p>
+              </div>
+              <span class="meta">Explainability</span>
+            </div>
+
+            <div class="evidence-drawer-grid">
+              <details class="evidence-drawer" open>
+                <summary>
+                  <span>Alert payload</span>
+                  <strong id="evidence-alert-summary">CloudWatch Alarm State Change</strong>
+                </summary>
+                <pre class="evidence-code" id="evidence-alert-payload">Alert payload will appear here after an incident run.</pre>
+              </details>
+
+              <details class="evidence-drawer" open>
+                <summary>
+                  <span>Collected logs</span>
+                  <strong id="evidence-log-summary">No log snippets loaded yet</strong>
+                </summary>
+                <div class="evidence-stack" id="evidence-log-context">
+                  <div class="evidence-empty">Run or open an incident to inspect the collected log snippets.</div>
+                </div>
+              </details>
+
+              <details class="evidence-drawer">
+                <summary>
+                  <span>Retrieved context</span>
+                  <strong id="evidence-retrieval-summary">No grounding documents loaded yet</strong>
+                </summary>
+                <div class="evidence-stack" id="evidence-retrieved-context">
+                  <div class="evidence-empty">Retrieved matches will appear here once the retrieval agent runs.</div>
+                </div>
+              </details>
+
+              <details class="evidence-drawer">
+                <summary>
+                  <span>Agent trace</span>
+                  <strong id="evidence-trace-summary">No graph trace available yet</strong>
+                </summary>
+                <div class="trace-list" id="evidence-graph-trace">
+                  <div class="evidence-empty">The hosted graph trace will appear here after an incident run.</div>
+                </div>
+              </details>
+            </div>
+          </article>
         </section>
       </main>
     </div>

@@ -40,6 +40,13 @@ function setText(id, value) {
   }
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
 function applyTheme(theme) {
   const resolvedTheme = theme === "dark" ? "dark" : "light";
   document.body.dataset.theme = resolvedTheme;
@@ -90,6 +97,139 @@ function renderSteps(steps) {
       `,
     )
     .join("");
+}
+
+function renderCodeBlock(id, value, fallback) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = value ? JSON.stringify(value, null, 2) : fallback;
+}
+
+function buildTraceEntries(payload) {
+  if (Array.isArray(payload?.graph_trace) && payload.graph_trace.length) {
+    return payload.graph_trace.map((entry) => ({
+      node: entry.node,
+      status: entry.status || "completed",
+      detail: entry.detail,
+    }));
+  }
+
+  if (Array.isArray(payload?.steps) && payload.steps.length) {
+    return payload.steps
+      .filter((step) => String(step.phase || "").startsWith("graph/"))
+      .map((step) => ({
+        node: String(step.phase).replace("graph/", ""),
+        status: step.status || "completed",
+        detail: step.detail || step.description,
+      }));
+  }
+
+  return [];
+}
+
+function renderLogContext(logContext = null) {
+  const container = document.getElementById("evidence-log-context");
+  if (!container) return;
+
+  const logs = logContext?.logs || [];
+  setText(
+    "evidence-log-summary",
+    logs.length ? `${logs.length} log snippet${logs.length === 1 ? "" : "s"} collected` : "No log snippets loaded yet",
+  );
+
+  if (!logs.length) {
+    container.innerHTML = `<div class="evidence-empty">Run or open an incident to inspect the collected log snippets.</div>`;
+    return;
+  }
+
+  container.innerHTML = logs
+    .map(
+      (log) => `
+        <article class="evidence-item">
+          <div class="evidence-item-header">
+            <strong>${escapeHtml(log.file_name || "Log snippet")}</strong>
+            <span>${escapeHtml(logContext.folder || "bundle")}</span>
+          </div>
+          <pre class="evidence-code">${escapeHtml(log.snippet || "")}</pre>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderRetrievedContext(retrievedExamples = [], retrieval = null) {
+  const container = document.getElementById("evidence-retrieved-context");
+  if (!container) return;
+
+  const sourceLabel = retrieval?.source || retrieval?.summary?.mode || "retrieval";
+  setText(
+    "evidence-retrieval-summary",
+    retrievedExamples.length
+      ? `${retrievedExamples.length} grounding match${retrievedExamples.length === 1 ? "" : "es"} from ${sourceLabel}`
+      : "No grounding documents loaded yet",
+  );
+
+  if (!retrievedExamples.length) {
+    container.innerHTML = `<div class="evidence-empty">Retrieved matches will appear here once the retrieval agent runs.</div>`;
+    return;
+  }
+
+  container.innerHTML = retrievedExamples
+    .map(
+      (item) => `
+        <article class="evidence-item">
+          <div class="evidence-item-header">
+            <strong>${escapeHtml(item.title || item.pattern || "Grounding document")}</strong>
+            <span>${escapeHtml(item.source || sourceLabel)}</span>
+          </div>
+          <p>${escapeHtml(item.root_cause || item.content || "No summary available.")}</p>
+          ${
+            Array.isArray(item.mitigation) && item.mitigation.length
+              ? `<ul>${item.mitigation.map((entry) => `<li>${escapeHtml(entry)}</li>`).join("")}</ul>`
+              : ""
+          }
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderGraphTrace(payload) {
+  const container = document.getElementById("evidence-graph-trace");
+  if (!container) return;
+
+  const entries = buildTraceEntries(payload);
+  setText("evidence-trace-summary", entries.length ? `${entries.length} workflow step${entries.length === 1 ? "" : "s"}` : "No graph trace available yet");
+
+  if (!entries.length) {
+    container.innerHTML = `<div class="evidence-empty">The hosted graph trace will appear here after an incident run.</div>`;
+    return;
+  }
+
+  container.innerHTML = entries
+    .map(
+      (entry) => `
+        <article class="trace-item">
+          <div class="trace-item-header">
+            <strong>${escapeHtml(entry.node)}</strong>
+            <span>${escapeHtml(entry.status)}</span>
+          </div>
+          <p>${escapeHtml(entry.detail || "No additional detail recorded.")}</p>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderEvidenceDrawers(payload) {
+  const report = payload?.report || null;
+  const cloudwatchEvent = report?.cloudwatch_event || null;
+  const alertSummary = cloudwatchEvent?.detailType || cloudwatchEvent?.detailType || "CloudWatch Alarm State Change";
+  setText("evidence-alert-summary", alertSummary);
+  renderCodeBlock("evidence-alert-payload", cloudwatchEvent, "Alert payload will appear here after an incident run.");
+  renderLogContext(report?.log_context || null);
+  renderRetrievedContext(report?.retrieved_examples || [], report?.retrieval || null);
+  renderGraphTrace(payload);
 }
 
 function renderSandboxLog(lines) {
@@ -332,7 +472,7 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
     issue: scenario.issue,
     root_cause: scenario.rootCause,
     recommended_action: scenario.action,
-      trigger: `${integration.sourceLabel} alert · ${scenario.trigger}`,
+    trigger: `${integration.sourceLabel} alert · ${scenario.trigger}`,
     impact: scenario.impact,
     evidence: scenario.evidence,
     next_steps: scenario.nextSteps,
@@ -361,6 +501,29 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
       log_group: scenario.cloudWatchLogGroup,
       stream_prefix: scenario.cloudWatchStreamPrefix,
       region: scenario.awsRegion || "us-east-1",
+    },
+    log_context: {
+      folder: scenario.key === "database" ? "db" : scenario.key === "memory" ? "infra" : "web",
+      logs: [
+        {
+          file_name: `${scenario.service}-incident.log`,
+          snippet: scenario.evidence.join("\n"),
+        },
+      ],
+    },
+    retrieved_examples: [
+      {
+        title: `${scenario.service} incident pattern`,
+        source: "bundled-rag",
+        root_cause: scenario.rootCause,
+        mitigation: scenario.nextSteps,
+      },
+    ],
+    retrieval: {
+      source: "bundled-rag",
+      summary: {
+        mode: "bundled-rag",
+      },
     },
   };
 
@@ -434,6 +597,7 @@ async function loadIncidentDetail(incidentId) {
   const payload = await fetchJson(`/api/incidents/${incidentId}`);
   renderIncidentDetail(payload);
   renderLatestIncident(payload.incident);
+  renderEvidenceDrawers(payload);
 }
 
 async function runSandboxScenario() {
@@ -476,6 +640,7 @@ async function runSandboxScenario() {
     renderRecentRuns(payload.incidents || []);
     renderLatestIncident(payload.incident);
     renderIncidentDetail(payload);
+    renderEvidenceDrawers(payload);
   } catch (_error) {
     const fallback = localPreviewForScenario(scenarioKey, severityMode, volumeMode);
     setText("sandbox-headline", fallback.preview.headline);
@@ -488,6 +653,7 @@ async function runSandboxScenario() {
     renderRecentRuns(fallback.incidents);
     renderLatestIncident(fallback.incident);
     renderIncidentDetail(fallback);
+    renderEvidenceDrawers(fallback);
   }
 }
 
@@ -525,6 +691,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setActiveIntegration("cloudwatch");
   renderScenario("database");
+  renderEvidenceDrawers(localPreviewForScenario("database", "auto", "auto"));
   refreshHealth();
   refreshRecentRuns();
 });
