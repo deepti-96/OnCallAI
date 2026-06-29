@@ -283,12 +283,14 @@ This is the safest path if you want a public product site and a live scenario fl
 
 1. The product overview page and live workspace run on Vercel.
 2. The hosted workspace calls Vercel API routes in `api/`.
-3. Those API routes create incidents, steps, and reports for CloudWatch-style demo scenarios.
-4. If Supabase credentials are present, the data is stored durably in Postgres.
-5. If credentials are missing, the app falls back to local preview storage for local development only.
-6. If Gemini is configured, hosted scenarios run the Gemini-backed collector, retrieval, triage, and supervisor graph. Otherwise they run in rules-demo mode.
-7. If Supabase vector RAG is configured, hosted scenarios retrieve grounding documents from pgvector. Otherwise they use bundled examples.
-8. If filesystem-hosted demo logs are unavailable in the serverless runtime, the API falls back to bundled log and incident-example data so the hosted workflow stays usable.
+3. The workspace normalizes CloudWatch, PagerDuty, Datadog, or Grafana-style intake selections into the same incident schema.
+4. Those API routes create incidents, steps, and reports for hosted demo scenarios.
+5. The workspace can reopen stored incidents and inspect the raw alert payload, collected logs, retrieved matches, and graph trace in the evidence drawer.
+6. If Supabase credentials are present, the data is stored durably in Postgres.
+7. If credentials are missing, the app falls back to local preview storage for local development only.
+8. If Gemini is configured, hosted scenarios run the Gemini-backed collector, retrieval, triage, and supervisor graph. Otherwise they run in rules-demo mode.
+9. If Supabase vector RAG is configured, hosted scenarios retrieve grounding documents from pgvector. Otherwise they use bundled examples.
+10. If filesystem-hosted demo logs are unavailable in the serverless runtime, the API falls back to bundled log and incident-example data so the hosted workflow stays usable.
 
 ### Supabase setup
 
@@ -395,6 +397,9 @@ The current demo path is intentionally simple and transparent:
 - Reports are stored in structured JSON plus Markdown.
 - The UI reads directly from the database and lets you inspect repeat-alert triage signals, escalation guidance, alert metadata, timelines, payloads, and final reports.
 - The hosted product site can also run scenarios end to end, replay CloudWatch Alarm State Change-style events, collect bundled logs, retrieve grounding context, run a hosted agent graph, and persist results in Supabase when deployed with the free-tier hosted stack.
+- The hosted workspace can switch between multiple alert-source entrypoints while preserving the same downstream incident schema and response flow.
+- The evidence drawer makes the hosted graph easier to inspect by surfacing the raw alert payload, collected logs, retrieved grounding matches, and graph trace for the selected incident.
+- Dark mode is available in the hosted workspace for demo screenshots, review flows, and lower-glare product previews.
 
 This makes the project easy to demo, debug, and extend locally.
 
