@@ -52,18 +52,29 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 - Environment-based configuration for polling, models, logging mode, and optional cloud integrations.
 - Vercel-compatible product site with interactive incident testing through serverless API routes.
 - Hosted incident intake that generates a CloudWatch alarm envelope, CloudWatch log-source metadata, and persisted incident records.
+- Multi-source alert ingestion controls for CloudWatch, PagerDuty, Datadog, and Grafana-style incident entrypoints.
 - Hosted agent graph with intake, collector, retrieval, triage, and supervisor nodes.
 - Optional Gemini structured JSON reasoning for hosted triage and operator handoff generation.
 - Hosted RAG that falls back to bundled incident examples or uses Supabase pgvector when configured.
 - Bundled runtime log and RAG fallbacks so the hosted app still runs even if serverless filesystem packaging is constrained.
 - Realistic CloudWatch Alarm State Change replay and log source metadata in hosted scenarios.
+- Evidence and reasoning drawers that expose raw alert payloads, collected log snippets, retrieved grounding context, and agent traces.
+- Persistent dark mode for the hosted workspace so screenshots and demos can switch between light and dark surfaces cleanly.
 - Free-tier durable storage option through Supabase Postgres for hosted scenario runs.
 
 ## Hosted Workspace
 
-The hosted workspace is designed to feel like a real internal incident response tool: alert intake on the left, the latest response summary in the center, and saved incident history on the right.
+The hosted workspace is designed to feel like a real internal incident response tool: alert intake on the left, the latest response summary in the center, saved incident history on the right, and evidence inspection below the main incident detail.
 
 ![Hosted OnCallAI workspace with CloudWatch-style incident context](docs/images/hosted-workspace-cloudwatch.png)
+
+The current hosted experience includes:
+
+- alert-source switching for CloudWatch, PagerDuty, Datadog, and Grafana-style intake
+- a live response summary backed by the hosted API
+- stored incidents that can be reopened directly from the workspace
+- an evidence drawer for raw payloads, collected logs, retrieved context, and the agent trace
+- a persistent dark mode toggle for alternate demo and review layouts
 
 ## Hosted Flow Diagrams
 
