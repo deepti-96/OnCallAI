@@ -200,6 +200,30 @@
                 <span class="meta">Alert intake</span>
               </div>
 
+              <div class="integration-strip">
+                <div class="integration-strip-copy">
+                  <span class="output-label">Alert source</span>
+                  <strong id="integration-label">CloudWatch alarm intake</strong>
+                  <span class="meta" id="integration-detail">
+                    AWS CloudWatch alarms are normalized directly into the hosted incident workflow.
+                  </span>
+                </div>
+                <div class="integration-button-row" aria-label="Alert source integrations">
+                  <button class="integration-button active button-reset" data-integration="cloudwatch" type="button">
+                    CloudWatch
+                  </button>
+                  <button class="integration-button button-reset" data-integration="pagerduty" type="button">
+                    PagerDuty
+                  </button>
+                  <button class="integration-button button-reset" data-integration="datadog" type="button">
+                    Datadog
+                  </button>
+                  <button class="integration-button button-reset" data-integration="grafana" type="button">
+                    Grafana
+                  </button>
+                </div>
+              </div>
+
               <div class="control-grid">
                 <label class="control-field">
                   <span>Scenario</span>
