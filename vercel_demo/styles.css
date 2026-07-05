@@ -340,10 +340,21 @@ h3 {
   box-shadow: 0 18px 34px rgba(194, 65, 12, 0.22);
 }
 
+.primary-button.is-busy {
+  opacity: 0.82;
+  cursor: wait;
+  filter: saturate(0.92);
+}
+
 .secondary-button {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(27, 36, 48, 0.1);
+}
+
+.secondary-button:disabled,
+.primary-button:disabled {
+  cursor: not-allowed;
 }
 
 .signal-row {

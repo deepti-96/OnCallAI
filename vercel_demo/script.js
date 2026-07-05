@@ -605,10 +605,17 @@ async function runSandboxScenario() {
   const severityMode = document.getElementById("sandbox-severity")?.value || "auto";
   const volumeMode = document.getElementById("sandbox-volume")?.value || "auto";
   const integration = getSelectedIntegration();
+  const runButton = document.getElementById("run-sandbox");
+  const originalButtonLabel = runButton?.textContent || "Send Alert";
 
   renderScenario(scenarioKey);
   setText("sandbox-status", "Running live workflow");
   renderSandboxLog([integration.submitLabel]);
+  if (runButton) {
+    runButton.disabled = true;
+    runButton.classList.add("is-busy");
+    runButton.textContent = "Running...";
+  }
 
   try {
     const payload = await fetchJson("/api/run-scenario", {
@@ -654,6 +661,12 @@ async function runSandboxScenario() {
     renderLatestIncident(fallback.incident);
     renderIncidentDetail(fallback);
     renderEvidenceDrawers(fallback);
+  } finally {
+    if (runButton) {
+      runButton.disabled = false;
+      runButton.classList.remove("is-busy");
+      runButton.textContent = originalButtonLabel;
+    }
   }
 }
 
