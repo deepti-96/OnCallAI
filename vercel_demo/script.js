@@ -243,6 +243,19 @@ function renderSandboxLog(lines) {
     .join("");
 }
 
+function formatIncidentTimestamp(value) {
+  if (!value) return "Time unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Time unavailable";
+
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function extendLogWithGraphTrace(lines, graphTrace = []) {
   if (!Array.isArray(graphTrace) || !graphTrace.length) {
     return lines;
@@ -270,6 +283,10 @@ function renderRecentRuns(incidents = []) {
             <span class="badge ${String(incident.severity).toLowerCase() === "critical" ? "critical" : "priority"}">${incident.severity}</span>
           </div>
           <p>${incident.title}</p>
+          <div class="recent-run-submeta">
+            <span>${incident.source || "Incident source"}</span>
+            <span>${formatIncidentTimestamp(incident.created_at)}</span>
+          </div>
           <div class="recent-run-meta">
             <span>${incident.status}</span>
             <span>${incident.occurrence_count || 1} alert${(incident.occurrence_count || 1) === 1 ? "" : "s"}</span>
@@ -330,7 +347,9 @@ function setActiveIntegration(integrationKey) {
   const integration = INGESTION_INTEGRATIONS[integrationKey] || INGESTION_INTEGRATIONS.cloudwatch;
 
   document.querySelectorAll(".integration-button").forEach((button) => {
-    button.classList.toggle("active", button.dataset.integration === integration.key);
+    const isActive = button.dataset.integration === integration.key;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
   });
 
   renderIntegrationStatus(integration);
@@ -605,10 +624,17 @@ async function runSandboxScenario() {
   const severityMode = document.getElementById("sandbox-severity")?.value || "auto";
   const volumeMode = document.getElementById("sandbox-volume")?.value || "auto";
   const integration = getSelectedIntegration();
+  const runButton = document.getElementById("run-sandbox");
+  const originalButtonLabel = runButton?.textContent || "Send Alert";
 
   renderScenario(scenarioKey);
   setText("sandbox-status", "Running live workflow");
   renderSandboxLog([integration.submitLabel]);
+  if (runButton) {
+    runButton.disabled = true;
+    runButton.classList.add("is-busy");
+    runButton.textContent = "Running...";
+  }
 
   try {
     const payload = await fetchJson("/api/run-scenario", {
@@ -654,6 +680,12 @@ async function runSandboxScenario() {
     renderLatestIncident(fallback.incident);
     renderIncidentDetail(fallback);
     renderEvidenceDrawers(fallback);
+  } finally {
+    if (runButton) {
+      runButton.disabled = false;
+      runButton.classList.remove("is-busy");
+      runButton.textContent = originalButtonLabel;
+    }
   }
 }
 

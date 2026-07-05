@@ -62,6 +62,7 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 - Realistic CloudWatch Alarm State Change replay and log source metadata in hosted scenarios.
 - Evidence and reasoning drawers that expose raw alert payloads, collected log snippets, retrieved grounding context, and agent traces.
 - Persistent dark mode for the hosted workspace so screenshots and demos can switch between light and dark surfaces cleanly.
+- Stronger operator-workspace hierarchy for intake controls, active response review, and stored incident history.
 - Free-tier durable storage option through Supabase Postgres for hosted scenario runs.
 
 ## Hosted Workspace
@@ -73,7 +74,9 @@ The hosted workspace is designed to feel like a real internal incident response 
 The current hosted experience includes:
 
 - alert-source switching for CloudWatch, PagerDuty, Datadog, and Grafana-style intake
+- a visible intake source selector in the operator workspace
 - a live response summary backed by the hosted API
+- richer signal context for alarm name, metric, impact, and log source in the walkthrough view
 - stored incidents that can be reopened directly from the workspace
 - an evidence drawer for raw payloads, collected logs, retrieved context, and the agent trace
 - a persistent dark mode toggle for alternate demo and review layouts

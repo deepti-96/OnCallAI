@@ -340,10 +340,21 @@ h3 {
   box-shadow: 0 18px 34px rgba(194, 65, 12, 0.22);
 }
 
+.primary-button.is-busy {
+  opacity: 0.82;
+  cursor: wait;
+  filter: saturate(0.92);
+}
+
 .secondary-button {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(27, 36, 48, 0.1);
+}
+
+.secondary-button:disabled,
+.primary-button:disabled {
+  cursor: not-allowed;
 }
 
 .signal-row {
@@ -768,6 +779,23 @@ h3 {
   border-color: rgba(148, 163, 184, 0.12);
 }
 
+.app-body[data-theme="dark"] .sandbox-preview {
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(15, 23, 39, 0.98) 0%, rgba(18, 35, 60, 0.96) 100%);
+  border-color: rgba(96, 165, 250, 0.18);
+  box-shadow: 0 30px 76px rgba(2, 6, 23, 0.32);
+}
+
+.app-body[data-theme="dark"] .storage-strip {
+  background: rgba(28, 37, 52, 0.92);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+.app-body[data-theme="dark"] .recent-runs {
+  border-top-color: rgba(148, 163, 184, 0.12);
+}
+
 .app-body[data-theme="dark"] .evidence-code {
   color: #dbeafe;
 }
@@ -885,11 +913,25 @@ h3 {
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
   gap: 18px;
+  align-items: start;
 }
 
 .sandbox-panel,
 .sandbox-preview {
   min-height: 100%;
+}
+
+.sandbox-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 253, 249, 0.94) 0%, rgba(252, 246, 238, 0.9) 100%);
+}
+
+.sandbox-preview {
+  background:
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(252, 254, 255, 0.98) 0%, rgba(240, 247, 255, 0.94) 100%);
+  border-color: rgba(14, 165, 233, 0.16);
+  box-shadow: 0 28px 72px rgba(30, 64, 175, 0.12);
 }
 
 .control-grid {
@@ -989,6 +1031,7 @@ h3 {
 .sandbox-log {
   display: grid;
   gap: 10px;
+  padding-top: 2px;
 }
 
 .evidence-drawer-grid {
@@ -1113,6 +1156,7 @@ h3 {
   border-radius: 16px;
   background: rgba(255, 252, 246, 0.86);
   border: 1px solid rgba(138, 50, 4, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
 }
 
 .sandbox-log-line {
@@ -1133,6 +1177,8 @@ h3 {
 
 .recent-runs {
   margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(27, 36, 48, 0.08);
 }
 
 .demo-panel-header.compact {
@@ -1172,12 +1218,19 @@ h3 {
 }
 
 .recent-run-row,
+.recent-run-submeta,
 .recent-run-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.recent-run-submeta {
+  margin-top: 10px;
+  color: var(--slate);
+  font-size: 0.84rem;
 }
 
 .recent-run-meta {
@@ -1303,6 +1356,29 @@ h3 {
   margin: 0 0 18px;
 }
 
+.intake-context-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.intake-context-item {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.intake-context-item strong {
+  display: block;
+  line-height: 1.45;
+}
+
+.intake-context-wide {
+  grid-column: span 1;
+}
+
 .stepper {
   display: grid;
   gap: 12px;
@@ -1342,6 +1418,10 @@ h3 {
   display: grid;
   gap: 12px;
   margin-bottom: 18px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(27, 36, 48, 0.06);
 }
 
 .output-block {
@@ -1350,6 +1430,36 @@ h3 {
   border-radius: 16px;
   padding: 16px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.output-card .output-block:first-child {
+  border-color: rgba(14, 165, 233, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 10px 24px rgba(14, 165, 233, 0.08);
+}
+
+.context-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.context-card {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.context-card strong {
+  display: block;
+  line-height: 1.45;
+}
+
+.context-card-wide {
+  grid-column: 1 / -1;
 }
 
 .evidence-grid {
@@ -1498,9 +1608,11 @@ code {
   }
 
   .mini-metrics,
+  .intake-context-strip,
   .control-grid,
   .evidence-grid,
-  .evidence-drawer-grid {
+  .evidence-drawer-grid,
+  .context-grid {
     grid-template-columns: 1fr;
   }
 

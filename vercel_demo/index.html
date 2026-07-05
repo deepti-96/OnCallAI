@@ -47,6 +47,9 @@
           </div>
           <div class="topbar-actions">
             <span class="topbar-pill">Early Access</span>
+            <button class="theme-toggle button-reset" id="theme-toggle" type="button" aria-pressed="false">
+              Dark mode
+            </button>
             <a class="topbar-cta" href="#try-product">Try Product</a>
             <a class="ghost-link" href="https://github.com/deepti-96/OnCallAI" target="_blank" rel="noreferrer">
               View Repository
@@ -200,6 +203,30 @@
                 <span class="meta">Alert intake</span>
               </div>
 
+              <div class="integration-strip">
+                <div class="integration-strip-copy">
+                  <span class="output-label">Alert source</span>
+                  <strong id="integration-label">CloudWatch alarm intake</strong>
+                  <span class="meta" id="integration-detail">
+                    AWS CloudWatch alarms are normalized directly into the hosted incident workflow.
+                  </span>
+                </div>
+                <div class="integration-button-row" aria-label="Alert source integrations">
+                  <button class="integration-button active button-reset" data-integration="cloudwatch" type="button" aria-pressed="true">
+                    CloudWatch
+                  </button>
+                  <button class="integration-button button-reset" data-integration="pagerduty" type="button" aria-pressed="false">
+                    PagerDuty
+                  </button>
+                  <button class="integration-button button-reset" data-integration="datadog" type="button" aria-pressed="false">
+                    Datadog
+                  </button>
+                  <button class="integration-button button-reset" data-integration="grafana" type="button" aria-pressed="false">
+                    Grafana
+                  </button>
+                </div>
+              </div>
+
               <div class="control-grid">
                 <label class="control-field">
                   <span>Scenario</span>
@@ -243,7 +270,7 @@
                   <p class="eyebrow">Response Summary</p>
                   <h3 id="sandbox-headline">Ready to run a live incident workflow</h3>
                 </div>
-                <span class="meta" id="sandbox-status">Awaiting input</span>
+                <span class="meta" id="sandbox-status" role="status" aria-live="polite">Awaiting input</span>
               </div>
 
               <div class="output-card">
@@ -336,6 +363,21 @@
                 </div>
               </div>
 
+              <div class="intake-context-strip">
+                <div class="intake-context-item">
+                  <span class="output-label">Alarm</span>
+                  <strong id="scenario-alarm-name">payment-service-critical-latency</strong>
+                </div>
+                <div class="intake-context-item">
+                  <span class="output-label">Region</span>
+                  <strong id="scenario-region">us-east-1</strong>
+                </div>
+                <div class="intake-context-item intake-context-wide">
+                  <span class="output-label">Log group</span>
+                  <strong id="scenario-log-group">/aws/ecs/payment-service</strong>
+                </div>
+              </div>
+
               <p class="scenario-summary" id="scenario-summary">
                 Latency alarms are firing repeatedly for a tier-1 payment dependency during checkout traffic spikes.
               </p>
@@ -364,6 +406,29 @@
                 <div class="output-block">
                   <span class="output-label">Recommended action</span>
                   <strong id="output-action">Page payments-oncall and validate DB readiness before rollback.</strong>
+                </div>
+              </div>
+
+              <div class="context-grid">
+                <div class="context-card">
+                  <span class="output-label">Alert signal</span>
+                  <strong id="sandbox-trigger">CloudWatch alert · High latency threshold breached</strong>
+                </div>
+                <div class="context-card">
+                  <span class="output-label">Operational impact</span>
+                  <strong id="sandbox-impact">Checkout latency is rising for payment-dependent requests.</strong>
+                </div>
+                <div class="context-card">
+                  <span class="output-label">CloudWatch alarm</span>
+                  <strong id="sandbox-alarm-name">payment-service-critical-latency</strong>
+                </div>
+                <div class="context-card">
+                  <span class="output-label">Metric signal</span>
+                  <strong id="sandbox-metric-signal">AWS/ApplicationELB/TargetResponseTime > 1 Seconds</strong>
+                </div>
+                <div class="context-card context-card-wide">
+                  <span class="output-label">Log source</span>
+                  <strong id="sandbox-log-source">/aws/ecs/payment-service · demo-db · us-east-1</strong>
                 </div>
               </div>
 
