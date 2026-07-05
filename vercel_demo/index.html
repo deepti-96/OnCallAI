@@ -182,11 +182,11 @@
 
         <section class="section try-product-section" id="try-product">
           <div class="section-heading">
-            <p class="eyebrow">Try Product</p>
-            <h2>Test how the workspace behaves in a live incident scenario.</h2>
+            <p class="eyebrow">Operator Workspace</p>
+            <h2>Run an incident through the workspace and inspect the result end to end.</h2>
             <p class="section-copy">
-              Choose a service pattern, adjust severity, and run a simulated incident. This gives you a product-like
-              testing flow you can click through during a live conversation.
+              Choose an alert pattern, set urgency, and send it into the hosted workflow to review the resulting
+              incident, evidence, and recommended response.
             </p>
           </div>
 
@@ -195,9 +195,9 @@
               <div class="demo-panel-header">
                 <div>
                   <p class="eyebrow">Simulation Controls</p>
-                  <h3>Launch a scenario</h3>
+                  <h3>Create incident</h3>
                 </div>
-                <span class="meta">Interactive testing mode</span>
+                <span class="meta">Alert intake</span>
               </div>
 
               <div class="control-grid">
@@ -232,29 +232,29 @@
               </div>
 
               <div class="sandbox-actions">
-                <button class="primary-button button-reset" id="run-sandbox" type="button">Run Analysis</button>
-                <button class="secondary-button button-reset" id="open-workflow" type="button">Show In Workspace</button>
+                <button class="primary-button button-reset" id="run-sandbox" type="button">Send Alert</button>
+                <button class="secondary-button button-reset" id="open-workflow" type="button">Open incident view</button>
               </div>
             </article>
 
             <article class="demo-panel demo-panel-accent sandbox-preview">
               <div class="demo-panel-header">
                 <div>
-                  <p class="eyebrow">Live Preview</p>
-                  <h3 id="sandbox-headline">Ready to simulate a product workflow</h3>
+                  <p class="eyebrow">Response Summary</p>
+                  <h3 id="sandbox-headline">Ready to run a live incident workflow</h3>
                 </div>
                 <span class="meta" id="sandbox-status">Awaiting input</span>
               </div>
 
               <div class="output-card">
                 <div class="output-block">
-                  <span class="output-label">What will happen</span>
+                  <span class="output-label">Incident brief</span>
                   <strong id="sandbox-summary">
                     Pick a scenario and run it to see the incident intake, reasoning path, escalation, and output.
                   </strong>
                 </div>
                 <div class="output-block">
-                  <span class="output-label">Expected operator outcome</span>
+                  <span class="output-label">Recommended next action</span>
                   <strong id="sandbox-outcome">A clear next action, supporting evidence, and escalation target.</strong>
                 </div>
               </div>
@@ -268,7 +268,7 @@
               </div>
 
               <div class="sandbox-log" id="sandbox-log">
-                <div class="sandbox-log-line active">Waiting for a simulated alert...</div>
+                <div class="sandbox-log-line active">Waiting for incident activity...</div>
               </div>
 
               <div class="recent-runs">
