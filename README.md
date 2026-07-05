@@ -20,6 +20,7 @@ The repository also includes a Vercel-friendly web experience with serverless AP
 - [Free-Tier Hosted Stack](#free-tier-hosted-stack)
 - [Make Targets](#make-targets)
 - [Configuration](#configuration)
+- [Alert Source Mapping](#alert-source-mapping)
 - [How the Demo Works](#how-the-demo-works)
 - [Hosted Agent Modes](#hosted-agent-modes)
 - [Current Scope and Limitations](#current-scope-and-limitations)
@@ -394,6 +395,18 @@ The project is configured primarily through environment variables.
 - `AWS_REGION`: AWS region for real CloudWatch polling
 - `CLOUDWATCH_MAX_RECORDS`: Maximum number of alarms to fetch per polling cycle
 
+## Alert Source Mapping
+
+The hosted workspace presents multiple intake labels, but they intentionally converge into one internal incident schema and one downstream response flow:
+
+| Alert source | What the UI is showing | What the backend does |
+| --- | --- | --- |
+| CloudWatch | CloudWatch Alarm State Change-style intake | Builds incident metadata, alarm context, and log-source hints |
+| PagerDuty | PagerDuty-style intake label | Normalizes the payload into the same incident schema with provider metadata |
+| Datadog | Datadog-style intake label | Normalizes the payload into the same incident schema with provider metadata |
+| Grafana | Grafana-style intake label | Normalizes the payload into the same incident schema with provider metadata |
+
+This is useful in demos and interviews because you can explain that the provider-specific ingestion layer changes, but the collector, retrieval, triage, supervisor, storage, and workspace review path stay consistent.
 
 ## How the Demo Works
 
