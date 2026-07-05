@@ -347,7 +347,9 @@ function setActiveIntegration(integrationKey) {
   const integration = INGESTION_INTEGRATIONS[integrationKey] || INGESTION_INTEGRATIONS.cloudwatch;
 
   document.querySelectorAll(".integration-button").forEach((button) => {
-    button.classList.toggle("active", button.dataset.integration === integration.key);
+    const isActive = button.dataset.integration === integration.key;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
   });
 
   renderIntegrationStatus(integration);
