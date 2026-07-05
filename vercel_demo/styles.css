@@ -1218,12 +1218,19 @@ h3 {
 }
 
 .recent-run-row,
+.recent-run-submeta,
 .recent-run-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.recent-run-submeta {
+  margin-top: 10px;
+  color: var(--slate);
+  font-size: 0.84rem;
 }
 
 .recent-run-meta {

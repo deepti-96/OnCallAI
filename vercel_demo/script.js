@@ -243,6 +243,19 @@ function renderSandboxLog(lines) {
     .join("");
 }
 
+function formatIncidentTimestamp(value) {
+  if (!value) return "Time unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Time unavailable";
+
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function extendLogWithGraphTrace(lines, graphTrace = []) {
   if (!Array.isArray(graphTrace) || !graphTrace.length) {
     return lines;
@@ -270,6 +283,10 @@ function renderRecentRuns(incidents = []) {
             <span class="badge ${String(incident.severity).toLowerCase() === "critical" ? "critical" : "priority"}">${incident.severity}</span>
           </div>
           <p>${incident.title}</p>
+          <div class="recent-run-submeta">
+            <span>${incident.source || "Incident source"}</span>
+            <span>${formatIncidentTimestamp(incident.created_at)}</span>
+          </div>
           <div class="recent-run-meta">
             <span>${incident.status}</span>
             <span>${incident.occurrence_count || 1} alert${(incident.occurrence_count || 1) === 1 ? "" : "s"}</span>
