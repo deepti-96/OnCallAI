@@ -394,6 +394,29 @@
                 </div>
               </div>
 
+              <div class="context-grid">
+                <div class="context-card">
+                  <span class="output-label">Alert signal</span>
+                  <strong id="sandbox-trigger">CloudWatch alert · High latency threshold breached</strong>
+                </div>
+                <div class="context-card">
+                  <span class="output-label">Operational impact</span>
+                  <strong id="sandbox-impact">Checkout latency is rising for payment-dependent requests.</strong>
+                </div>
+                <div class="context-card">
+                  <span class="output-label">CloudWatch alarm</span>
+                  <strong id="sandbox-alarm-name">payment-service-critical-latency</strong>
+                </div>
+                <div class="context-card">
+                  <span class="output-label">Metric signal</span>
+                  <strong id="sandbox-metric-signal">AWS/ApplicationELB/TargetResponseTime > 1 Seconds</strong>
+                </div>
+                <div class="context-card context-card-wide">
+                  <span class="output-label">Log source</span>
+                  <strong id="sandbox-log-source">/aws/ecs/payment-service · demo-db · us-east-1</strong>
+                </div>
+              </div>
+
               <div class="evidence-grid">
                 <div class="evidence-card">
                   <h4>Why the system thinks this</h4>
