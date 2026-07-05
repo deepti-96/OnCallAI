@@ -16,6 +16,7 @@ The repository also includes a Vercel-friendly web experience with serverless AP
 - [Repository Structure](#repository-structure)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
+- [Quick Demo Path](#quick-demo-path)
 - [Free-Tier Hosted Stack](#free-tier-hosted-stack)
 - [Make Targets](#make-targets)
 - [Configuration](#configuration)
@@ -270,6 +271,19 @@ make ui
 make test
 ```
 
+## Quick Demo Path
+
+If you want the fastest path to a clean end-to-end walkthrough, use this order:
+
+1. Open the hosted workspace or local Vercel demo page.
+2. Pick an alert source such as CloudWatch, PagerDuty, Datadog, or Grafana.
+3. Choose a scenario, severity, and alert volume.
+4. Trigger the incident run from the workspace.
+5. Review the response summary, saved incident record, and evidence drawer.
+6. Re-open a stored incident to show persistence, reasoning trace, and retrieved context.
+
+For a fully durable hosted demo, connect Supabase first so the incident history persists across refreshes and sessions.
+
 ## Free-Tier Hosted Stack
 
 The simplest free hosted version of OnCallAI uses:
@@ -379,6 +393,7 @@ The project is configured primarily through environment variables.
 - `CLOUDWATCH_LOG_GROUP`: CloudWatch log group name
 - `AWS_REGION`: AWS region for real CloudWatch polling
 - `CLOUDWATCH_MAX_RECORDS`: Maximum number of alarms to fetch per polling cycle
+
 
 ## How the Demo Works
 
