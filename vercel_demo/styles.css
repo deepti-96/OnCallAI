@@ -1356,6 +1356,29 @@ h3 {
   margin: 0 0 18px;
 }
 
+.intake-context-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.intake-context-item {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.intake-context-item strong {
+  display: block;
+  line-height: 1.45;
+}
+
+.intake-context-wide {
+  grid-column: span 1;
+}
+
 .stepper {
   display: grid;
   gap: 12px;
@@ -1585,6 +1608,7 @@ code {
   }
 
   .mini-metrics,
+  .intake-context-strip,
   .control-grid,
   .evidence-grid,
   .evidence-drawer-grid,
