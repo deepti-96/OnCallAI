@@ -530,11 +530,11 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
   return {
     preview: {
       headline: `${severityLabel} ${scenario.title}`,
-      status: "Local sample response",
-      summary: `${scenario.summary} This local page is showing a full incident response for ${repeatLabel}.`,
+      status: "Local incident response",
+      summary: `${scenario.summary} The local workspace is showing the incident response for ${repeatLabel}.`,
       outcome: scenario.action,
       log: [
-        `Created a local sample incident for ${scenario.service}.`,
+        `Created a local incident record for ${scenario.service}.`,
         `Observed signal from ${integration.sourceLabel}: ${scenario.trigger}`,
         `Applied ${repeatLabel} behavior to the incident record.`,
         `Prepared issue, escalation, and next-action guidance for review.`,
@@ -577,7 +577,7 @@ async function refreshHealth() {
     });
     renderCombinedReasoning({
       label: "Structured log-and-retrieval graph",
-      detail: "The local page is using the built-in intake, collector, retrieval, triage, and supervisor flow.",
+      detail: "The local workspace is using the built-in intake, collector, retrieval, triage, and supervisor flow.",
     });
   }
 }
