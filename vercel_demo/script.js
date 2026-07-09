@@ -40,6 +40,21 @@ function setText(id, value) {
   }
 }
 
+function setLink(id, href, label, disabledLabel) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  if (href) {
+    el.href = href;
+    el.textContent = label;
+    el.setAttribute("aria-disabled", "false");
+  } else {
+    el.href = "#";
+    el.textContent = disabledLabel;
+    el.setAttribute("aria-disabled", "true");
+  }
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -374,8 +389,12 @@ function renderScenario(key) {
   setText("scenario-alarm-name", scenario.alarmName);
   setText("scenario-region", scenario.awsRegion || "us-east-1");
   setText("scenario-log-group", scenario.cloudWatchLogGroup || "n/a");
+  setText("scenario-owner-team", scenario.ownerTeam || "Unassigned");
+  setText("scenario-account-id", scenario.awsAccountId || "Unknown");
   setText("scenario-summary", scenario.summary);
   setText("scenario-severity", scenario.severity);
+  setLink("scenario-runbook-link", scenario.runbookUrl, "Open runbook", "Runbook unavailable");
+  setLink("scenario-dashboard-link", scenario.dashboardUrl, "Open dashboard", "Dashboard unavailable");
 
   const severityBadge = document.getElementById("scenario-severity");
   if (severityBadge) {
@@ -417,8 +436,12 @@ function renderIncidentDetail({ incident, steps = [], report = null }) {
   setText("scenario-alarm-name", incident.alarm_name || cloudwatchEvent?.detail?.alarmName || "Unknown");
   setText("scenario-region", cloudwatchEvent?.region || cloudwatchLogs?.region || "us-east-1");
   setText("scenario-log-group", cloudwatchLogs?.log_group || "n/a");
+  setText("scenario-owner-team", incident.owner_team || "Unassigned");
+  setText("scenario-account-id", cloudwatchEvent?.account || "Unknown");
   setText("scenario-summary", incident.summary || "Incident context is available for this run.");
   setText("scenario-severity", incident.severity || "Unknown");
+  setLink("scenario-runbook-link", report?.runbook_url || null, report?.runbook_url ? "Open runbook" : "Runbook unavailable", "Runbook unavailable");
+  setLink("scenario-dashboard-link", report?.dashboard_url || null, report?.dashboard_url ? "Open dashboard" : "Dashboard unavailable", "Dashboard unavailable");
 
   const severityBadge = document.getElementById("scenario-severity");
   if (severityBadge) {
