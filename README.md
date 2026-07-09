@@ -73,10 +73,13 @@ The hosted workspace is designed to feel like a real internal incident response 
 
 The current hosted experience includes:
 
+- a stronger landing hero that frames the hosted product around workflow, evidence, and stored incident history
 - alert-source switching for CloudWatch, PagerDuty, Datadog, and Grafana-style intake
 - a visible intake source selector in the operator workspace
+- a live operator-state summary for storage mode, active reasoning path, and latest incident context
 - a live response summary backed by the hosted API
 - richer signal context for alarm name, metric, impact, and log source in the walkthrough view
+- direct operator references for runbooks, dashboards, ownership, and account context in the walkthrough output
 - stored incidents that can be reopened directly from the workspace
 - an evidence drawer for raw payloads, collected logs, retrieved context, and the agent trace
 - a persistent dark mode toggle for alternate demo and review layouts
@@ -282,9 +285,10 @@ If you want the fastest path to a clean end-to-end walkthrough, use this order:
 1. Open the hosted workspace or local Vercel demo page.
 2. Pick an alert source such as CloudWatch, PagerDuty, Datadog, or Grafana.
 3. Choose a scenario, severity, and alert volume.
-4. Trigger the incident run from the workspace.
-5. Review the response summary, saved incident record, and evidence drawer.
-6. Re-open a stored incident to show persistence, reasoning trace, and retrieved context.
+4. Review the live operator-state cards so the storage mode, reasoning path, and latest incident are clear before you run anything.
+5. Trigger the incident run from the workspace.
+6. Review the response summary, runbook and dashboard references, saved incident record, and evidence drawer.
+7. Re-open a stored incident to show persistence, reasoning trace, and retrieved context.
 
 For a fully durable hosted demo, connect Supabase first so the incident history persists across refreshes and sessions.
 
