@@ -302,6 +302,8 @@ function renderStorageStatus(storage) {
   if (!storage) return;
   setText("storage-label", storage.label);
   setText("storage-detail", storage.detail);
+  setText("storage-label-inline", storage.label);
+  setText("storage-detail-inline", storage.detail);
 }
 
 function renderReasoningStatus(reasoning) {

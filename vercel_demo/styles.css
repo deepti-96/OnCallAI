@@ -757,6 +757,8 @@ h3 {
 .app-body[data-theme="dark"] .ghost-link,
 .app-body[data-theme="dark"] .panel-helper,
 .app-body[data-theme="dark"] .panel-footer-item span,
+.app-body[data-theme="dark"] .workspace-state-card p,
+.app-body[data-theme="dark"] .workspace-state-meta,
 .app-body[data-theme="dark"] .control-field,
 .app-body[data-theme="dark"] .status-card p,
 .app-body[data-theme="dark"] .recent-run-card p,
@@ -785,7 +787,8 @@ h3 {
 }
 
 .app-body[data-theme="dark"] .hero-fact-card,
-.app-body[data-theme="dark"] .panel-footer-item {
+.app-body[data-theme="dark"] .panel-footer-item,
+.app-body[data-theme="dark"] .workspace-state-card {
   background: rgba(15, 23, 39, 0.78);
   border-color: rgba(148, 163, 184, 0.12);
 }
@@ -1076,6 +1079,40 @@ h3 {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.workspace-state-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.workspace-state-card {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.workspace-state-card p {
+  margin: 8px 0 0;
+  color: var(--slate);
+  line-height: 1.55;
+}
+
+.workspace-state-card-wide {
+  grid-column: 1 / -1;
+}
+
+.workspace-state-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  color: var(--slate);
+  font-size: 0.88rem;
 }
 
 .button-reset {
@@ -1667,6 +1704,7 @@ code {
   .hero-facts,
   .intake-context-strip,
   .control-grid,
+  .workspace-state-grid,
   .evidence-grid,
   .evidence-drawer-grid,
   .context-grid {

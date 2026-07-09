@@ -287,6 +287,28 @@
                 <button class="primary-button button-reset" id="run-sandbox" type="button">Send Alert</button>
                 <button class="secondary-button button-reset" id="open-workflow" type="button">Open incident view</button>
               </div>
+
+              <div class="workspace-state-grid">
+                <article class="workspace-state-card">
+                  <span class="output-label">Storage</span>
+                  <strong id="storage-label-inline">Checking backend status...</strong>
+                  <p id="storage-detail-inline">Waiting for API health check.</p>
+                </article>
+                <article class="workspace-state-card">
+                  <span class="output-label">Agent graph</span>
+                  <strong id="reasoning-label">Checking analysis mode...</strong>
+                  <p id="reasoning-detail">Waiting for reasoning status.</p>
+                </article>
+                <article class="workspace-state-card workspace-state-card-wide">
+                  <span class="output-label">Latest incident</span>
+                  <strong id="latest-incident-id">No hosted incident selected</strong>
+                  <p id="latest-incident-meta">Run an alert or open a saved incident to inspect the current workspace state.</p>
+                  <div class="workspace-state-meta">
+                    <span id="latest-owner-team">Unassigned</span>
+                    <span id="latest-escalation-meta">Monitor priority</span>
+                  </div>
+                </article>
+              </div>
             </article>
 
             <article class="demo-panel demo-panel-accent sandbox-preview">
