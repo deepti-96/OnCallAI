@@ -86,6 +86,20 @@ The current hosted experience includes:
 
 ## Hosted Flow Diagrams
 
+### End-to-end hosted incident flow
+
+```mermaid
+flowchart TD
+    A["Alert arrives from CloudWatch, PagerDuty, Datadog, or Grafana"] --> B["Hosted workspace selects scenario and intake source"]
+    B --> C["/api/run-scenario builds the incident payload"]
+    C --> D["Collector agent attaches logs and service context"]
+    D --> E["Retrieval agent loads grounding matches from bundled data or Supabase pgvector"]
+    E --> F["Triage agent produces issue, impact, evidence, and likely root cause"]
+    F --> G["Supervisor agent prepares escalation, next action, and operator handoff"]
+    G --> H["Incident, steps, and report are stored in Supabase Postgres or local preview storage"]
+    H --> I["Workspace shows response summary, incident history, references, and evidence drawers"]
+```
+
 ### Product flow
 
 ```mermaid
