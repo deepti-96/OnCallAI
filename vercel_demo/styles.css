@@ -162,6 +162,8 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .theme-toggle {
@@ -363,6 +365,30 @@ h3 {
   gap: 12px;
 }
 
+.hero-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hero-fact-card {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(138, 50, 4, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.hero-fact-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--burnt);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
 .signal-card {
   padding: 18px;
   border-radius: var(--radius-md);
@@ -433,6 +459,27 @@ h3 {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(255, 248, 240, 0.98) 100%);
   border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.panel-footer-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.panel-footer-item {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(27, 36, 48, 0.07);
+}
+
+.panel-footer-item span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--slate);
+  font-size: 0.84rem;
 }
 
 .incident-title-row,
@@ -711,6 +758,9 @@ h3 {
 .app-body[data-theme="dark"] .brand-tag,
 .app-body[data-theme="dark"] .ghost-link,
 .app-body[data-theme="dark"] .panel-helper,
+.app-body[data-theme="dark"] .panel-footer-item span,
+.app-body[data-theme="dark"] .workspace-state-card p,
+.app-body[data-theme="dark"] .workspace-state-meta,
 .app-body[data-theme="dark"] .control-field,
 .app-body[data-theme="dark"] .status-card p,
 .app-body[data-theme="dark"] .recent-run-card p,
@@ -736,6 +786,17 @@ h3 {
 .app-body[data-theme="dark"] .app-hero-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
   border-color: rgba(148, 163, 184, 0.14);
+}
+
+.app-body[data-theme="dark"] .hero-fact-card,
+.app-body[data-theme="dark"] .panel-footer-item,
+.app-body[data-theme="dark"] .workspace-state-card {
+  background: rgba(15, 23, 39, 0.78);
+  border-color: rgba(148, 163, 184, 0.12);
+}
+
+.app-body[data-theme="dark"] .hero-fact-label {
+  color: #f4c37b;
 }
 
 .app-body[data-theme="dark"] .workspace-card,
@@ -769,6 +830,8 @@ h3 {
 .app-body[data-theme="dark"] .step-card,
 .app-body[data-theme="dark"] .output-block,
 .app-body[data-theme="dark"] .output-card,
+.app-body[data-theme="dark"] .reference-panel,
+.app-body[data-theme="dark"] .reference-meta-card,
 .app-body[data-theme="dark"] .evidence-drawer,
 .app-body[data-theme="dark"] .evidence-item,
 .app-body[data-theme="dark"] .trace-item,
@@ -794,6 +857,13 @@ h3 {
 
 .app-body[data-theme="dark"] .recent-runs {
   border-top-color: rgba(148, 163, 184, 0.12);
+}
+
+.app-body[data-theme="dark"] .reference-link,
+.app-body[data-theme="dark"] .reference-link:visited {
+  background: rgba(21, 31, 49, 0.96);
+  border-color: rgba(148, 163, 184, 0.14);
+  color: #f8fafc;
 }
 
 .app-body[data-theme="dark"] .evidence-code {
@@ -932,6 +1002,8 @@ h3 {
     linear-gradient(180deg, rgba(252, 254, 255, 0.98) 0%, rgba(240, 247, 255, 0.94) 100%);
   border-color: rgba(14, 165, 233, 0.16);
   box-shadow: 0 28px 72px rgba(30, 64, 175, 0.12);
+  position: sticky;
+  top: 22px;
 }
 
 .control-grid {
@@ -1020,6 +1092,40 @@ h3 {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.workspace-state-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.workspace-state-card {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.workspace-state-card p {
+  margin: 8px 0 0;
+  color: var(--slate);
+  line-height: 1.55;
+}
+
+.workspace-state-card-wide {
+  grid-column: 1 / -1;
+}
+
+.workspace-state-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  color: var(--slate);
+  font-size: 0.88rem;
 }
 
 .button-reset {
@@ -1188,6 +1294,18 @@ h3 {
 .recent-run-list {
   display: grid;
   gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.recent-run-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.recent-run-list::-webkit-scrollbar-thumb {
+  background: rgba(87, 98, 115, 0.22);
+  border-radius: 999px;
 }
 
 .recent-run-card,
@@ -1244,6 +1362,8 @@ h3 {
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 22px;
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
 
 .scenario-chip {
@@ -1462,6 +1582,51 @@ h3 {
   grid-column: 1 / -1;
 }
 
+.reference-panel {
+  margin-bottom: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.reference-header {
+  margin-bottom: 14px;
+}
+
+.reference-actions,
+.reference-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.reference-link,
+.reference-link:visited {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(27, 36, 48, 0.09);
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.reference-meta {
+  margin-top: 12px;
+}
+
+.reference-meta-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(27, 36, 48, 0.08);
+}
+
 .evidence-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1568,6 +1733,10 @@ code {
   h1 {
     max-width: none;
   }
+
+  .sandbox-preview {
+    position: static;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1588,7 +1757,7 @@ code {
 
   .topbar-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .workspace-card,
@@ -1608,11 +1777,19 @@ code {
   }
 
   .mini-metrics,
+  .hero-facts,
   .intake-context-strip,
   .control-grid,
+  .workspace-state-grid,
   .evidence-grid,
   .evidence-drawer-grid,
-  .context-grid {
+  .context-grid,
+  .reference-actions,
+  .reference-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-footer-strip {
     grid-template-columns: 1fr;
   }
 
@@ -1623,6 +1800,14 @@ code {
   .integration-button {
     width: 100%;
     justify-content: center;
+  }
+
+  .topbar-cta,
+  .theme-toggle,
+  .ghost-link {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
 
   .storage-strip {
