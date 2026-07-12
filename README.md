@@ -8,6 +8,7 @@ The repository also includes a Vercel-friendly web experience with serverless AP
 
 ## Index
 
+- [Review First](#review-first)
 - [Why OnCallAI](#why-oncallai)
 - [Core Capabilities](#core-capabilities)
 - [Hosted Workspace](#hosted-workspace)
@@ -28,6 +29,15 @@ The repository also includes a Vercel-friendly web experience with serverless AP
 - [Professional Use Cases](#professional-use-cases)
 - [Contributing](#contributing)
 - [License](#license)
+
+## Review First
+
+If you are reviewing this project quickly, start here:
+
+1. Open the hosted product flow in [`vercel_demo/index.html`](vercel_demo/index.html) and [`try-product.html`](try-product.html).
+2. Read the hosted orchestration logic in [`api/_lib/agent-graph.js`](api/_lib/agent-graph.js).
+3. Skim the end-to-end system view in [Hosted Flow Diagrams](#hosted-flow-diagrams).
+4. Use [Quick Demo Path](#quick-demo-path) for the fastest walkthrough of the hosted app.
 
 ## Why OnCallAI 
 
@@ -136,7 +146,7 @@ OnCallAI follows an agent-inspired workflow in both local and hosted modes.
 2. The collector stage retrieves context and logs for the incident.
 3. The analyst stage evaluates evidence and drafts findings.
 4. The supervisor stage writes the final report, includes escalation guidance, and marks the incident complete.
-5. The UI reads the persisted data and displays incident state, steps, and outputs.
+5. The resulting incident data, steps, and reports can then be surfaced through the hosted workspace or inspected directly from storage.
 
 ### Hosted Vercel agent graph
 

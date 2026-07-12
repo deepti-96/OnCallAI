@@ -57,13 +57,14 @@ The repository includes a [`.vercelignore`](/Users/deepti.r.kumar/Desktop/Docume
 ## 5. Interview-safe live demo flow
 
 1. Open the hosted site.
-2. Click `Try Product`.
+2. Click `Open Workspace`.
 3. Choose `Database outage` or `Bad deploy`.
-4. Click `Run Analysis`.
+4. Click `Send Alert`.
 5. Show:
+   - operator state cards
    - storage mode
-   - live processing log
-   - recent runs list
-   - walkthrough and operator output sections
+    - live processing log
+    - recent runs list
+    - walkthrough and operator output sections
 
 If Supabase is connected, you can honestly say the runs are being durably stored in Postgres on the free tier.
