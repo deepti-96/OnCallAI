@@ -10,4 +10,7 @@ app/reports/*
 .chromadb/*
 app/logs/
 app/db/*.db
+.streamlit/
 .streamlit/secrets.toml
+Nextiva_GTM_AI_Intern_OnCallAI_Study_Guide.docx
+streamlit_app.py
