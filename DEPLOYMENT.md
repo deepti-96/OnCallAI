@@ -45,7 +45,7 @@ Reference file:
 6. Add the two Supabase environment variables.
 7. Deploy.
 
-The repository includes a [`.vercelignore`](/Users/deepti.r.kumar/Desktop/Documents/Projects/OnCallAI/.vercelignore) allowlist so Vercel only uploads the hosted website and JavaScript API routes, not the local Python/Streamlit prototype files.
+The repository includes a [`.vercelignore`](/Users/deepti.r.kumar/Desktop/Documents/Projects/OnCallAI/.vercelignore) allowlist so Vercel only uploads the hosted website and JavaScript API routes, not the local Python pipeline files.
 
 ## 4. How the hosted app behaves
 

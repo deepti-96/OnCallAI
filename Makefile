@@ -1,12 +1,9 @@
 PYTHON ?= python3
 
-.PHONY: run ui test simulate-alert poll-cloudwatch seed clean
+.PHONY: run test simulate-alert poll-cloudwatch seed clean
 
 run:
 	$(PYTHON) app/runner.py
-
-ui:
-	$(PYTHON) -m streamlit run ui/streamlit_app.py
 
 test:
 	$(PYTHON) -m unittest discover -s tests

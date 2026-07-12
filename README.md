@@ -50,7 +50,6 @@ Modern on-call teams lose time switching between alerts, logs, dashboards, and t
 - Retrieval-assisted log analysis that combines heuristic rules with example-based incident context.
 - Escalation guidance that recommends paging targets, priority, and next action.
 - Downloadable incident reports in both JSON and Markdown formats.
-- Streamlit dashboard for filtering incidents, reviewing agent timelines, inspecting generated reports, and triaging stale or noisy alerts.
 - Environment-based configuration for polling, models, logging mode, and optional cloud integrations.
 - Vercel-compatible product site with interactive incident testing through serverless API routes.
 - Hosted incident intake that generates a CloudWatch alarm envelope, CloudWatch log-source metadata, and persisted incident records.
@@ -161,7 +160,6 @@ If `GEMINI_API_KEY` is present, the hosted triage and supervisor agents use Gemi
 - [`app/agents/collector_agent.py`](app/agents/collector_agent.py): Log selection and retrieval logic.
 - [`app/agents/analyst_agent.py`](app/agents/analyst_agent.py): Retrieval-assisted analysis and mitigation generation.
 - [`app/agents/supervisor.py`](app/agents/supervisor.py): Report compilation and workflow completion.
-- [`ui/streamlit_app.py`](ui/streamlit_app.py): Operator-facing incident dashboard.
 - [`api/`](api): Vercel serverless functions for hosted scenario execution, incident retrieval, agent graph orchestration, hosted RAG, and health checks.
 - [`api/_lib/agent-graph.js`](api/_lib/agent-graph.js): Hosted collector, retrieval, triage, and supervisor graph.
 - [`api/_lib/hosted-rag.js`](api/_lib/hosted-rag.js): Bundled retrieval and optional Supabase vector retrieval.
@@ -191,7 +189,6 @@ OnCallAI/
 ├── api/                # Vercel serverless functions and hosted agent graph
 ├── supabase/           # Hosted Postgres and optional pgvector schemas
 ├── tests/              # Lightweight unit and incident-flow tests
-├── ui/                 # Streamlit application
 ├── vercel_demo/        # Vercel-friendly product website
 ├── Makefile
 ├── requirements.txt
@@ -201,7 +198,6 @@ OnCallAI/
 ## Tech Stack
 
 - Python 3
-- Streamlit
 - SQLite
 - SQLAlchemy
 - LangChain and LangGraph dependencies for future orchestration expansion
@@ -278,15 +274,7 @@ This polls current alarms in the `ALARM` and `OK` states, normalizes them, and r
 make run
 ```
 
-### 8. Launch the UI
-
-In a separate terminal:
-
-```bash
-make ui
-```
-
-### 9. Run tests
+### 8. Run tests
 
 ```bash
 make test
@@ -374,7 +362,6 @@ make seed   # Seed sample data
 make simulate-alert   # Ingest a sample CloudWatch-style alert
 make poll-cloudwatch  # Poll live CloudWatch alarms and ingest them
 make run    # Start incident polling and processing
-make ui     # Launch the Streamlit app
 make test   # Run the unit and incident-flow test suite
 make clean  # Remove the local SQLite db and generated reports
 ```
@@ -444,7 +431,7 @@ The current demo path is intentionally simple and transparent:
 - The supervisor attaches escalation guidance to the final report based on severity, age, service tier, and repeat volume.
 - Agent steps are written back to the database as the incident is processed.
 - Reports are stored in structured JSON plus Markdown.
-- The UI reads directly from the database and lets you inspect repeat-alert triage signals, escalation guidance, alert metadata, timelines, payloads, and final reports.
+- The hosted workspace and API expose the incident output, alert metadata, evidence, and stored runs for review.
 - The hosted product site can also run scenarios end to end, replay CloudWatch Alarm State Change-style events, collect bundled logs, retrieve grounding context, run a hosted agent graph, and persist results in Supabase when deployed with the free-tier hosted stack.
 - The hosted workspace can switch between multiple alert-source entrypoints while preserving the same downstream incident schema and response flow.
 - The evidence drawer makes the hosted graph easier to inspect by surfacing the raw alert payload, collected logs, retrieved grounding matches, and graph trace for the selected incident.
@@ -504,7 +491,7 @@ If you are iterating on the project, a practical workflow is:
 
 1. Create or seed incidents.
 2. Run the processor locally.
-3. Inspect output in the Streamlit UI.
+3. Inspect output through the hosted workspace and stored incident views.
 4. Improve collection, analysis, or report generation logic.
 5. Re-run with fresh sample data.
 
