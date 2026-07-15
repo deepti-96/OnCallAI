@@ -102,7 +102,7 @@ def record_incident(
     payload: Dict[str, Any] | None = None,
     created_at: str | None = None,
     incident_id: str | None = None
-) -> int:
+) -> str:
     """Insert a new incident and return its id."""
     incident_id = incident_id or str(uuid.uuid4())
     with _conn() as con:
@@ -154,7 +154,7 @@ def update_incident(
         con.execute(f"UPDATE incidents SET {', '.join(updates)} WHERE id=?", tuple(params))
 
 def record_step(
-    incident_id: int, agent: str, phase: str, message: str,
+    incident_id: str, agent: str, phase: str, message: str,
     data: Dict[str, Any] | None = None, status: str | None = None
 ) -> None:
     with _conn() as con:
@@ -164,7 +164,7 @@ def record_step(
             (incident_id, agent, phase, message, json.dumps(data or {}), _now_iso(), status)
         )
 
-def save_report(incident_id: int, report_json: Dict[str, Any], report_md: str) -> None:
+def save_report(incident_id: str, report_json: Dict[str, Any], report_md: str) -> None:
     with _conn() as con:
         con.execute(
             """INSERT INTO reports(incident_id, report_json, report_md, created_at)
