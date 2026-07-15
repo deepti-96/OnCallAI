@@ -52,6 +52,14 @@ class OnCallAITestCase(unittest.TestCase):
                 "alert_type": "db availability",
             },
         }
+        self.dal.record_incident(
+            status="OPEN",
+            service=incident["service"],
+            environment="prod",
+            severity="CRITICAL",
+            payload=incident["payload"],
+            incident_id=incident["id"],
+        )
 
         with patch.object(self.collector, "LOGS_LOCAL_ROOT", str(self.logs_root)):
             result = self.collector.collector_run(incident)
