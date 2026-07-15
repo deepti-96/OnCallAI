@@ -3,19 +3,20 @@ PRAGMA foreign_keys = ON;
 -- every agent step (timeline row)
 CREATE TABLE IF NOT EXISTS agent_steps (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  incident_id INTEGER NOT NULL,
+  incident_id TEXT    NOT NULL,
   agent       TEXT    NOT NULL,     -- collector | analyst | supervisor
   phase       TEXT    NOT NULL,     -- start | retrieve | analyze | summarize | done | error
   message     TEXT    NOT NULL,     -- short human-readable message
   data_json   TEXT    NOT NULL,     -- JSON payload (details)
   ts          TEXT    NOT NULL,     -- ISO8601 UTC timestamp
-  status      TEXT                 -- STARTED | OK | WARN | ERROR (optional)
+  status      TEXT,                -- STARTED | OK | WARN | ERROR (optional)
+  FOREIGN KEY (incident_id) REFERENCES incidents(id) ON DELETE CASCADE
 );
 
 -- final (or intermediate) report for an incident
 CREATE TABLE IF NOT EXISTS reports (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  incident_id INTEGER NOT NULL,
+  incident_id TEXT    NOT NULL,
   report_json TEXT    NOT NULL,     -- structured RCA
   report_md   TEXT    NOT NULL,     -- pretty Markdown
   created_at  TEXT    NOT NULL,     -- ISO8601 UTC
