@@ -2,6 +2,7 @@ import importlib
 import tempfile
 import unittest
 from pathlib import Path
+import sqlite3
 
 
 class DalTestCase(unittest.TestCase):
@@ -29,6 +30,7 @@ class DalTestCase(unittest.TestCase):
 
         incident = self.dal.get_incident(incident_id)
 
+        self.assertIsInstance(incident_id, str)
         self.assertEqual(incident["payload"]["source"], "database")
         self.assertEqual(incident["payload"]["alert_type"], "db connectivity")
 
@@ -117,6 +119,44 @@ class DalTestCase(unittest.TestCase):
         self.assertEqual(incident["escalation_target"], "payments-oncall")
         self.assertTrue(incident["should_page"])
         self.assertIn("3 repeated alerts", incident["escalation_reason"])
+
+    def test_agent_steps_and_reports_cascade_when_incident_is_deleted(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={"source": "cloudwatch"},
+        )
+        self.dal.record_step(
+            incident_id,
+            "collector",
+            "start",
+            "Collector started",
+        )
+        self.dal.save_report(
+            incident_id,
+            {"issue": "example"},
+            "# Example",
+        )
+
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.execute("DELETE FROM incidents WHERE id=?", (incident_id,))
+
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
+            step_count = conn.execute(
+                "SELECT COUNT(*) FROM agent_steps WHERE incident_id=?",
+                (incident_id,),
+            ).fetchone()[0]
+            report_count = conn.execute(
+                "SELECT COUNT(*) FROM reports WHERE incident_id=?",
+                (incident_id,),
+            ).fetchone()[0]
+
+        self.assertEqual(step_count, 0)
+        self.assertEqual(report_count, 0)
 
 
 if __name__ == "__main__":
