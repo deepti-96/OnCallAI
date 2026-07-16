@@ -4,6 +4,8 @@ from typing import Any, Dict
 
 from app.db.dal import (
     find_open_incident_by_dedupe_key,
+    complete_queued_incident,
+    enqueue_incident,
     init_db,
     record_incident,
     record_step,
@@ -65,6 +67,10 @@ def ingest_cloudwatch_alert(alert: Dict[str, Any]) -> str:
             severity=normalized["severity"],
             payload=merged_payload,
         )
+        if normalized["status"] == "DONE":
+            complete_queued_incident(existing["id"], status="DONE")
+        else:
+            enqueue_incident(existing["id"])
         phase = "resolve" if normalized["status"] == "DONE" else "dedupe"
         message = (
             "Resolved existing incident from recovery alert"
@@ -100,6 +106,10 @@ def ingest_cloudwatch_alert(alert: Dict[str, Any]) -> str:
         },
         status="OK",
     )
+    if normalized["status"] == "OPEN":
+        enqueue_incident(incident_id)
+    else:
+        complete_queued_incident(incident_id, status="DONE")
     return incident_id
 
 

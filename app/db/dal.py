@@ -222,6 +222,70 @@ def get_latest_report(incident_id: str) -> Optional[Dict[str, Any]]:
     return d
 
 
+def enqueue_incident(incident_id: str) -> None:
+    with _conn() as con:
+        con.execute(
+            """INSERT INTO incident_queue(incident_id, status, enqueued_at, claimed_at, completed_at, attempts, last_error)
+               VALUES (?, 'PENDING', ?, NULL, NULL, 0, NULL)
+               ON CONFLICT(incident_id) DO UPDATE SET
+                 status='PENDING',
+                 enqueued_at=excluded.enqueued_at,
+                 claimed_at=NULL,
+                 completed_at=NULL,
+                 last_error=NULL
+               WHERE incident_queue.status IN ('DONE', 'FAILED')""",
+            (incident_id, _now_iso()),
+        )
+
+
+def sync_open_incidents_to_queue() -> int:
+    queued = 0
+    for incident in get_open_incidents():
+        enqueue_incident(incident["id"])
+        queued += 1
+    return queued
+
+
+def claim_next_queued_incident() -> Optional[Dict[str, Any]]:
+    with _conn(rowdict=True) as con:
+        queue_row = con.execute(
+            """SELECT incident_id
+               FROM incident_queue
+               WHERE status='PENDING'
+               ORDER BY enqueued_at ASC, incident_id ASC
+               LIMIT 1"""
+        ).fetchone()
+        if not queue_row:
+            return None
+
+        updated = con.execute(
+            """UPDATE incident_queue
+               SET status='IN_PROGRESS', claimed_at=?, attempts=attempts + 1
+               WHERE incident_id=? AND status='PENDING'""",
+            (_now_iso(), queue_row["incident_id"]),
+        )
+        if updated.rowcount != 1:
+            return None
+
+        incident = con.execute(
+            """SELECT id, status, service, environment, severity, dedupe_key, payload_json, created_at
+               FROM incidents
+               WHERE id=?""",
+            (queue_row["incident_id"],),
+        ).fetchone()
+    return _enrich_incident_record(incident)
+
+
+def complete_queued_incident(incident_id: str, *, status: str = "DONE", error: str | None = None) -> None:
+    with _conn() as con:
+        con.execute(
+            """UPDATE incident_queue
+               SET status=?, completed_at=?, last_error=?
+               WHERE incident_id=?""",
+            (status, _now_iso(), error, incident_id),
+        )
+
+
 def find_open_incident_by_dedupe_key(dedupe_key: str) -> Optional[Dict[str, Any]]:
     if not dedupe_key:
         return None
