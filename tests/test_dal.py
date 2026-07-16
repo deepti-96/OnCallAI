@@ -62,6 +62,24 @@ class DalTestCase(unittest.TestCase):
         self.assertEqual(incident["escalation_target"], "payments-oncall")
         self.assertTrue(incident["should_page"])
 
+    def test_find_open_incident_by_dedupe_key_uses_direct_lookup(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={
+                "source": "cloudwatch",
+                "dedupe_key": "payment-service-prod-alarm",
+            },
+        )
+
+        incident = self.dal.find_open_incident_by_dedupe_key("payment-service-prod-alarm")
+
+        self.assertIsNotNone(incident)
+        self.assertEqual(incident["id"], incident_id)
+        self.assertEqual(incident["payload"]["dedupe_key"], "payment-service-prod-alarm")
+
     def test_list_incidents_sorts_by_created_at_desc(self):
         older_id = self.dal.record_incident(
             status="OPEN",
