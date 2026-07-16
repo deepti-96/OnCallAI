@@ -1,8 +1,8 @@
 import importlib
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
-import sqlite3
 
 
 class DalTestCase(unittest.TestCase):
@@ -175,6 +175,42 @@ class DalTestCase(unittest.TestCase):
 
         self.assertEqual(step_count, 0)
         self.assertEqual(report_count, 0)
+
+    def test_queue_helpers_claim_and_complete_incidents(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={"source": "cloudwatch", "dedupe_key": "queue-test"},
+        )
+
+        self.dal.enqueue_incident(incident_id)
+        claimed = self.dal.claim_next_queued_incident()
+
+        self.assertIsNotNone(claimed)
+        self.assertEqual(claimed["id"], incident_id)
+
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
+            queue_row = conn.execute(
+                "SELECT status, attempts FROM incident_queue WHERE incident_id=?",
+                (incident_id,),
+            ).fetchone()
+
+        self.assertEqual(queue_row[0], "IN_PROGRESS")
+        self.assertEqual(queue_row[1], 1)
+
+        self.dal.complete_queued_incident(incident_id, status="DONE")
+
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
+            queue_row = conn.execute(
+                "SELECT status FROM incident_queue WHERE incident_id=?",
+                (incident_id,),
+            ).fetchone()
+
+        self.assertEqual(queue_row[0], "DONE")
 
 
 if __name__ == "__main__":

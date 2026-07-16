@@ -1,4 +1,5 @@
 import importlib
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -155,6 +156,51 @@ class OnCallAITestCase(unittest.TestCase):
         self.assertEqual(processed_incident["status"], "DONE")
         self.assertEqual(steps[-1]["phase"], "skip")
         self.assertIsNone(report)
+
+    def test_queue_claimed_incident_runs_end_to_end(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={
+                "source": "database-cpu",
+                "dedupe_key": "payment-service-queue-test",
+                "details": "ECONNREFUSED from service",
+                "enrichment": {
+                    "owner_team": "payments-platform",
+                    "primary_contact": "payments-oncall",
+                    "runbook_url": "https://internal.example/runbooks/payment-service",
+                    "escalation_policy": "page-payments-primary",
+                    "service_tier": "tier-1",
+                }
+            },
+        )
+        self.dal.enqueue_incident(incident_id)
+        incident = self.dal.claim_next_queued_incident()
+
+        self.assertIsNotNone(incident)
+        self.assertEqual(incident["id"], incident_id)
+
+        with patch.object(self.collector, "LOGS_LOCAL_ROOT", str(self.logs_root)):
+            self.runner.process_incident(incident)
+
+        processed_incident = self.dal.get_incident(incident_id)
+        steps = self.dal.list_steps(incident_id)
+        report = self.dal.get_latest_report(incident_id)
+
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
+            queue_row = conn.execute(
+                "SELECT status, attempts FROM incident_queue WHERE incident_id=?",
+                (incident_id,),
+            ).fetchone()
+
+        self.assertEqual(processed_incident["status"], "DONE")
+        self.assertGreaterEqual(len(steps), 5)
+        self.assertIsNotNone(report)
+        self.assertEqual(queue_row[0], "DONE")
+        self.assertEqual(queue_row[1], 1)
 
 
 if __name__ == "__main__":
