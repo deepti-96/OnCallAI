@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS incidents(
   service     TEXT NOT NULL,
   environment TEXT NOT NULL,
   severity    TEXT NOT NULL,
+  dedupe_key  TEXT,
   payload_json TEXT,
   created_at  TEXT NOT NULL
 );
@@ -38,3 +39,4 @@ CREATE TABLE IF NOT EXISTS incidents(
 CREATE INDEX IF NOT EXISTS idx_steps_inc_ts   ON agent_steps(incident_id, ts);
 CREATE INDEX IF NOT EXISTS idx_reports_inc_dt ON reports(incident_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_incidents_status_created_at ON incidents(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_incidents_dedupe_key ON incidents(dedupe_key);

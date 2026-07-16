@@ -105,16 +105,18 @@ def record_incident(
 ) -> str:
     """Insert a new incident and return its id."""
     incident_id = incident_id or str(uuid.uuid4())
+    dedupe_key = (payload or {}).get("dedupe_key")
     with _conn() as con:
         con.execute(
-            """INSERT INTO incidents(id, status, service, environment, severity, payload_json, created_at)
-               VALUES (?,?,?,?,?,?,?)""",
+            """INSERT INTO incidents(id, status, service, environment, severity, dedupe_key, payload_json, created_at)
+               VALUES (?,?,?,?,?,?,?,?)""",
             (
                 incident_id,
                 status,
                 service,
                 environment,
                 severity,
+                dedupe_key,
                 json.dumps(payload or {}),
                 created_at or _now_iso(),
             ),
@@ -132,6 +134,7 @@ def update_incident(
 ) -> None:
     updates: list[str] = []
     params: list[Any] = []
+    dedupe_key = (payload or {}).get("dedupe_key") if payload is not None else None
 
     if status is not None:
         updates.append("status=?")
@@ -139,6 +142,9 @@ def update_incident(
     if severity is not None:
         updates.append("severity=?")
         params.append(severity)
+    if payload is not None:
+        updates.append("dedupe_key=?")
+        params.append(dedupe_key)
     if payload is not None:
         updates.append("payload_json=?")
         params.append(json.dumps(payload))
@@ -214,6 +220,21 @@ def get_latest_report(incident_id: str) -> Optional[Dict[str, Any]]:
     except Exception:
         d["report"] = {}
     return d
+
+
+def find_open_incident_by_dedupe_key(dedupe_key: str) -> Optional[Dict[str, Any]]:
+    if not dedupe_key:
+        return None
+    with _conn(rowdict=True) as con:
+        row = con.execute(
+            """SELECT id, status, service, environment, severity, dedupe_key, payload_json, created_at
+               FROM incidents
+               WHERE status='OPEN' AND dedupe_key=?
+               ORDER BY created_at ASC, id ASC
+               LIMIT 1""",
+            (dedupe_key,),
+        ).fetchone()
+    return _enrich_incident_record(row)
 
 # ---------- helpers for the agent loop ----------
 

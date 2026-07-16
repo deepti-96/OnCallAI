@@ -2,21 +2,20 @@ import json
 from pathlib import Path
 from typing import Any, Dict
 
-from app.db.dal import get_open_incidents, init_db, record_incident, record_step, update_incident
+from app.db.dal import (
+    find_open_incident_by_dedupe_key,
+    init_db,
+    record_incident,
+    record_step,
+    update_incident,
+)
 from app.middleware.alert_normalizer import normalize_cloudwatch_alarm
 from app.models.service_registry import get_service_enrichment
 
 
 def _find_deduped_incident(normalized: Dict[str, Any]) -> Dict[str, Any] | None:
     dedupe_key = (normalized.get("payload") or {}).get("dedupe_key")
-    if not dedupe_key:
-        return None
-
-    for incident in get_open_incidents():
-        payload = incident.get("payload") or {}
-        if payload.get("dedupe_key") == dedupe_key:
-            return incident
-    return None
+    return find_open_incident_by_dedupe_key(dedupe_key)
 
 
 def _merge_payload(existing_payload: Dict[str, Any], new_payload: Dict[str, Any], created_at: str) -> Dict[str, Any]:
