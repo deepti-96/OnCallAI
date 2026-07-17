@@ -1,9 +1,12 @@
 import importlib
+import json
 import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+
+from app.errors import RetryableIncidentError, TerminalIncidentError
 
 
 class OnCallAITestCase(unittest.TestCase):
@@ -206,6 +209,94 @@ class OnCallAITestCase(unittest.TestCase):
         self.assertIsNotNone(processed_incident["processed_at"])
         self.assertIsNotNone(processed_incident["completed_at"])
         self.assertIsNotNone(incident["queue_claimed_at"])
+
+    def test_retryable_processing_error_requeues_incident(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={
+                "source": "database-cpu",
+                "dedupe_key": "payment-service-retry-test",
+                "details": "ECONNREFUSED from service",
+                "enrichment": {
+                    "owner_team": "payments-platform",
+                    "primary_contact": "payments-oncall",
+                    "runbook_url": "https://internal.example/runbooks/payment-service",
+                    "escalation_policy": "page-payments-primary",
+                    "service_tier": "tier-1",
+                }
+            },
+        )
+        self.dal.enqueue_incident(incident_id)
+        incident = self.dal.claim_next_queued_incident()
+
+        with (
+            patch.object(self.runner, "collector_run", side_effect=RetryableIncidentError("temporary logs unavailable")),
+            patch("builtins.print") as mock_print,
+        ):
+            self.runner.process_incident(incident)
+
+        processed_incident = self.dal.get_incident(incident_id)
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
+            queue_row = conn.execute(
+                "SELECT status, last_error, dead_letter_at FROM incident_queue WHERE incident_id=?",
+                (incident_id,),
+            ).fetchone()
+
+        printed_events = [json.loads(call.args[0]) for call in mock_print.call_args_list if call.args]
+
+        self.assertEqual(processed_incident["status"], "OPEN")
+        self.assertEqual(queue_row[0], "PENDING")
+        self.assertIn("RetryableIncidentError", queue_row[1])
+        self.assertIsNone(queue_row[2])
+        self.assertTrue(any(event["event"] == "incident_requeued" for event in printed_events))
+
+    def test_terminal_processing_error_dead_letters_incident(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={
+                "source": "database-cpu",
+                "dedupe_key": "payment-service-terminal-test",
+                "details": "corrupt payload",
+                "enrichment": {
+                    "owner_team": "payments-platform",
+                    "primary_contact": "payments-oncall",
+                    "runbook_url": "https://internal.example/runbooks/payment-service",
+                    "escalation_policy": "page-payments-primary",
+                    "service_tier": "tier-1",
+                }
+            },
+        )
+        self.dal.enqueue_incident(incident_id)
+        incident = self.dal.claim_next_queued_incident()
+
+        with (
+            patch.object(self.runner, "collector_run", side_effect=TerminalIncidentError("invalid incident payload")),
+            patch("builtins.print") as mock_print,
+        ):
+            self.runner.process_incident(incident)
+
+        processed_incident = self.dal.get_incident(incident_id)
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
+            queue_row = conn.execute(
+                "SELECT status, last_error, dead_letter_at FROM incident_queue WHERE incident_id=?",
+                (incident_id,),
+            ).fetchone()
+
+        printed_events = [json.loads(call.args[0]) for call in mock_print.call_args_list if call.args]
+
+        self.assertEqual(processed_incident["status"], "FAILED")
+        self.assertEqual(queue_row[0], "DEAD_LETTER")
+        self.assertIn("TerminalIncidentError", queue_row[1])
+        self.assertIsNotNone(queue_row[2])
+        self.assertTrue(any(event["event"] == "incident_dead_lettered" for event in printed_events))
 
 
 if __name__ == "__main__":
