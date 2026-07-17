@@ -33,6 +33,8 @@ class DalTestCase(unittest.TestCase):
         self.assertIsInstance(incident_id, str)
         self.assertEqual(incident["payload"]["source"], "database")
         self.assertEqual(incident["payload"]["alert_type"], "db connectivity")
+        self.assertEqual(incident["event_time"], incident["created_at"])
+        self.assertIsNotNone(incident["ingested_at"])
 
     def test_get_incident_exposes_enriched_triage_fields(self):
         incident_id = self.dal.record_incident(
@@ -61,6 +63,25 @@ class DalTestCase(unittest.TestCase):
         self.assertEqual(incident["escalation_priority"], "Immediate")
         self.assertEqual(incident["escalation_target"], "payments-oncall")
         self.assertTrue(incident["should_page"])
+
+    def test_markers_set_processing_timestamps(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={"source": "cloudwatch"},
+        )
+
+        self.dal.mark_in_progress(incident_id)
+        in_progress = self.dal.get_incident(incident_id)
+        self.dal.mark_done(incident_id)
+        completed = self.dal.get_incident(incident_id)
+
+        self.assertEqual(in_progress["status"], "IN_PROGRESS")
+        self.assertIsNotNone(in_progress["processed_at"])
+        self.assertEqual(completed["status"], "DONE")
+        self.assertIsNotNone(completed["completed_at"])
 
     def test_find_open_incident_by_dedupe_key_uses_direct_lookup(self):
         incident_id = self.dal.record_incident(

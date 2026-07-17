@@ -201,6 +201,11 @@ class OnCallAITestCase(unittest.TestCase):
         self.assertIsNotNone(report)
         self.assertEqual(queue_row[0], "DONE")
         self.assertEqual(queue_row[1], 1)
+        self.assertIsNotNone(processed_incident["event_time"])
+        self.assertIsNotNone(processed_incident["ingested_at"])
+        self.assertIsNotNone(processed_incident["processed_at"])
+        self.assertIsNotNone(processed_incident["completed_at"])
+        self.assertIsNotNone(incident["queue_claimed_at"])
 
 
 if __name__ == "__main__":

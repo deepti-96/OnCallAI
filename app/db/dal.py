@@ -303,7 +303,7 @@ def sync_open_incidents_to_queue() -> int:
 def claim_next_queued_incident() -> Optional[Dict[str, Any]]:
     with _conn(rowdict=True) as con:
         queue_row = con.execute(
-            """SELECT incident_id
+            """SELECT incident_id, attempts, enqueued_at
                FROM incident_queue
                WHERE status='PENDING'
                ORDER BY enqueued_at ASC, incident_id ASC
