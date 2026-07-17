@@ -32,7 +32,11 @@ CREATE TABLE IF NOT EXISTS incidents(
   severity    TEXT NOT NULL,
   dedupe_key  TEXT,
   payload_json TEXT,
-  created_at  TEXT NOT NULL
+  created_at  TEXT NOT NULL,
+  event_time  TEXT,
+  ingested_at TEXT,
+  processed_at TEXT,
+  completed_at TEXT
 );
 
 -- indexes for fast UI reads
@@ -48,6 +52,7 @@ CREATE TABLE IF NOT EXISTS incident_queue (
   enqueued_at  TEXT    NOT NULL,
   claimed_at   TEXT,
   completed_at TEXT,
+  dead_letter_at TEXT,
   attempts     INTEGER NOT NULL DEFAULT 0,
   last_error   TEXT,
   FOREIGN KEY (incident_id) REFERENCES incidents(id) ON DELETE CASCADE
