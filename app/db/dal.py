@@ -352,6 +352,33 @@ def complete_queued_incident(incident_id: str, *, status: str = "DONE", error: s
         )
 
 
+def requeue_queued_incident(incident_id: str, error: str | None = None) -> None:
+    with _conn() as con:
+        con.execute(
+            """UPDATE incident_queue
+               SET status='PENDING',
+                   claimed_at=NULL,
+                   completed_at=NULL,
+                   dead_letter_at=NULL,
+                   last_error=?
+               WHERE incident_id=?""",
+            (error, incident_id),
+        )
+
+
+def dead_letter_queued_incident(incident_id: str, error: str | None = None) -> None:
+    with _conn() as con:
+        con.execute(
+            """UPDATE incident_queue
+               SET status='DEAD_LETTER',
+                   completed_at=?,
+                   dead_letter_at=?,
+                   last_error=?
+               WHERE incident_id=?""",
+            (_now_iso(), _now_iso(), error, incident_id),
+        )
+
+
 def find_open_incident_by_dedupe_key(dedupe_key: str) -> Optional[Dict[str, Any]]:
     if not dedupe_key:
         return None
