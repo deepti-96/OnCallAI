@@ -13,9 +13,9 @@ from app.db.dal import (
     complete_queued_incident,
     dead_letter_queued_incident,
     init_db,
+    mark_incident_resolved,
     mark_failed,
     mark_in_progress,
-    mark_done,
     mark_open,
     requeue_queued_incident,
     sync_open_incidents_to_queue,
@@ -49,7 +49,7 @@ def _run_incident_pipeline(inc: dict) -> None:
             {"state": payload.get("state")},
             status="OK",
         )
-        mark_done(inc["id"])
+        mark_incident_resolved(inc["id"], resolved_at=payload.get("last_seen_at"))
         complete_queued_incident(inc["id"], status="DONE")
         _log_event("incident_completed", inc, outcome="recovered")
         return
