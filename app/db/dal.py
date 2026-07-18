@@ -231,6 +231,39 @@ def save_report(incident_id: str, report_json: Dict[str, Any], report_md: str) -
             (incident_id, json.dumps(report_json), report_md, _now_iso())
         )
 
+
+def finalize_report_transaction(
+    incident_id: str,
+    report_json: Dict[str, Any],
+    report_md: str,
+    *,
+    final_step_message: str = "Incident processing complete",
+) -> None:
+    finalized_at = _now_iso()
+    with _conn() as con:
+        con.execute(
+            """INSERT INTO reports(incident_id, report_json, report_md, created_at)
+               VALUES(?,?,?,?)""",
+            (incident_id, json.dumps(report_json), report_md, finalized_at),
+        )
+        con.execute(
+            "UPDATE incidents SET status='DONE', completed_at=? WHERE id=?",
+            (finalized_at, incident_id),
+        )
+        con.execute(
+            """INSERT INTO agent_steps(incident_id, agent, phase, message, data_json, ts, status)
+               VALUES(?,?,?,?,?,?,?)""",
+            (
+                incident_id,
+                "supervisor",
+                "done",
+                final_step_message,
+                json.dumps({"completed_at": finalized_at}),
+                finalized_at,
+                "OK",
+            ),
+        )
+
 # ---------- reads (for UI) ----------
 
 def list_incidents(limit: int = 200) -> List[Dict[str, Any]]:
