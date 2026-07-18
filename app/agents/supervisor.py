@@ -1,4 +1,4 @@
-from app.db.dal import record_step, save_report, mark_done
+from app.db.dal import record_step, finalize_report_transaction
 from app.models.escalation_policy import compute_escalation_guidance
 
 def compile_report(incident, analysis):
@@ -60,6 +60,9 @@ def compile_report(incident, analysis):
 def supervisor_orchestrate(incident, analysis):
     record_step(incident['id'], 'supervisor', 'summarize', 'Compiling final report')
     report_json, report_md = compile_report(incident, analysis)
-    save_report(incident['id'], report_json, report_md)
-    mark_done(incident['id'])
-    record_step(incident['id'], 'supervisor', 'done', 'Incident processing complete')
+    finalize_report_transaction(
+        incident['id'],
+        report_json,
+        report_md,
+        final_step_message='Incident processing complete',
+    )
