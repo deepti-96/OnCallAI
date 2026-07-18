@@ -126,7 +126,8 @@ class OnCallAITestCase(unittest.TestCase):
         steps = self.dal.list_steps(incident_id)
         report = self.dal.get_latest_report(incident_id)
 
-        self.assertEqual(processed_incident["status"], "DONE")
+        self.assertEqual(processed_incident["status"], "OPEN")
+        self.assertEqual(processed_incident["workflow_status"], "COMPLETED")
         self.assertGreaterEqual(len(steps), 5)
         self.assertIsNotNone(report)
         self.assertEqual(report["report"]["issue"], "Database connection errors")
@@ -156,7 +157,9 @@ class OnCallAITestCase(unittest.TestCase):
         steps = self.dal.list_steps(incident_id)
         report = self.dal.get_latest_report(incident_id)
 
-        self.assertEqual(processed_incident["status"], "DONE")
+        self.assertEqual(processed_incident["status"], "RESOLVED")
+        self.assertEqual(processed_incident["workflow_status"], "COMPLETED")
+        self.assertEqual(processed_incident["resolution_status"], "RESOLVED")
         self.assertEqual(steps[-1]["phase"], "skip")
         self.assertIsNone(report)
 
@@ -199,7 +202,8 @@ class OnCallAITestCase(unittest.TestCase):
                 (incident_id,),
             ).fetchone()
 
-        self.assertEqual(processed_incident["status"], "DONE")
+        self.assertEqual(processed_incident["status"], "OPEN")
+        self.assertEqual(processed_incident["workflow_status"], "COMPLETED")
         self.assertGreaterEqual(len(steps), 5)
         self.assertIsNotNone(report)
         self.assertEqual(queue_row[0], "DONE")
