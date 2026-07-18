@@ -96,7 +96,9 @@ class AlertIngestTestCase(unittest.TestCase):
 
         self.assertEqual(incident_id, resolved_id)
         self.assertEqual(len(incidents), 1)
-        self.assertEqual(incident["status"], "DONE")
+        self.assertEqual(incident["status"], "RESOLVED")
+        self.assertEqual(incident["workflow_status"], "COMPLETED")
+        self.assertEqual(incident["resolution_status"], "RESOLVED")
         self.assertEqual(incident["payload"]["state"], "OK")
         self.assertEqual(incident["payload"]["occurrence_count"], 2)
         steps = self.dal.list_steps(incident_id)
