@@ -9,6 +9,7 @@ from app.db.dal import (
     init_db,
     record_incident,
     record_step,
+    mark_incident_resolved,
     update_incident,
 )
 from app.middleware.alert_normalizer import normalize_cloudwatch_alarm
@@ -63,9 +64,13 @@ def ingest_cloudwatch_alert(alert: Dict[str, Any]) -> str:
         )
         update_incident(
             existing["id"],
-            status=normalized["status"],
+            status="RESOLVED" if normalized["status"] == "DONE" else normalized["status"],
+            workflow_status="COMPLETED" if normalized["status"] == "DONE" else None,
             severity=normalized["severity"],
             payload=merged_payload,
+            workflow_completed_at=normalized["created_at"] if normalized["status"] == "DONE" else None,
+            resolution_status="RESOLVED" if normalized["status"] == "DONE" else None,
+            resolved_at=normalized["created_at"] if normalized["status"] == "DONE" else None,
         )
         if normalized["status"] == "DONE":
             complete_queued_incident(existing["id"], status="DONE")
@@ -109,7 +114,7 @@ def ingest_cloudwatch_alert(alert: Dict[str, Any]) -> str:
     if normalized["status"] == "OPEN":
         enqueue_incident(incident_id)
     else:
-        complete_queued_incident(incident_id, status="DONE")
+        mark_incident_resolved(incident_id, resolved_at=normalized["created_at"])
     return incident_id
 
 
