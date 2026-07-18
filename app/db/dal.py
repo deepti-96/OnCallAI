@@ -72,6 +72,8 @@ def _incident_summary(row: sqlite3.Row | Dict[str, Any]) -> Dict[str, Any]:
     ingested_at = _parse_iso(data.get("ingested_at"))
     processed_at = _parse_iso(data.get("processed_at"))
     completed_at = _parse_iso(data.get("completed_at"))
+    workflow_completed_at = _parse_iso(data.get("workflow_completed_at"))
+    resolved_at = _parse_iso(data.get("resolved_at"))
     last_seen_at = _parse_iso(payload.get("last_seen_at"))
     reference_ts = last_seen_at or event_time or ingested_at
     age_minutes = None
@@ -90,6 +92,9 @@ def _incident_summary(row: sqlite3.Row | Dict[str, Any]) -> Dict[str, Any]:
     data["ingested_at"] = data.get("ingested_at")
     data["processed_at"] = data.get("processed_at")
     data["completed_at"] = data.get("completed_at")
+    data["workflow_completed_at"] = data.get("workflow_completed_at")
+    data["resolution_status"] = data.get("resolution_status")
+    data["resolved_at"] = data.get("resolved_at")
     data["owner_team"] = enrichment.get("owner_team", "")
     data["age_minutes"] = age_minutes
     escalation = compute_escalation_guidance(data)
@@ -114,6 +119,10 @@ def init_db() -> None:
         _ensure_column(con, "incidents", "ingested_at", "TEXT")
         _ensure_column(con, "incidents", "processed_at", "TEXT")
         _ensure_column(con, "incidents", "completed_at", "TEXT")
+        _ensure_column(con, "incidents", "workflow_status", "TEXT")
+        _ensure_column(con, "incidents", "workflow_completed_at", "TEXT")
+        _ensure_column(con, "incidents", "resolution_status", "TEXT")
+        _ensure_column(con, "incidents", "resolved_at", "TEXT")
         _ensure_column(con, "incident_queue", "dead_letter_at", "TEXT")
 
 # ---------- writes ----------
@@ -129,6 +138,10 @@ def record_incident(
     ingested_at: str | None = None,
     processed_at: str | None = None,
     completed_at: str | None = None,
+    workflow_status: str | None = None,
+    workflow_completed_at: str | None = None,
+    resolution_status: str | None = None,
+    resolved_at: str | None = None,
     incident_id: str | None = None
 ) -> str:
     """Insert a new incident and return its id."""
@@ -139,13 +152,15 @@ def record_incident(
     with _conn() as con:
         con.execute(
             """INSERT INTO incidents(
-                 id, status, service, environment, severity, dedupe_key,
-                 payload_json, created_at, event_time, ingested_at, processed_at, completed_at
+                 id, status, workflow_status, service, environment, severity, dedupe_key,
+                 payload_json, created_at, event_time, ingested_at, processed_at, completed_at,
+                 workflow_completed_at, resolution_status, resolved_at
                )
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 incident_id,
                 status,
+                workflow_status,
                 service,
                 environment,
                 severity,
@@ -156,6 +171,9 @@ def record_incident(
                 ingested_at,
                 processed_at,
                 completed_at,
+                workflow_completed_at,
+                resolution_status,
+                resolved_at,
             ),
         )
         return incident_id
@@ -165,6 +183,7 @@ def update_incident(
     incident_id: str,
     *,
     status: str | None = None,
+    workflow_status: str | None = None,
     severity: str | None = None,
     payload: Dict[str, Any] | None = None,
     created_at: str | None = None,
@@ -172,6 +191,9 @@ def update_incident(
     ingested_at: str | None = None,
     processed_at: str | None = None,
     completed_at: str | None = None,
+    workflow_completed_at: str | None = None,
+    resolution_status: str | None = None,
+    resolved_at: str | None = None,
 ) -> None:
     updates: list[str] = []
     params: list[Any] = []
@@ -180,6 +202,9 @@ def update_incident(
     if status is not None:
         updates.append("status=?")
         params.append(status)
+    if workflow_status is not None:
+        updates.append("workflow_status=?")
+        params.append(workflow_status)
     if severity is not None:
         updates.append("severity=?")
         params.append(severity)
@@ -204,6 +229,15 @@ def update_incident(
     if completed_at is not None:
         updates.append("completed_at=?")
         params.append(completed_at)
+    if workflow_completed_at is not None:
+        updates.append("workflow_completed_at=?")
+        params.append(workflow_completed_at)
+    if resolution_status is not None:
+        updates.append("resolution_status=?")
+        params.append(resolution_status)
+    if resolved_at is not None:
+        updates.append("resolved_at=?")
+        params.append(resolved_at)
 
     if not updates:
         return
@@ -247,8 +281,13 @@ def finalize_report_transaction(
             (incident_id, json.dumps(report_json), report_md, finalized_at),
         )
         con.execute(
-            "UPDATE incidents SET status='DONE', completed_at=? WHERE id=?",
-            (finalized_at, incident_id),
+            """UPDATE incidents
+               SET status='OPEN',
+                   workflow_status='COMPLETED',
+                   completed_at=?,
+                   workflow_completed_at=?
+               WHERE id=?""",
+            (finalized_at, finalized_at, incident_id),
         )
         con.execute(
             """INSERT INTO agent_steps(incident_id, agent, phase, message, data_json, ts, status)
@@ -264,11 +303,42 @@ def finalize_report_transaction(
             ),
         )
 
+
+def mark_workflow_complete(incident_id: str, *, incident_status: str = "OPEN") -> None:
+    completed_at = _now_iso()
+    with _conn() as con:
+        con.execute(
+            """UPDATE incidents
+               SET status=?,
+                   workflow_status='COMPLETED',
+                   completed_at=?,
+                   workflow_completed_at=?
+               WHERE id=?""",
+            (incident_status, completed_at, completed_at, incident_id),
+        )
+
+
+def mark_incident_resolved(incident_id: str, *, resolved_at: str | None = None) -> None:
+    finished_at = resolved_at or _now_iso()
+    with _conn() as con:
+        con.execute(
+            """UPDATE incidents
+               SET status='RESOLVED',
+                   workflow_status='COMPLETED',
+                   completed_at=?,
+                   workflow_completed_at=?,
+                   resolution_status='RESOLVED',
+                   resolved_at=?
+               WHERE id=?""",
+            (finished_at, finished_at, finished_at, incident_id),
+        )
+
 # ---------- reads (for UI) ----------
 
 def list_incidents(limit: int = 200) -> List[Dict[str, Any]]:
-    sql = """SELECT id, status, service, environment, severity, payload_json, created_at,
-                    event_time, ingested_at, processed_at, completed_at, dedupe_key
+    sql = """SELECT id, status, workflow_status, service, environment, severity, payload_json, created_at,
+                    event_time, ingested_at, processed_at, completed_at, workflow_completed_at,
+                    resolution_status, resolved_at, dedupe_key
              FROM incidents ORDER BY created_at DESC, id DESC LIMIT ?"""
     with _conn(rowdict=True) as con:
         rows = con.execute(sql, (limit,)).fetchall()
@@ -438,22 +508,24 @@ def get_open_incidents() -> List[Dict[str, Any]]:
 def mark_in_progress(incident_id: str) -> None:
     with _conn() as con:
         con.execute(
-            "UPDATE incidents SET status='IN_PROGRESS', processed_at=? WHERE id=?",
+            "UPDATE incidents SET status='IN_PROGRESS', workflow_status='IN_PROGRESS', processed_at=? WHERE id=?",
             (_now_iso(), incident_id),
         )
 
 def mark_done(incident_id: str) -> None:
-    with _conn() as con:
-        con.execute(
-            "UPDATE incidents SET status='DONE', completed_at=? WHERE id=?",
-            (_now_iso(), incident_id),
-        )
+    mark_workflow_complete(incident_id)
 
 def mark_failed(incident_id: str) -> None:
+    failed_at = _now_iso()
     with _conn() as con:
         con.execute(
-            "UPDATE incidents SET status='FAILED', completed_at=? WHERE id=?",
-            (_now_iso(), incident_id),
+            """UPDATE incidents
+               SET status='FAILED',
+                   workflow_status='FAILED',
+                   completed_at=?,
+                   workflow_completed_at=?
+               WHERE id=?""",
+            (failed_at, failed_at, incident_id),
         )
 
 def mark_open(incident_id: str) -> None:

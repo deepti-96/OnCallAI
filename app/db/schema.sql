@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE TABLE IF NOT EXISTS incidents(
   id          TEXT PRIMARY KEY,
   status      TEXT NOT NULL,        -- OPEN | IN_PROGRESS | DONE | FAILED
+  workflow_status TEXT,             -- PENDING | COMPLETED | FAILED
   service     TEXT NOT NULL,
   environment TEXT NOT NULL,
   severity    TEXT NOT NULL,
@@ -36,7 +37,10 @@ CREATE TABLE IF NOT EXISTS incidents(
   event_time  TEXT,
   ingested_at TEXT,
   processed_at TEXT,
-  completed_at TEXT
+  completed_at TEXT,
+  workflow_completed_at TEXT,
+  resolution_status TEXT,           -- UNRESOLVED | RESOLVED
+  resolved_at TEXT
 );
 
 -- indexes for fast UI reads
