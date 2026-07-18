@@ -79,9 +79,28 @@ class DalTestCase(unittest.TestCase):
         completed = self.dal.get_incident(incident_id)
 
         self.assertEqual(in_progress["status"], "IN_PROGRESS")
+        self.assertEqual(in_progress["workflow_status"], "IN_PROGRESS")
         self.assertIsNotNone(in_progress["processed_at"])
-        self.assertEqual(completed["status"], "DONE")
+        self.assertEqual(completed["status"], "OPEN")
+        self.assertEqual(completed["workflow_status"], "COMPLETED")
         self.assertIsNotNone(completed["completed_at"])
+
+    def test_mark_incident_resolved_sets_resolution_fields(self):
+        incident_id = self.dal.record_incident(
+            status="OPEN",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={"source": "cloudwatch"},
+        )
+
+        self.dal.mark_incident_resolved(incident_id, resolved_at="2026-02-01T00:10:00Z")
+        resolved = self.dal.get_incident(incident_id)
+
+        self.assertEqual(resolved["status"], "RESOLVED")
+        self.assertEqual(resolved["workflow_status"], "COMPLETED")
+        self.assertEqual(resolved["resolution_status"], "RESOLVED")
+        self.assertEqual(resolved["resolved_at"], "2026-02-01T00:10:00Z")
 
     def test_find_open_incident_by_dedupe_key_uses_direct_lookup(self):
         incident_id = self.dal.record_incident(
@@ -232,6 +251,34 @@ class DalTestCase(unittest.TestCase):
             ).fetchone()
 
         self.assertEqual(queue_row[0], "DONE")
+
+    def test_finalize_report_transaction_writes_report_and_completion_step(self):
+        incident_id = self.dal.record_incident(
+            status="IN_PROGRESS",
+            service="payment-service",
+            environment="prod",
+            severity="CRITICAL",
+            payload={"source": "cloudwatch"},
+        )
+
+        self.dal.finalize_report_transaction(
+            incident_id,
+            {"issue": "database connection errors"},
+            "# RCA",
+            final_step_message="Incident processing complete",
+        )
+
+        incident = self.dal.get_incident(incident_id)
+        report = self.dal.get_latest_report(incident_id)
+        steps = self.dal.list_steps(incident_id)
+
+        self.assertEqual(incident["status"], "OPEN")
+        self.assertEqual(incident["workflow_status"], "COMPLETED")
+        self.assertIsNotNone(incident["completed_at"])
+        self.assertIsNotNone(report)
+        self.assertEqual(report["report"]["issue"], "database connection errors")
+        self.assertEqual(steps[-1]["phase"], "done")
+        self.assertEqual(steps[-1]["message"], "Incident processing complete")
 
 
 if __name__ == "__main__":
