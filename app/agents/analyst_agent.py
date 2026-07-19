@@ -1,6 +1,7 @@
 import re
 
 from app.db.dal import record_step
+from app.rag.confidence import calibrate_confidence
 from app.rag.loader import retrieve_examples
 
 # Tiny rule-based analyst for demo. Replace with RAG+LLM in real use.
@@ -37,10 +38,12 @@ def analyze_logs(incident, collected):
     corpus = _incident_context(incident, collected)
     evidence = []
     retrieved_examples = retrieve_examples(corpus)
+    log_lines = collected.get("logs", [])
+    rule_matched = False
 
     if retrieved_examples:
         evidence.extend(
-            f"Retrieved example: {example['root_cause']} (matches={example['match_count']})"
+            f"Retrieved example: {example['root_cause']} (score={example.get('retrieval_score', 0.0)})"
             for example in retrieved_examples
         )
         record_step(
@@ -54,6 +57,7 @@ def analyze_logs(incident, collected):
 
     for rule in RULES:
         if re.search(rule['pattern'], corpus, flags=re.I):
+            rule_matched = True
             evidence.append(f"Matched pattern: {rule['pattern']}")
             record_step(incident['id'], 'analyst', 'analyze', f"Pattern match: {rule['pattern']}")
             mitigations = list(rule['fix'])
@@ -67,7 +71,12 @@ def analyze_logs(incident, collected):
                 'root_cause': rule['root'],
                 'mitigations': mitigations,
                 'evidence': evidence,
-                'confidence': round(min(0.95, 0.65 + (0.1 * len(retrieved_examples))), 2),
+                'confidence': calibrate_confidence(
+                    rule_matched=rule_matched,
+                    retrieved_examples=retrieved_examples,
+                    evidence_count=len(evidence),
+                    log_count=len(log_lines),
+                ),
                 'retrieved_examples': retrieved_examples,
             }
 
@@ -85,7 +94,12 @@ def analyze_logs(incident, collected):
             'root_cause': best_example.get('root_cause', 'Inconclusive'),
             'mitigations': best_example.get('mitigation', ['Escalate to on-call']),
             'evidence': evidence,
-            'confidence': 0.55,
+            'confidence': calibrate_confidence(
+                rule_matched=rule_matched,
+                retrieved_examples=retrieved_examples,
+                evidence_count=len(evidence),
+                log_count=len(log_lines),
+            ),
             'retrieved_examples': retrieved_examples,
         }
 
@@ -95,6 +109,11 @@ def analyze_logs(incident, collected):
         'root_cause': 'Inconclusive',
         'mitigations': ['Escalate to on-call', 'Gather more logs', 'Increase verbosity'],
         'evidence': ['No rule matched'],
-        'confidence': 0.3,
+        'confidence': calibrate_confidence(
+            rule_matched=rule_matched,
+            retrieved_examples=[],
+            evidence_count=1,
+            log_count=len(log_lines),
+        ),
         'retrieved_examples': [],
     }

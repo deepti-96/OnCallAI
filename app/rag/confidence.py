@@ -15,21 +15,21 @@ def calibrate_confidence(
     log_count: int = 0,
 ) -> float:
     examples = list(retrieved_examples)
-    score = 0.22
+    score = 0.24
 
     if rule_matched:
-        score += 0.34
+        score += 0.38
     elif examples:
         score += 0.18
 
     if evidence_count:
-        score += min(0.12, 0.03 * min(evidence_count, 4))
+        score += min(0.18, 0.04 * min(evidence_count, 4))
 
     if log_count:
-        score += min(0.08, 0.02 * min(log_count, 4))
+        score += min(0.10, 0.03 * min(log_count, 4))
 
     if examples:
-        score += min(0.16, sum(float(example.get("confidence_hint", 0.0)) for example in examples[:3]) * 0.08)
+        score += min(0.18, sum(float(example.get("confidence_hint", 0.0)) for example in examples[:3]) * 0.18)
         score += min(0.06, 0.02 * max(len(examples) - 1, 0))
 
     return _clamp_confidence(score)
