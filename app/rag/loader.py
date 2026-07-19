@@ -1,11 +1,40 @@
 import json
 import pathlib
 import re
+from functools import lru_cache
 from typing import Any, Dict, List
 
 EXAMPLES_FILE = pathlib.Path(__file__).parent / "data" / "examples.jsonl"
+TOKEN_RE = re.compile(r"[A-Za-z0-9_]+")
 
 
+def _tokenize(text: str) -> set[str]:
+    return {token.lower() for token in TOKEN_RE.findall(text or "")}
+
+
+def _normalize_example(example: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = dict(example)
+    normalized.setdefault("pattern", "")
+    normalized.setdefault("root_cause", "")
+    normalized.setdefault("mitigation", [])
+    if not isinstance(normalized["mitigation"], list):
+        normalized["mitigation"] = [str(normalized["mitigation"])]
+    normalized["_pattern_tokens"] = _tokenize(str(normalized.get("pattern", "")))
+    normalized["_text_tokens"] = _tokenize(
+        " ".join(
+            str(value)
+            for value in (
+                normalized.get("pattern", ""),
+                normalized.get("root_cause", ""),
+                " ".join(str(item) for item in normalized.get("mitigation", [])),
+            )
+            if value
+        )
+    )
+    return normalized
+
+
+@lru_cache(maxsize=1)
 def load_examples() -> List[Dict[str, Any]]:
     if not EXAMPLES_FILE.exists():
         return []
@@ -17,7 +46,7 @@ def load_examples() -> List[Dict[str, Any]]:
             if not line:
                 continue
             try:
-                examples.append(json.loads(line))
+                examples.append(_normalize_example(json.loads(line)))
             except json.JSONDecodeError:
                 continue
     return examples
