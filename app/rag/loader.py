@@ -52,20 +52,46 @@ def load_examples() -> List[Dict[str, Any]]:
     return examples
 
 
+def _example_score(corpus_tokens: set[str], corpus: str, example: Dict[str, Any]) -> Dict[str, Any] | None:
+    pattern = example.get("pattern", "")
+    regex_hits = len(re.findall(pattern, corpus, flags=re.I)) if pattern else 0
+    overlap = len(corpus_tokens & set(example.get("_text_tokens", set())))
+    pattern_overlap = len(corpus_tokens & set(example.get("_pattern_tokens", set())))
+
+    if regex_hits == 0 and overlap == 0 and pattern_overlap == 0:
+        return None
+
+    retrieval_score = round(
+        (regex_hits * 2.0)
+        + (pattern_overlap * 0.45)
+        + (overlap * 0.25),
+        3,
+    )
+    confidence_hint = min(0.95, round(0.35 + (retrieval_score / 8.0), 2))
+    return {
+        **example,
+        "match_count": max(regex_hits, overlap, pattern_overlap),
+        "token_overlap": overlap,
+        "pattern_overlap": pattern_overlap,
+        "retrieval_score": retrieval_score,
+        "confidence_hint": confidence_hint,
+    }
+
+
 def retrieve_examples(corpus: str, limit: int = 2) -> List[Dict[str, Any]]:
+    corpus_tokens = _tokenize(corpus)
     matches: List[Dict[str, Any]] = []
     for example in load_examples():
-        pattern = example.get("pattern")
-        if not pattern:
-            continue
-        hit_count = len(re.findall(pattern, corpus, flags=re.I))
-        if hit_count:
-            matches.append(
-                {
-                    **example,
-                    "match_count": hit_count,
-                }
-            )
+        scored = _example_score(corpus_tokens, corpus, example)
+        if scored is not None:
+            matches.append(scored)
 
-    matches.sort(key=lambda item: item["match_count"], reverse=True)
+    matches.sort(
+        key=lambda item: (
+            item["retrieval_score"],
+            item["confidence_hint"],
+            item["match_count"],
+        ),
+        reverse=True,
+    )
     return matches[:limit]
