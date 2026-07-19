@@ -68,8 +68,9 @@ def _example_score(corpus_tokens: set[str], corpus: str, example: Dict[str, Any]
         3,
     )
     confidence_hint = min(0.95, round(0.35 + (retrieval_score / 8.0), 2))
+    public_example = {key: value for key, value in example.items() if not key.startswith("_")}
     return {
-        **example,
+        **public_example,
         "match_count": max(regex_hits, overlap, pattern_overlap),
         "token_overlap": overlap,
         "pattern_overlap": pattern_overlap,
