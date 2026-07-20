@@ -76,7 +76,8 @@ def build_log_collection_profile(incident: Dict[str, Any]) -> Dict[str, Any]:
     time_window_minutes = SEVERITY_WINDOW_MINUTES.get(severity, 10)
 
     search_terms = _dedupe_terms(
-        _tokenize(service)
+        [service.lower()]
+        + _tokenize(service)
         + _tokenize(incident.get("environment"))
         + _tokenize(payload.get("alert_type"))
         + _tokenize(payload.get("alert"))
