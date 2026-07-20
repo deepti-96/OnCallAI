@@ -1,9 +1,9 @@
-import os
 import sqlite3
 import time
 
-DB_FILE = os.environ.get("DB_FILE", "dev.db")
-POLL_INTERVAL = 10  # check every 10 seconds
+from app.config import DB_FILE, POLL_INTERVAL_SECONDS
+
+POLL_INTERVAL = POLL_INTERVAL_SECONDS  # check every few seconds by default
 
 def fetch_new_incidents(conn, last_seen_created_at, last_seen_id):
     cursor = conn.cursor()

@@ -1,12 +1,12 @@
 # app/db/dal.py
 import datetime
 import json
-import os
 import pathlib
 import sqlite3
 import uuid
 from typing import Any, Dict, List, Optional
 
+from app.config import DB_FILE
 from app.models.escalation_policy import compute_escalation_guidance
 
 try:
@@ -17,7 +17,6 @@ except ImportError:  # Optional during lightweight local runs
 if load_dotenv is not None:
     load_dotenv()
 
-DB_FILE = os.environ.get("DB_FILE", "dev.db")
 SCHEMA_FILE = pathlib.Path(__file__).with_name("schema.sql")
 
 def _now_iso() -> str:
