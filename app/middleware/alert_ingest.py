@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, Dict
@@ -13,7 +14,7 @@ from app.db.dal import (
     update_incident,
 )
 from app.middleware.alert_normalizer import normalize_cloudwatch_alarm
-from app.models.service_registry import get_service_enrichment
+from app.models.service_registry import get_service_enrichment, normalize_service_name, resolve_service_name
 
 
 def _find_deduped_incident(normalized: Dict[str, Any]) -> Dict[str, Any] | None:
@@ -42,6 +43,16 @@ def _merge_payload(existing_payload: Dict[str, Any], new_payload: Dict[str, Any]
 
 def _apply_enrichment(normalized: Dict[str, Any]) -> Dict[str, Any]:
     payload = dict(normalized.get("payload") or {})
+    canonical_service = resolve_service_name(normalized.get("service", ""))
+    normalized["service"] = canonical_service or normalize_service_name(normalized.get("service", ""))
+    dedupe_source = "|".join(
+        [
+            normalized["service"],
+            str(normalized.get("environment") or ""),
+            str(payload.get("alarm_arn") or payload.get("alarm_name") or ""),
+        ]
+    )
+    payload["dedupe_key"] = hashlib.sha256(dedupe_source.encode("utf-8")).hexdigest()[:16]
     enrichment = get_service_enrichment(
         normalized["service"],
         normalized.get("environment"),
