@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
-from app.models.service_registry import get_service_enrichment
+from app.models.service_registry import get_service_enrichment, normalize_service_name, resolve_service_name
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9_]+")
 
@@ -48,7 +48,9 @@ def _choose_folder(corpus: str) -> str:
 
 def build_log_collection_profile(incident: Dict[str, Any]) -> Dict[str, Any]:
     payload = incident.get("payload") or {}
-    service = str(incident.get("service") or "unknown-service")
+    service = resolve_service_name(incident.get("service") or "")
+    if not service:
+        service = normalize_service_name(incident.get("service") or "unknown-service")
     severity = str(incident.get("severity") or "LOW").upper()
     enrichment = get_service_enrichment(service, incident.get("environment"))
 
