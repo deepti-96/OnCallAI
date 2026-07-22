@@ -43,6 +43,7 @@ def _merge_payload(existing_payload: Dict[str, Any], new_payload: Dict[str, Any]
 
 def _apply_enrichment(normalized: Dict[str, Any]) -> Dict[str, Any]:
     payload = dict(normalized.get("payload") or {})
+    original_service = normalized.get("service", "")
     canonical_service = resolve_service_name(normalized.get("service", ""))
     normalized["service"] = canonical_service or normalize_service_name(normalized.get("service", ""))
     dedupe_source = "|".join(
@@ -56,6 +57,7 @@ def _apply_enrichment(normalized: Dict[str, Any]) -> Dict[str, Any]:
     enrichment = get_service_enrichment(
         normalized["service"],
         normalized.get("environment"),
+        requested_service=original_service,
     )
     if enrichment:
         payload["enrichment"] = enrichment

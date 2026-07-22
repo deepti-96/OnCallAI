@@ -57,6 +57,27 @@ class CollectorTestCase(unittest.TestCase):
         self.assertIn("payment-service", profile["search_terms"])
         self.assertEqual(profile["catalog"]["owner_team"], "payments-platform")
 
+    def test_build_log_collection_profile_resolves_aliases(self):
+        incident = {
+            "service": "payments-service",
+            "environment": "staging",
+            "severity": "HIGH",
+            "payload": {
+                "source": "database-cpu",
+                "details": "connection refused from service",
+            },
+        }
+
+        profile = self.log_collection.build_log_collection_profile(incident)
+
+        self.assertEqual(profile["service"], "payment-service")
+        self.assertEqual(profile["folder"], "db")
+        self.assertEqual(profile["catalog"]["requested_service"], "payments-service")
+        self.assertEqual(
+            profile["catalog"]["dashboard_url"],
+            "https://grafana.example/d/payment-service-staging",
+        )
+
     def test_collector_ranks_matching_logs_first(self):
         incident_id = self.dal.record_incident(
             status="OPEN",

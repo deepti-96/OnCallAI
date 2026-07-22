@@ -62,6 +62,27 @@ class AlertIngestTestCase(unittest.TestCase):
         self.assertEqual(incident["service"], "orders-service")
         self.assertEqual(incident["payload"]["alarm_name"], alert["AlarmName"])
 
+    def test_ingest_cloudwatch_alert_canonicalizes_alias_service(self):
+        alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(
+            service="ignored-service-name",
+            environment="staging",
+        )
+        alert["OnCallAI"] = {
+            "service": "payments-service",
+            "environment": "staging",
+        }
+
+        incident_id = self.alert_ingest.ingest_cloudwatch_alert(alert)
+        incident = self.dal.get_incident(incident_id)
+
+        self.assertEqual(incident["service"], "payment-service")
+        self.assertEqual(incident["payload"]["enrichment"]["service"], "payment-service")
+        self.assertEqual(
+            incident["payload"]["enrichment"]["dashboard_url"],
+            "https://grafana.example/d/payment-service-staging",
+        )
+        self.assertEqual(incident["payload"]["enrichment"]["requested_service"], "payments-service")
+
     def test_repeated_alert_reuses_existing_open_incident(self):
         alert = self.cloudwatch_simulator.sample_cloudwatch_alarm(service="payments-service")
 

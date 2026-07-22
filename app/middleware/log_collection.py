@@ -48,11 +48,12 @@ def _choose_folder(corpus: str) -> str:
 
 def build_log_collection_profile(incident: Dict[str, Any]) -> Dict[str, Any]:
     payload = incident.get("payload") or {}
-    service = resolve_service_name(incident.get("service") or "")
+    original_service = incident.get("service") or ""
+    service = resolve_service_name(original_service)
     if not service:
-        service = normalize_service_name(incident.get("service") or "unknown-service")
+        service = normalize_service_name(original_service or "unknown-service")
     severity = str(incident.get("severity") or "LOW").upper()
-    enrichment = get_service_enrichment(service, incident.get("environment"))
+    enrichment = get_service_enrichment(service, incident.get("environment"), requested_service=original_service)
 
     service_aliases = enrichment.get("aliases") or enrichment.get("service_aliases") or []
     if not isinstance(service_aliases, list):

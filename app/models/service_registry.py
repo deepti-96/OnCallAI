@@ -93,13 +93,18 @@ def resolve_service_name(service: str) -> str:
     return requested
 
 
-def get_service_enrichment(service: str, environment: str | None = None) -> Dict[str, Any]:
+def get_service_enrichment(
+    service: str,
+    environment: str | None = None,
+    *,
+    requested_service: str | None = None,
+) -> Dict[str, Any]:
     catalog = load_service_catalog()
     canonical_service = resolve_service_name(service)
     service_entry = catalog.get(canonical_service, {})
     enrichment = dict(service_entry)
 
-    requested_service = normalize_service_name(service)
+    requested_service = normalize_service_name(requested_service or service)
     environment_overrides = service_entry.get("environments", {}) if isinstance(service_entry, dict) else {}
     if environment and environment_overrides:
         environment_entry = environment_overrides.get(environment) or environment_overrides.get(environment.lower())
