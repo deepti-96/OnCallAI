@@ -1,38 +1,66 @@
 {
   "payment-service": {
+    "aliases": ["payments-service", "payment", "payments"],
     "owner_team": "payments-platform",
     "primary_contact": "payments-oncall",
     "runbook_url": "https://internal.example/runbooks/payment-service",
     "dashboard_url": "https://grafana.example/d/payment-service",
     "service_tier": "tier-1",
     "escalation_policy": "page-payments-primary",
-    "recent_deploy_hint": "Check deployments in the last 30 minutes."
+    "recent_deploy_hint": "Check deployments in the last 30 minutes.",
+    "environments": {
+      "staging": {
+        "dashboard_url": "https://grafana.example/d/payment-service-staging",
+        "recent_deploy_hint": "Validate staging deploys before promoting to prod."
+      },
+      "prod": {
+        "recent_deploy_hint": "Check prod deploys in the last 30 minutes."
+      }
+    }
   },
   "billing-service": {
+    "aliases": ["billing", "billing-api"],
     "owner_team": "billing-platform",
     "primary_contact": "billing-oncall",
     "runbook_url": "https://internal.example/runbooks/billing-service",
     "dashboard_url": "https://grafana.example/d/billing-service",
     "service_tier": "tier-1",
     "escalation_policy": "page-billing-primary",
-    "recent_deploy_hint": "Compare invoice pipeline jobs with the latest deploy."
+    "recent_deploy_hint": "Compare invoice pipeline jobs with the latest deploy.",
+    "environments": {
+      "staging": {
+        "dashboard_url": "https://grafana.example/d/billing-service-staging"
+      }
+    }
   },
   "checkout-service": {
+    "aliases": ["checkout", "checkout-api"],
     "owner_team": "checkout-experience",
     "primary_contact": "checkout-oncall",
     "runbook_url": "https://internal.example/runbooks/checkout-service",
     "dashboard_url": "https://grafana.example/d/checkout-service",
     "service_tier": "tier-1",
     "escalation_policy": "page-checkout-primary",
-    "recent_deploy_hint": "Look for cart or payment dependency changes."
+    "recent_deploy_hint": "Look for cart or payment dependency changes.",
+    "environments": {
+      "staging": {
+        "dashboard_url": "https://grafana.example/d/checkout-service-staging"
+      }
+    }
   },
   "inventory-service": {
+    "aliases": ["inventory", "stock-service"],
     "owner_team": "inventory-core",
     "primary_contact": "inventory-oncall",
     "runbook_url": "https://internal.example/runbooks/inventory-service",
     "dashboard_url": "https://grafana.example/d/inventory-service",
     "service_tier": "tier-2",
     "escalation_policy": "page-inventory-primary",
-    "recent_deploy_hint": "Validate stock sync jobs and warehouse feed health."
+    "recent_deploy_hint": "Validate stock sync jobs and warehouse feed health.",
+    "environments": {
+      "staging": {
+        "dashboard_url": "https://grafana.example/d/inventory-service-staging"
+      }
+    }
   }
 }
