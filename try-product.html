@@ -139,8 +139,8 @@
             </div>
 
             <div class="sandbox-actions">
-              <button class="primary-button button-reset" id="run-sandbox" type="button">Send Alert</button>
-              <button class="secondary-button button-reset" id="open-workflow" type="button">Open incident view</button>
+              <button class="primary-button button-reset" id="run-sandbox" type="button">Run incident</button>
+              <button class="secondary-button button-reset" id="open-workflow" type="button">Open incident detail</button>
             </div>
 
             <div class="status-grid">
@@ -155,7 +155,7 @@
                 <p id="storage-detail">Waiting for API health check.</p>
               </div>
               <div class="status-card">
-                <span class="output-label">Agent graph</span>
+                <span class="output-label">Workflow</span>
                 <strong id="reasoning-label">Checking analysis mode...</strong>
                 <p id="reasoning-detail">Waiting for API health check.</p>
               </div>
@@ -179,7 +179,7 @@
                 <h2 id="sandbox-headline">Incident response summary</h2>
                 <p class="panel-helper">Latest incident outcome and recommended response.</p>
               </div>
-              <span class="meta" id="sandbox-status">Awaiting input</span>
+              <span class="meta" id="sandbox-status">Ready for input</span>
             </div>
 
             <div class="output-card">
@@ -198,7 +198,7 @@
                 <strong id="sandbox-impact">Expected customer or system impact will appear here.</strong>
               </div>
               <div class="output-block">
-                <span class="output-label">Recommended next action</span>
+                <span class="output-label">Suggested next step</span>
                 <strong id="sandbox-outcome">A clear next action, supporting evidence, and escalation target.</strong>
               </div>
             </div>
@@ -318,7 +318,7 @@
                     <strong id="output-issue">Database connection errors</strong>
                   </div>
                   <div class="output-block">
-                    <span class="output-label">Root cause hint</span>
+                    <span class="output-label">Likely root cause</span>
                     <strong id="output-root-cause">DB pod not ready or crashed after elevated load.</strong>
                   </div>
                   <div class="output-block">
