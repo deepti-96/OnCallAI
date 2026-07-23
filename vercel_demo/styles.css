@@ -1818,3 +1818,25 @@ code {
     grid-template-columns: 1fr;
   }
 }
+  border-top: 4px solid rgba(249, 115, 22, 0.22);
+  border-top: 4px solid rgba(244, 63, 94, 0.16);
+  border-top: 4px solid rgba(249, 115, 22, 0.18);
+  border-top-color: rgba(249, 115, 22, 0.28);
+  border-top-color: rgba(14, 165, 233, 0.26);
+  border-top-color: rgba(99, 102, 241, 0.22);
+  border-top-color: rgba(56, 189, 248, 0.2);
+  border-top-color: rgba(248, 250, 252, 0.22);
+.feature-card {
+  border-top: 4px solid rgba(14, 165, 233, 0.18);
+}
+
+.report-card {
+  border-top: 4px solid rgba(249, 115, 22, 0.18);
+}
+
+.position-card {
+  border-top: 4px solid rgba(99, 102, 241, 0.16);
+}
+
+  border-top: 4px solid rgba(249, 115, 22, 0.2);
+  border-top-color: rgba(244, 63, 94, 0.2);
