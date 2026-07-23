@@ -5,28 +5,28 @@ const INGESTION_INTEGRATIONS = {
     key: "cloudwatch",
     label: "CloudWatch alarm intake",
     detail: "AWS CloudWatch alarms are normalized directly into the hosted incident workflow.",
-    submitLabel: "Submitting CloudWatch alarm to the hosted app...",
+    submitLabel: "Routing CloudWatch alarm into the incident workflow...",
     sourceLabel: "CloudWatch",
   },
   pagerduty: {
     key: "pagerduty",
     label: "PagerDuty event intake",
     detail: "PagerDuty webhooks can be normalized into the same incident schema and operator workflow.",
-    submitLabel: "Submitting PagerDuty event to the hosted app...",
+    submitLabel: "Routing PagerDuty event into the incident workflow...",
     sourceLabel: "PagerDuty",
   },
   datadog: {
     key: "datadog",
     label: "Datadog monitor intake",
     detail: "Datadog alerts can flow through the same collector, retrieval, triage, and supervisor path.",
-    submitLabel: "Submitting Datadog monitor alert to the hosted app...",
+    submitLabel: "Routing Datadog monitor alert into the incident workflow...",
     sourceLabel: "Datadog",
   },
   grafana: {
     key: "grafana",
     label: "Grafana alert intake",
     detail: "Grafana-managed alerts can be mapped into the shared incident record and escalation flow.",
-    submitLabel: "Submitting Grafana alert to the hosted app...",
+    submitLabel: "Routing Grafana alert into the incident workflow...",
     sourceLabel: "Grafana",
   },
 };
@@ -592,11 +592,11 @@ function localPreviewForScenario(scenarioKey, severityMode, volumeMode) {
     report,
     incidents: [incident],
     storage: {
-      label: "Local sample data",
-      detail: "This localhost page uses built-in incident data. The deployed workspace stores live runs.",
+      label: "Built-in sample data",
+      detail: "This localhost page uses bundled incident data. The hosted workspace stores live runs.",
     },
     reasoning: {
-      label: "Structured log-and-retrieval graph",
+      label: "Structured agent workflow",
       detail: "Localhost uses the built-in intake, collector, retrieval, triage, and supervisor flow unless the hosted API is available.",
     },
     graph_trace: [
@@ -620,7 +620,7 @@ async function refreshHealth() {
       detail: "The product walkthrough is available, but the serverless backend is not responding yet.",
     });
     renderCombinedReasoning({
-      label: "Structured log-and-retrieval graph",
+      label: "Structured agent workflow",
       detail: "The local workspace is using the built-in intake, collector, retrieval, triage, and supervisor flow.",
     });
   }
@@ -653,7 +653,7 @@ async function runSandboxScenario() {
   const originalButtonLabel = runButton?.textContent || "Send Alert";
 
   renderScenario(scenarioKey);
-  setText("sandbox-status", "Running live workflow");
+  setText("sandbox-status", "Running incident workflow");
   renderSandboxLog([integration.submitLabel]);
   if (runButton) {
     runButton.disabled = true;
@@ -682,7 +682,7 @@ async function runSandboxScenario() {
     renderSandboxLog(extendLogWithGraphTrace(payload.preview.log, payload.graph_trace));
     renderStorageStatus(payload.storage);
     renderCombinedReasoning({
-      label: payload.analysis_mode === "gemini-agent-graph" ? "Gemini log-and-retrieval graph active" : "Structured log-and-retrieval graph",
+      label: payload.analysis_mode === "gemini-agent-graph" ? "Gemini incident workflow active" : "Structured agent workflow",
       detail:
         payload.analysis_mode === "gemini-agent-graph"
           ? "This incident was generated through the hosted intake, collector, retrieval, triage-agent, and supervisor-agent flow."
