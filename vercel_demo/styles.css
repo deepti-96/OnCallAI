@@ -1840,3 +1840,52 @@ code {
 
   border-top: 4px solid rgba(249, 115, 22, 0.2);
   border-top-color: rgba(244, 63, 94, 0.2);
+.app-body[data-theme="dark"] .hero-copy {
+  border-top-color: rgba(249, 115, 22, 0.38);
+}
+
+.app-body[data-theme="dark"] .hero-panel {
+  background: linear-gradient(180deg, rgba(12, 19, 32, 0.96), rgba(18, 27, 42, 0.92));
+  border-top-color: rgba(244, 63, 94, 0.26);
+}
+
+.app-body[data-theme="dark"] .feature-card {
+  background: linear-gradient(180deg, rgba(15, 23, 39, 0.98), rgba(19, 31, 50, 0.94));
+  border-top-color: rgba(59, 130, 246, 0.26);
+}
+
+.app-body[data-theme="dark"] .report-card {
+  background: linear-gradient(180deg, rgba(16, 24, 40, 0.98), rgba(22, 33, 53, 0.94));
+  border-top-color: rgba(249, 115, 22, 0.3);
+}
+
+.app-body[data-theme="dark"] .position-card {
+  background: linear-gradient(180deg, rgba(16, 24, 40, 0.98), rgba(22, 33, 53, 0.94));
+  border-top-color: rgba(99, 102, 241, 0.28);
+}
+
+.app-body[data-theme="dark"] .workspace-card-strong {
+  background: linear-gradient(180deg, rgba(15, 23, 39, 0.98), rgba(18, 29, 46, 0.96));
+  border-top-color: rgba(249, 115, 22, 0.34);
+}
+
+.app-body[data-theme="dark"] .workspace-card-accent {
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 30%),
+    linear-gradient(180deg, rgba(15, 23, 39, 0.98), rgba(18, 31, 50, 0.96));
+  border-top-color: rgba(59, 130, 246, 0.3);
+}
+
+.app-body[data-theme="dark"] .workspace-card-history {
+  background: linear-gradient(180deg, rgba(16, 24, 40, 0.98), rgba(21, 29, 48, 0.95));
+  border-top-color: rgba(99, 102, 241, 0.28);
+}
+
+.app-body[data-theme="dark"] .workspace-card-evidence {
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(15, 23, 39, 0.98), rgba(19, 31, 50, 0.95));
+  border-top-color: rgba(56, 189, 248, 0.28);
+}
+
+  border-top-color: rgba(248, 250, 252, 0.3);
