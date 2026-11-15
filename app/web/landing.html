@@ -153,7 +153,7 @@
         </ul>
       </div>
     </div>
-    <p class="note">Measured with the built-in MIND simulator on synthetic incidents. Run <span class="mono">python3 scripts/mind_demo.py --live</span> to see how real MIND extraction behaves on the same data.</p>
+    <p class="note">Measured with the built-in MIND simulator on synthetic incidents. Run <span class="mono">.venv/bin/python scripts/mind_demo.py --live</span> to see how real MIND extraction behaves on the same data.</p>
   </section>
 
   <section class="plain" style="padding-top:0">
@@ -176,7 +176,7 @@
 <pre><span class="c"># creates log groups, metric filter, alarm, topic, queue</span>
 bash scripts/aws_demo_setup.sh
 export CW_SQS_QUEUE_URL=https://sqs...
-python3 scripts/aws_emit_logs.py</pre>
+.venv/bin/python scripts/aws_emit_logs.py</pre>
       </div>
       <div>
         <h3>Datadog</h3>
@@ -197,11 +197,11 @@ Payload  {"title": "$EVENT_TITLE",
         <p>No cloud account needed for the first look. A recorded CloudWatch alarm runs through the same code a real one would, and MIND is simulated until you add a key.</p>
         <a class="btn solid" href="/console">Open the console</a>
       </div>
-<pre>./scripts/start.sh                 <span class="c"># checks, tests, starts</span>
+<pre>bash scripts/start.sh              <span class="c"># .venv, tests, start</span>
 <span class="c"># real MIND</span>
-MIND_ENABLED=true MIND_API_KEY=mind_... ./scripts/start.sh
+MIND_ENABLED=true MIND_API_KEY=mind_... bash scripts/start.sh
 <span class="c"># real CloudWatch</span>
-CW_SQS_QUEUE_URL=https://sqs... ./scripts/start.sh</pre>
+CW_SQS_QUEUE_URL=https://sqs... bash scripts/start.sh</pre>
     </div>
   </section>
 

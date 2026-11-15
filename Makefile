@@ -1,6 +1,6 @@
-PYTHON ?= python3
+PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 
-.PHONY: run test simulate-alert poll-cloudwatch seed clean mind-demo mind-demo-live mind-test console
+.PHONY: run test simulate-alert poll-cloudwatch seed clean mind-demo mind-demo-live mind-test console venv
 
 run:
 	$(PYTHON) app/runner.py
@@ -32,4 +32,7 @@ mind-demo-live:
 	$(PYTHON) scripts/mind_demo.py --live
 
 console:
-	$(PYTHON) -m app.web.server --simulate-mind
+	bash scripts/start.sh
+
+venv:
+	bash scripts/setup_venv.sh

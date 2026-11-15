@@ -1,8 +1,8 @@
 """MIND incident-memory demo + the graph-vs-similarity experiment.
 
-    python3 scripts/mind_demo.py                 # offline, simulated MIND (FakeMind)
-    python3 scripts/mind_demo.py --live          # real MIND, needs MIND_API_KEY
-    python3 scripts/mind_demo.py --live --cleanup  # delete the demo entries from MIND
+    .venv/bin/python scripts/mind_demo.py                 # offline, simulated MIND (FakeMind)
+    .venv/bin/python scripts/mind_demo.py --live          # real MIND, needs MIND_API_KEY
+    .venv/bin/python scripts/mind_demo.py --live --cleanup  # delete the demo entries from MIND
 
 Uses a throwaway SQLite file, never dev.db. All incidents are synthetic.
 """

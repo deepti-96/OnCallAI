@@ -1,6 +1,7 @@
 """OnCallAI local console.
 
-    python3 -m app.web.server --simulate-mind
+    bash scripts/start.sh                         # sets up .venv, runs tests, starts this
+    .venv/bin/python -m app.web.server --simulate-mind   # start only
     open http://localhost:8787
 
 Live sources (both optional, both feed the same pipeline):

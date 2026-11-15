@@ -1,10 +1,10 @@
 """Mark an incident resolved and write the confirmed RCA to MIND.
 
-    python3 scripts/resolve_incident.py --id <incident_id> \
+    .venv/bin/python scripts/resolve_incident.py --id <incident_id> \
         --root-cause "..." --mitigation "..." --mitigation "..." \
         [--component payment-service] [--deployment "payment-service v2.15.0"]
 
-    python3 scripts/resolve_incident.py --retry-pending   # flush write-backs that failed earlier
+    .venv/bin/python scripts/resolve_incident.py --retry-pending   # flush write-backs that failed earlier
 
 Needs MIND_ENABLED=true and MIND_API_KEY, otherwise it only resolves locally.
 """

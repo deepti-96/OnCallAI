@@ -70,19 +70,20 @@ Things I did not use and why: `supersedes` on entries (a recurring failure is hi
 
 ## 3. Commands
 
+Everything runs inside `.venv` in the project folder.
+
 ```bash
 cd ~/Desktop/Projects/OnCallAI-MIND
-python3 -m venv .venv && source .venv/bin/activate
-pip install python-dotenv            # optional: lets MIND_API_KEY come from .env. Tests need only the standard library.
+bash scripts/setup_venv.sh           # creates .venv, installs requirements-console.txt
+source .venv/bin/activate            # now `python` is the venv's Python
 
-make test                            # all 58 tests (43 existing + 15 new)
-make mind-test                       # just the MIND tests, verbose
-make mind-demo                       # offline, simulated MIND
+python -m unittest discover -s tests # all tests
+python scripts/mind_demo.py          # offline, simulated MIND
 
 # real MIND (writes 4 private entries to your account)
 export MIND_API_KEY=mind_xxx         # m-i-n-d.ai -> Settings -> Developer -> API Keys
-python3 scripts/mind_demo.py --live --wait 90
-python3 scripts/mind_demo.py --live --cleanup   # remove the demo entries afterwards
+python scripts/mind_demo.py --live --wait 90
+python scripts/mind_demo.py --live --cleanup   # remove the demo entries afterwards
 ```
 
 `--wait` gives MIND time to run graph extraction on the new entries. If the graph modes come back thin, rerun with a longer wait.

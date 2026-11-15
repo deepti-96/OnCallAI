@@ -4,6 +4,7 @@
 # Needs the AWS CLI v2 with credentials that can manage logs, cloudwatch, sns, sqs.
 # Undo with scripts/aws_demo_teardown.sh
 set -euo pipefail
+cd "$(dirname "$0")/.."
 
 REGION="${AWS_REGION:-us-east-1}"
 export AWS_DEFAULT_REGION="$REGION"
@@ -32,7 +33,8 @@ QUEUE_ARN=$(aws sqs get-queue-attributes --queue-url "$QUEUE_URL" --attribute-na
 
 echo "4/6 let only this topic write to the queue"
 ATTRS=$(mktemp)
-python3 - "$TOPIC_ARN" "$QUEUE_ARN" > "$ATTRS" <<'PY'
+PYBIN=python3; [ -x .venv/bin/python ] && PYBIN=.venv/bin/python
+"$PYBIN" - "$TOPIC_ARN" "$QUEUE_ARN" > "$ATTRS" <<'PY'
 import json, sys
 topic, queue = sys.argv[1], sys.argv[2]
 policy = {"Version": "2012-10-17", "Statement": [{
@@ -64,11 +66,11 @@ Done. Start the console with:
 
   export AWS_REGION=$REGION
   export CW_SQS_QUEUE_URL=$QUEUE_URL
-  python3 -m app.web.server --simulate-mind
+  bash scripts/start.sh
 
 Then make checkout fail:
 
-  python3 scripts/aws_emit_logs.py
+  .venv/bin/python scripts/aws_emit_logs.py
 
 The alarm usually fires 1 to 3 minutes later. The console picks it up from SQS.
 The process needs: sqs:ReceiveMessage, sqs:DeleteMessage, logs:FilterLogEvents.

@@ -2,7 +2,7 @@
 
 ## What runs
 
-`./scripts/start.sh` sets up a virtualenv, runs the tests, and starts one process on http://localhost:8787 with:
+`bash scripts/start.sh` creates or reuses `.venv`, installs `requirements-console.txt` into it, runs the tests, and starts one process on http://localhost:8787 with:
 
 - a product page at `/` and the console at `/console`
 - the existing runner pipeline in a worker thread (collector, analyst, MIND recall, supervisor)
@@ -38,9 +38,8 @@ flowchart LR
 Offline (no AWS, simulated MIND):
 
 ```bash
-python3 -m app.web.server --simulate-mind
-# open http://localhost:8787
-# click "1 Store past incidents", then "2 Replay CloudWatch alarm"
+bash scripts/start.sh
+# opens http://127.0.0.1:8787; go to /console and click "Run both steps"
 ```
 
 The replay feeds a recorded SNS->SQS message through the real `CloudWatchSqsSource` code with in-memory SQS and Logs clients.
@@ -48,12 +47,12 @@ The replay feeds a recorded SNS->SQS message through the real `CloudWatchSqsSour
 Real AWS (free tier):
 
 ```bash
-pip install boto3
+bash scripts/setup_venv.sh          # boto3 goes into .venv, not your system Python
 aws configure                       # or any credentials with logs, cloudwatch, sns, sqs
 bash scripts/aws_demo_setup.sh      # prints the export lines
 export AWS_REGION=us-east-1 CW_SQS_QUEUE_URL=https://sqs....
-python3 -m app.web.server --simulate-mind
-python3 scripts/aws_emit_logs.py    # in another terminal; alarm fires 1 to 3 minutes later
+bash scripts/start.sh
+.venv/bin/python scripts/aws_emit_logs.py   # in another terminal; alarm fires 1 to 3 minutes later
 bash scripts/aws_demo_teardown.sh   # when done
 ```
 
@@ -105,3 +104,7 @@ One theme, fog and sodium, used on both pages. Each accent means one thing and n
 petrol `#14323C` for text and structure, sodium `#E3962B` for live or alerting, tide `#2B8A78` for resolved, iris `#5459C9` for memory from MIND.
 Type is IBM Plex Sans Condensed for service names and headings, Plex Sans for body, Plex Mono only for logs and memory keys. Fonts ship in `app/web/static/fonts` (SIL Open Font License), so the demo looks the same offline.
 The memory graph (`app/web/static/graph.js`) is the one bold element: solid iris edges are past incidents today's logs back up, dashed edges are reference only.
+
+## Python environment
+
+Everything runs from `.venv` in the project folder. `scripts/setup_venv.sh` creates it with Python 3.11+ and installs `requirements-console.txt` (python-dotenv and boto3, pinned to the versions in `requirements.txt`). `scripts/start.sh` calls it first, then runs the tests and the server with `.venv/bin/python`. To work by hand: `source .venv/bin/activate`, then plain `python` uses the venv.

@@ -1,7 +1,7 @@
 """Write synthetic failing logs into the demo CloudWatch log groups.
 
-    python3 scripts/aws_emit_logs.py                       # checkout 504s after payment v2.15.0
-    python3 scripts/aws_emit_logs.py --rounds 2 --pause 30 # keep failing for longer
+    .venv/bin/python scripts/aws_emit_logs.py                       # checkout 504s after payment v2.15.0
+    .venv/bin/python scripts/aws_emit_logs.py --rounds 2 --pause 30 # keep failing for longer
 
 Uses the same lines as the offline replay, stamped with the current time.
 Needs boto3 and logs:CreateLogStream + logs:PutLogEvents.
@@ -27,7 +27,7 @@ def main():
     try:
         import boto3
     except ImportError:
-        sys.exit("pip install boto3 first")
+        sys.exit("boto3 missing: run bash scripts/setup_venv.sh, then use .venv/bin/python")
     logs = boto3.client("logs", region_name=os.getenv("AWS_REGION", "us-east-1"))
     stream = f"oncallai-demo-{int(time.time())}"
     _, events_by_group = scenario("pool-exhaustion")
