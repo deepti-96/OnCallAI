@@ -3,6 +3,7 @@ import re
 from app.db.dal import record_step
 from app.rag.confidence import calibrate_confidence
 from app.rag.loader import retrieve_examples
+from app.memory.incident_memory import apply_incident_memory
 
 # Tiny rule-based analyst for demo. Replace with RAG+LLM in real use.
 RULES = [
@@ -36,6 +37,12 @@ def _incident_context(incident, collected) -> str:
 def analyze_logs(incident, collected):
     record_step(incident['id'], 'analyst', 'start', 'Analyzing logs with heuristic rules and retrieved examples')
     corpus = _incident_context(incident, collected)
+    analysis = _analyze_current_evidence(incident, collected, corpus)
+    # Optional: consult MIND for related past incidents. No-op unless MIND_ENABLED=true.
+    return apply_incident_memory(incident, collected, analysis)
+
+
+def _analyze_current_evidence(incident, collected, corpus):
     evidence = []
     retrieved_examples = retrieve_examples(corpus)
     log_lines = collected.get("logs", [])

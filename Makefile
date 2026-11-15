@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: run test simulate-alert poll-cloudwatch seed clean
+.PHONY: run test simulate-alert poll-cloudwatch seed clean mind-demo mind-demo-live mind-test
 
 run:
 	$(PYTHON) app/runner.py
@@ -21,3 +21,12 @@ seed:
 
 clean:
 	rm -f dev.db && rm -rf app/reports/*
+
+mind-test:
+	$(PYTHON) -m unittest tests.test_mind_memory -v
+
+mind-demo:
+	$(PYTHON) scripts/mind_demo.py
+
+mind-demo-live:
+	$(PYTHON) scripts/mind_demo.py --live

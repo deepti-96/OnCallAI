@@ -29,6 +29,21 @@ def compile_report(incident, analysis):
             f"- Reason: {escalation.get('reason', 'n/a')}",
         ]
     )
+    history = analysis.get("historical_context")
+    if history:
+        lines = [f"- MIND status: {history['status']} (mode={history['mode']}, {history['latency_ms']} ms)",
+                 f"- Used in RCA: {history['used_in_rca']}"]
+        for h in history.get("hypotheses", []):
+            verdict = "corroborated by current logs" if h["corroborated_by_current_logs"] else "NOT corroborated, shown for reference only"
+            lines.append(f"- `{h['memory_key']}` on {h['past_service']}: {h['past_root_cause']} ({verdict})")
+            lines.append(f"  - why it surfaced: {'; '.join(h['match_reasons'])}")
+            if h["seen_only_now"] or h["seen_only_in_past"]:
+                lines.append(f"  - differs: now={h['seen_only_now'] or '-'} past-only={h['seen_only_in_past'] or '-'}")
+        if history.get("fallback_activated"):
+            lines.append("- MIND unavailable, report built from current logs and local retrieval only")
+        history_section = "\n\n**Historical Context (MIND, not current evidence)**\n" + "\n".join(lines)
+    else:
+        history_section = ""
     report_md = f"""
 # Incident {incident['id']} — {incident.get('service','unknown')}
 
@@ -51,7 +66,7 @@ def compile_report(incident, analysis):
 {escalation_section}
 
 **Retrieved Context**
-{retrieved_section}
+{retrieved_section}{history_section}
 """
     report_json = dict(analysis)
     report_json["escalation"] = escalation
