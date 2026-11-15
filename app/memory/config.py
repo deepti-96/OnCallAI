@@ -1,5 +1,7 @@
 import os
 
+import app.config  # noqa: F401  loads .env before the values below are read
+
 
 def _flag(name: str, default: str = "false") -> bool:
     return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}

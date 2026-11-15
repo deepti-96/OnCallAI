@@ -188,6 +188,13 @@ class MindMemoryTestCase(unittest.TestCase):
         self.assertIn("Retrieved Context", report["report_md"])
         self.assertIn("MIND unavailable", report["report_md"])
 
+    def test_unexpected_memory_error_does_not_break_triage(self):
+        inc, collected = self._record(self.data.INCIDENT_B)
+        with patch.object(self.analyst, "apply_incident_memory", side_effect=RuntimeError("boom")):
+            analysis = self.analyst.analyze_logs(inc, collected)
+        self.assertIn("root_cause", analysis)
+        self.assertTrue(any(s["agent"] == "memory" and s["status"] == "WARN" for s in self.dal.list_steps(inc["id"])))
+
     def test_disabled_mind_changes_nothing(self):
         inc, collected = self._record(self.data.INCIDENT_B)
         with patch.object(self.mem, "get_client", return_value=None):
@@ -234,6 +241,42 @@ class MindHttpClientTestCase(unittest.TestCase):
         self.assertEqual(seen[0][1], "mind_test")
         self.assertEqual(seen[0][2], {"query": "q", "mode": "local", "retrieve_only": True})
         self.assertEqual(seen[1][0], "/developer/v1/entries")
+
+    def test_edge_block_is_retried_gzipped(self):
+        import gzip
+        seen = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                raw = self.rfile.read(int(self.headers["Content-Length"]))
+                enc = self.headers.get("Content-Encoding")
+                seen.append(enc)
+                if enc != "gzip":  # behave like the web edge on SQL-looking text
+                    self.send_response(403)
+                    self.send_header("Content-Type", "text/html")
+                    self.end_headers()
+                    self.wfile.write(b"<html>blocked</html>")
+                    return
+                body = json.loads(gzip.decompress(raw))
+                out = json.dumps({"response": body["query"], "sources": []}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(out)
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            from app.memory.mind_client import MindClient
+            client = MindClient("mind_test", f"http://127.0.0.1:{server.server_port}", timeout=2)
+            q = "SELECT * FROM orders WHERE id=1 OR 1=1; | bash"
+            self.assertEqual(client.query(q)["response"], q)
+        finally:
+            server.shutdown()
+        self.assertEqual(seen, [None, "gzip"])
 
     def test_unreachable_server_raises_unavailable(self):
         from app.memory.mind_client import MindClient, MindUnavailable

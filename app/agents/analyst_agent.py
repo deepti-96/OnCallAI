@@ -7,6 +7,7 @@ from app.memory.incident_memory import apply_incident_memory
 
 # Tiny rule-based analyst for demo. Replace with RAG+LLM in real use.
 RULES = [
+    {'pattern': r'connection pool exhausted|pool exhausted|too many connections', 'issue':'Connection pool exhaustion', 'root':'A dependency ran out of pooled connections, so requests queued and callers timed out', 'fix':['Check recent changes to pool size or connection limits','Restore or raise the pool size','Alert on pool saturation']},
     {'pattern': r'connection refused|ECONNREFUSED', 'issue':'Database connection errors', 'root':'DB pod not ready/crashed', 'fix':['Restart DB pod','Increase memory','Check readiness probes']},
     {'pattern': r'OOMKilled|OutOfMemoryError', 'issue':'Service OOM', 'root':'Memory pressure or leak', 'fix':['Increase container memory limit','Investigate leak','Scale horizontally']},
     {'pattern': r'HTTP 500|NullPointerException', 'issue':'HTTP 500 / Null deref', 'root':'Bug introduced in recent deploy', 'fix':['Rollback to last working version','Add null checks','Improve input validation']},
@@ -39,7 +40,11 @@ def analyze_logs(incident, collected):
     corpus = _incident_context(incident, collected)
     analysis = _analyze_current_evidence(incident, collected, corpus)
     # Optional: consult MIND for related past incidents. No-op unless MIND_ENABLED=true.
-    return apply_incident_memory(incident, collected, analysis)
+    try:
+        return apply_incident_memory(incident, collected, analysis)
+    except Exception as exc:  # memory is optional; triage result stands without it
+        record_step(incident['id'], 'memory', 'error', f'MIND step skipped: {type(exc).__name__}', status='WARN')
+        return analysis
 
 
 def _analyze_current_evidence(incident, collected, corpus):

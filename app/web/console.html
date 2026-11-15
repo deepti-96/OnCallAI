@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OnCallAI Console | Live triage with MIND memory</title>
+<style>
+  :root {
+    --cream:#f9f1e5; --sand:#eadcca; --ink:#1b2430; --slate:#576273; --burnt:#c2410c; --burnt-deep:#8a3204;
+    --gold:#f6bc72; --rose:#fce8e1; --white:#fffdf9; --coral:#f97316; --berry:#f43f5e;
+    --ok:#15803d; --ok-bg:#e7f6ec; --warn:#b45309; --warn-bg:#fdf1dc; --err:#be123c; --err-bg:#fde7ec;
+    --violet:#6d28d9; --violet-bg:#efe9ff;
+    --shadow:0 18px 60px rgba(40,33,27,.10); --r-lg:22px; --r-md:14px;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing:border-box }
+  body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink);
+    background: radial-gradient(circle at top left, rgba(246,188,114,.45), transparent 28%),
+                radial-gradient(circle at 90% 6%, rgba(244,63,94,.14), transparent 24%),
+                linear-gradient(180deg,#fff8f0 0%, var(--cream) 55%, #f2e8dc 100%); min-height:100vh }
+  header { display:flex; align-items:center; gap:16px; padding:18px 28px; position:sticky; top:0; z-index:5;
+    background:rgba(255,248,240,.82); backdrop-filter:blur(10px); border-bottom:1px solid rgba(27,36,48,.06) }
+  .brand { display:flex; align-items:center; gap:12px }
+  .brand svg { width:38px; height:38px }
+  .brand b { font-size:18px; letter-spacing:-.01em } .brand small { display:block; color:var(--slate); font-size:12px }
+  .pills { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap }
+  .pill { font-size:12px; padding:6px 11px; border-radius:999px; background:var(--white); border:1px solid var(--sand); color:var(--slate); white-space:nowrap }
+  .pill b { color:var(--ink) }
+  .pill.live { background:var(--ok-bg); border-color:#bfe5cb; color:var(--ok) }
+  .pill.sim { background:var(--violet-bg); border-color:#d9ccff; color:var(--violet) }
+  .pill.off { background:var(--warn-bg); border-color:#f3d7a6; color:var(--warn) }
+  main { display:grid; grid-template-columns: 360px 340px 1fr; gap:18px; padding:20px 28px 28px; align-items:start }
+  @media (max-width:1250px) { main { grid-template-columns: 1fr 1fr } .detail { grid-column: 1 / -1 } }
+  .card { background:var(--white); border:1px solid rgba(234,220,202,.9); border-radius:var(--r-lg); box-shadow:var(--shadow); padding:18px }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--slate); margin:0 0 12px; display:flex; align-items:center; gap:8px }
+  h3 { margin:0 0 6px; font-size:20px; letter-spacing:-.01em }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--coral); box-shadow:0 0 0 4px rgba(249,115,22,.15) }
+  .dot.pulse { animation:pulse 1.4s infinite } @keyframes pulse { 50% { box-shadow:0 0 0 8px rgba(249,115,22,0) } }
+  .btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px }
+  button { font:inherit; font-size:13px; border:1px solid var(--sand); background:var(--white); color:var(--ink); padding:9px 10px; border-radius:12px; cursor:pointer; text-align:left }
+  button:hover { border-color:var(--gold) }
+  button.primary { background:linear-gradient(135deg,var(--coral),var(--berry)); color:#fff; border:0; font-weight:600 }
+  button.full { grid-column:1 / -1 }
+  button:disabled { opacity:.5; cursor:default }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px }
+  .stat { background:var(--cream); border-radius:12px; padding:8px 10px } .stat b { display:block; font-size:18px } .stat span { font-size:11px; color:var(--slate) }
+  .logs { font-family:var(--mono); font-size:11.5px; line-height:1.45; height:360px; overflow:auto; background:#1b2430; color:#e8e2d8; border-radius:var(--r-md); padding:10px 12px }
+  .logs div { white-space:pre-wrap; word-break:break-word; padding:1px 0 }
+  .sev { display:inline-block; min-width:44px; font-weight:700 } .s-INFO{color:#8fb7ff} .s-WARN{color:var(--gold)} .s-ERROR,.s-FATAL{color:#ff8fa3}
+  .svc { color:#f6bc72 } .src { color:#c4b5fd }
+  .srcs { display:grid; gap:8px; margin-bottom:12px }
+  .srcrow { border:1px solid var(--sand); border-radius:12px; padding:9px 11px; font-size:12.5px; background:#fffaf3 }
+  .srcrow b { font-size:13px } .srcrow code { font-family:var(--mono); font-size:11px; color:var(--slate); word-break:break-all } .muted { color:var(--slate) } .logs .muted { color:#8d96a3 }
+  .inc { border:1px solid var(--sand); border-radius:var(--r-md); padding:12px; margin-bottom:10px; cursor:pointer; background:#fffaf3; transition:.15s }
+  .inc:hover, .inc.sel { border-color:var(--coral); box-shadow:0 6px 24px rgba(249,115,22,.14) }
+  .inc .row { display:flex; gap:6px; align-items:center; flex-wrap:wrap }
+  .inc p { margin:6px 0 0; font-size:13px; color:var(--slate) }
+  .tag { font-size:11px; font-weight:600; padding:3px 8px; border-radius:999px; background:var(--cream); color:var(--slate) }
+  .t-CRITICAL { background:var(--err-bg); color:var(--err) } .t-HIGH { background:var(--warn-bg); color:var(--warn) }
+  .t-ok { background:var(--ok-bg); color:var(--ok) } .t-mind { background:var(--violet-bg); color:var(--violet) } .t-err { background:var(--err-bg); color:var(--err) }
+  .empty { color:var(--slate); font-size:14px; padding:30px 8px; text-align:center }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px } @media (max-width:900px){ .grid2 { grid-template-columns:1fr } }
+  .section { margin-top:16px } .section h4 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--slate) }
+  ul.clean { margin:0; padding-left:18px } ul.clean li { margin:4px 0; font-size:14px }
+  .rc { font-size:16px; line-height:1.45; background:var(--rose); border-radius:var(--r-md); padding:12px 14px }
+  .conf { font-size:12px; color:var(--slate); margin-top:6px }
+  .hyp { border:1px solid #e3dafb; background:#faf8ff; border-radius:var(--r-md); padding:12px; margin-bottom:10px }
+  .hyp.no { border-color:var(--sand); background:#fffaf3 }
+  .hyp .k { font-family:var(--mono); font-size:11px; color:var(--violet) }
+  .hyp p { margin:6px 0; font-size:14px }
+  .why { font-size:12px; color:var(--slate) } .diff { font-size:12px; font-family:var(--mono); color:var(--burnt-deep) }
+  .prov { font-size:12px; background:var(--cream); border-radius:12px; padding:10px 12px; color:var(--slate) }
+  .timeline { font-size:12.5px; max-height:300px; overflow:auto } .timeline div { padding:5px 0; border-bottom:1px dashed var(--sand); display:grid; grid-template-columns:86px 88px 1fr; gap:8px }
+  .timeline .a { font-weight:600 } .timeline .WARN { color:var(--warn) }
+  form label { display:block; font-size:12px; color:var(--slate); margin:8px 0 4px }
+  input, textarea { width:100%; font:inherit; font-size:13px; padding:9px 11px; border-radius:12px; border:1px solid var(--sand); background:#fffaf3; color:var(--ink) }
+  textarea { min-height:64px; resize:vertical }
+  .note { font-size:12px; color:var(--slate); margin-top:8px }
+  .banner { margin:0 28px; padding:10px 14px; border-radius:14px; font-size:13px; background:var(--violet-bg); color:var(--violet); border:1px solid #d9ccff }
+  .toast { position:fixed; bottom:20px; right:20px; background:var(--ink); color:#fff; padding:11px 15px; border-radius:12px; font-size:13px; opacity:0; transition:.25s; pointer-events:none }
+  .toast.on { opacity:1 }
+  footer { padding:0 28px 26px; font-size:12px; color:var(--slate) } footer code { font-family:var(--mono) }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFB86B"/><stop offset="55%" stop-color="#F97316"/><stop offset="100%" stop-color="#F43F5E"/></linearGradient></defs><rect x="6" y="6" width="52" height="52" rx="18" fill="url(#g)"/><path d="M20 39.5L28.5 24L35 34L43.5 20.5" fill="none" stroke="#FFF8F1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="43.5" cy="20.5" r="4.5" fill="#FFF8F1"/></svg>
+    <div><b>OnCallAI Console</b><small>Live telemetry, triage, and incident memory</small></div>
+  </div>
+  <div class="pills">
+    <span class="pill" id="p-mind">MIND: …</span>
+    <span class="pill" id="p-cw">CloudWatch: …</span>
+    <span class="pill" id="p-dd">Datadog: …</span>
+    <span class="pill" id="p-worker">Worker: running</span>
+  </div>
+</header>
+<div id="banner"></div>
+<main>
+  <section class="card">
+    <h2><span class="dot pulse"></span>Alert sources</h2>
+    <div class="srcs" id="srcs"></div>
+    <div class="btns">
+      <button class="full" data-act="history">1 · Store past incidents A, C, D in MIND</button>
+      <button class="full primary" data-act="replay" data-s="pool-exhaustion">2 · Replay CloudWatch alarm: checkout 504s</button>
+      <button data-act="replay" data-s="config-timeout">Replay payment timeout alarm</button>
+      <button data-act="replay" data-s="recovery">Replay recovery (OK)</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="c-msg">0</b><span>alarms</span></div>
+      <div class="stat"><b id="c-lines">0</b><span>log lines</span></div>
+      <div class="stat"><b id="c-inc">0</b><span>incidents</span></div>
+      <div class="stat"><b id="c-mem">0</b><span>memories</span></div>
+    </div>
+    <h2 style="margin-top:4px">Logs pulled for incidents</h2>
+    <div class="logs" id="logs"><div class="muted">No logs yet. When an alarm arrives, OnCallAI pulls the log lines from the window before it fired.</div></div>
+  </section>
+
+  <section class="card">
+    <h2>Incidents</h2>
+    <div id="incidents"><div class="empty">No incidents yet. Replay the CloudWatch alarm, or point a real queue or Datadog webhook here.</div></div>
+  </section>
+
+  <section class="card detail" id="detail"><div class="empty">Select an incident to see the triage report, the MIND context it used, and the resolve flow.</div></section>
+</main>
+<footer>MIND telemetry: <code id="mt">none yet</code></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let selected = null, lastDetail = "";
+
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("on"); setTimeout(()=>t.classList.remove("on"), 2600); }
+async function post(path, body){ const r = await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})}); return r.json(); }
+
+document.querySelectorAll("[data-act]").forEach(b => b.addEventListener("click", async () => {
+  b.disabled = true;
+  try {
+    if (b.dataset.act === "replay") { const r = await post("/api/demo/replay", {scenario:b.dataset.s}); toast(r.error ? r.error : "Alarm delivered via SQS · incident " + (r.incidents||[]).map(x=>x.slice(0,8)).join(", ")); if (r.incidents && r.incidents[0]) { selected = r.incidents[0]; lastDetail=""; } }
+    if (b.dataset.act === "history") { const r = await post("/api/demo/history"); toast("History: " + r.seeded.map(x=>x.id.replace("demo-inc-","")+" "+x.status).join(", ")); }
+  } finally { setTimeout(()=> b.disabled=false, 1500); }
+}));
+
+function mindPill(m){
+  const p=$("p-mind");
+  if (m.mode==="live"){ p.className="pill live"; p.innerHTML="MIND: <b>live</b> · "+esc(m.query_mode); }
+  else if (m.mode==="simulated"){ p.className="pill sim"; p.innerHTML="MIND: <b>simulated</b> · "+esc(m.query_mode); }
+  else { p.className="pill off"; p.innerHTML="MIND: <b>off</b> (fallback path)"; }
+  $("banner").innerHTML = m.mode==="simulated" ? '<div class="banner">MIND is simulated in memory for this run. Start with MIND_ENABLED=true and MIND_API_KEY to use your real MIND graph.</div>' : "";
+}
+
+function renderLogs(logs){
+  const box=$("logs"); const atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 30;
+  if(!logs.length) return;
+  box.innerHTML = logs.map(r => {
+    const m = /^(FATAL|ERROR|WARN|INFO)\b\s*(.*)$/.exec(r.message||""); const sev = m ? m[1] : "INFO"; const rest = m ? m[2] : (r.message||"");
+    return `<div><span class="muted">${esc((r.time||"").slice(11,19))}</span> <span class="src">${esc(r.source)}</span> <span class="sev s-${esc(sev)}">${esc(sev)}</span> <span class="svc">${esc((r.origin||"").split("/").pop())}</span> ${esc(rest)}</div>`;
+  }).join("");
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+function renderSources(src){
+  const cw = src.cloudwatch, dd = src.datadog;
+  $("p-cw").className = "pill " + (cw.enabled ? "live" : "off"); $("p-cw").innerHTML = "CloudWatch: <b>" + (cw.enabled ? "polling SQS" : "off") + "</b>";
+  $("p-dd").className = "pill " + (dd.logs_api ? "live" : ""); $("p-dd").innerHTML = "Datadog: <b>webhook ready</b>" + (dd.logs_api ? " · logs API" : "");
+  const st = cw.stats || {};
+  $("srcs").innerHTML = `<div class="srcrow"><b>AWS CloudWatch → SNS → SQS</b> ${cw.enabled?'<span class="tag t-ok">connected</span>':'<span class="tag">not configured</span>'}<br>
+      ${cw.enabled?`<code>${esc(cw.queue_url)}</code><br>${st.messages||0} alarms · ${st.log_lines||0} log lines · ${st.errors||0} errors${st.last_error?` · <span class="t-err">${esc(st.last_error)}</span>`:""}`:`Set <code>CW_SQS_QUEUE_URL</code> (see scripts/aws_demo_setup.sh). Replay below uses the same code path.${cw.error?`<br><span class="t-err">${esc(cw.error)}</span>`:""}`}</div>
+    <div class="srcrow"><b>Datadog monitor webhook</b> <span class="tag">${dd.token_required?"token required":"open"}</span><br><code>POST ${esc(location.origin + dd.endpoint)}</code><br>${dd.logs_api?"Pulls logs via Logs Search API":"Set DD_API_KEY + DD_APP_KEY to pull Datadog logs"}</div>`;
+}
+
+function mindTag(i){
+  if (i.memory && i.memory.status==="WRITTEN") return `<span class="tag t-mind">stored in MIND</span>`;
+  if (!i.mind_status || i.mind_status==="disabled") return "";
+  if (i.mind_status==="unavailable"||i.mind_status==="malformed") return `<span class="tag t-err">MIND fallback</span>`;
+  if (i.mind_history) return `<span class="tag t-mind">${i.mind_history} related${i.mind_used?" · used":""}</span>`;
+  return `<span class="tag">no history</span>`;
+}
+
+function renderIncidents(list){
+  if(!list.length) return;
+  $("incidents").innerHTML = list.map(i => {
+    const resolved = i.resolution_status==="RESOLVED";
+    const wf = resolved ? `<span class="tag t-ok">resolved</span>` : `<span class="tag">${esc((i.workflow_status||i.status||"").toLowerCase())}</span>`;
+    return `<div class="inc ${selected===i.id?"sel":""}" data-id="${esc(i.id)}">
+      <div class="row"><b>${esc(i.service)}</b><span class="tag t-${esc(i.severity)}">${esc(i.severity)}</span>${wf}${mindTag(i)}</div>
+      <p>${esc(i.alert||"")}${i.reason?`<br><span style="font-size:12px">${esc(i.reason.slice(0,110))}</span>`:""}</p>
+      <div class="row" style="margin-top:6px"><span class="tag">${esc(i.source||"")}</span><span class="tag">${esc(i.environment)}</span>${i.occurrence_count>1?`<span class="tag">×${i.occurrence_count}</span>`:""}</div>
+    </div>`;}).join("");
+  document.querySelectorAll(".inc").forEach(el => el.onclick = () => { selected = el.dataset.id; lastDetail=""; refreshDetail(); refresh(); });
+}
+
+function hypCard(h){
+  return `<div class="hyp ${h.corroborated_by_current_logs?"":"no"}">
+    <div class="row"><span class="k">${esc(h.memory_key)}</span> <span class="tag ${h.corroborated_by_current_logs?"t-mind":""}">${h.corroborated_by_current_logs?"corroborated by current logs":"not corroborated, reference only"}</span></div>
+    <p><b>${esc(h.past_service)}</b>: ${esc(h.past_root_cause)}</p>
+    <div class="why">Why it surfaced: ${esc((h.match_reasons||[]).join("; "))}</div>
+    ${(h.seen_only_now.length||h.seen_only_in_past.length)?`<div class="diff">differs · now: ${esc(h.seen_only_now.join(", ")||"-")} · past only: ${esc(h.seen_only_in_past.join(", ")||"-")}</div>`:""}
+    ${(h.past_mitigation||[]).length?`<div class="why">Past fix: ${esc(h.past_mitigation.join("; "))}</div>`:""}
+  </div>`;
+}
+
+async function refreshDetail(){
+  if(!selected) return;
+  const r = await fetch("/api/incidents/"+encodeURIComponent(selected)); if(!r.ok) return;
+  const d = await r.json(); const key = JSON.stringify([d.steps.length, d.report && d.report.created_at, d.incident.resolution_status, d.memory]);
+  if (key===lastDetail) return; lastDetail = key;
+  const inc=d.incident, rep=(d.report&&d.report.report)||null, hist=rep&&rep.historical_context, p=inc.payload||{};
+  const resolved = inc.resolution_status==="RESOLVED";
+  let html = `<div class="row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3>${esc(inc.service)}</h3><span class="tag t-${esc(inc.severity)}">${esc(inc.severity)}</span>${resolved?'<span class="tag t-ok">resolved</span>':""}${d.memory?`<span class="tag t-mind">MIND ${esc(d.memory.status.toLowerCase())} · ${esc(d.memory.memory_key)}</span>`:""}</div>
+    <div class="muted" style="font-size:13px">${esc(p.alert||p.alarm_name||"")} · ${esc(p.source||"")} · ${esc(inc.id)}</div>`;
+  if(!rep){ html += `<div class="empty">Triage running…</div>`; }
+  else {
+    html += `<div class="grid2 section"><div>
+        <h4>Root cause (from current evidence)</h4><div class="rc">${esc(rep.root_cause)}</div>
+        <div class="conf">Confidence ${esc(rep.confidence)} · ${esc(rep.issue||"")}</div>
+        <div class="section"><h4>Suggested mitigations</h4><ul class="clean">${(rep.mitigations||[]).map(m=>`<li>${esc(m)}</li>`).join("")}</ul></div>
+        <div class="section"><h4>Evidence: current logs</h4><ul class="clean">${(rep.evidence||[]).map(m=>`<li>${esc(m)}</li>`).join("")||"<li>none</li>"}</ul></div>
+      </div><div>
+        <h4>Historical context from MIND</h4>
+        ${!hist?`<div class="prov">MIND not consulted for this incident.</div>`:
+          `<div class="prov">Status <b>${esc(hist.status)}</b> · mode ${esc(hist.mode)} · ${esc(hist.latency_ms)} ms · ${esc(hist.historical_incidents)} related · used in RCA: <b>${hist.used_in_rca?"yes":"no"}</b>${hist.fallback_activated?" · <b>fallback active</b>: "+esc(hist.error||""):""}</div>
+           <div class="section">${(hist.hypotheses||[]).map(hypCard).join("")||'<div class="empty" style="padding:12px">No related past incidents.</div>'}</div>
+           ${hist.query?`<div class="note">Query sent to MIND: “${esc(hist.query)}”</div>`:""}`}
+      </div></div>`;
+  }
+  if (!resolved) {
+    html += `<div class="section card" style="box-shadow:none;background:#fffaf3"><h4>Resolve and store in MIND</h4>
+      <form id="rf"><label>Confirmed root cause (what actually happened, not the guess)</label><textarea name="root_cause" required placeholder="e.g. payment-service v2.15.0 cut its DB pool from 50 to 10…"></textarea>
+      <div class="grid2"><div><label>Mitigations (one per line)</label><textarea name="mitigation"></textarea></div>
+      <div><label>Affected component</label><input name="affected_component" placeholder="payment-service"/><label>Deployment</label><input name="deployment" placeholder="payment-service v2.15.0"/></div></div>
+      <div style="margin-top:10px"><button class="primary" type="submit">Resolve and write to MIND</button></div>
+      <div class="note">Only a confirmed RCA is written back. The triage guess never is, so memory does not learn its own mistakes.</div></form></div>`;
+  }
+  html += `<div class="section"><h4>Timeline</h4><div class="timeline">${d.steps.map(s=>`<div><span class="muted">${esc((s.ts||"").slice(11,19))}</span><span class="a">${esc(s.agent)} · ${esc(s.phase)}</span><span class="${esc(s.status)}">${esc(s.message)}</span></div>`).join("")}</div></div>`;
+  $("detail").innerHTML = html;
+  const f=$("rf"); if(f) f.onsubmit = async (e) => { e.preventDefault(); const fd=new FormData(f);
+    const r = await post(`/api/incidents/${encodeURIComponent(selected)}/resolve`, {root_cause:fd.get("root_cause"), mitigation:String(fd.get("mitigation")||"").split("\n"), affected_component:fd.get("affected_component"), deployment:fd.get("deployment")});
+    toast(r.error ? r.error : "Resolved · MIND write-back: "+r.status); lastDetail=""; refreshDetail(); };
+}
+
+async function refresh(){
+  try {
+    const s = await (await fetch("/api/state")).json();
+    mindPill(s.mind); renderSources(s.sources);
+    const live = s.incidents.filter(i=>i.source!=="history-seed");
+    $("c-msg").textContent = live.reduce((a,i)=>a+(i.occurrence_count||1),0); $("c-lines").textContent = s.logs.length;
+    $("c-inc").textContent = live.length;
+    $("c-mem").textContent = s.mind.entries ?? (s.telemetry.mind_writeback_succeeded||0);
+    $("p-worker").textContent = s.worker_errors ? `Worker: ${s.worker_errors} errors` : "Worker: running";
+    renderLogs(s.logs); renderIncidents(s.incidents);
+    const t = Object.entries(s.telemetry).map(([k,v])=>`${k}=${v}`).join("  "); $("mt").textContent = t || "none yet";
+    if (selected) refreshDetail();
+  } catch(e) {}
+}
+refresh(); setInterval(refresh, 1500);
+</script>
+</body>
+</html>

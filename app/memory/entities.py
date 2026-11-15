@@ -34,7 +34,7 @@ def extract_entities(incident: Dict[str, Any], collected: Dict[str, Any] | None 
     enrichment = payload.get("enrichment") or {}
     logs: List[str] = list((collected or {}).get("logs", []))
     text = "\n".join(
-        str(v) for v in [payload.get("alert", ""), payload.get("details", ""), *logs] if v
+        str(v) for v in [payload.get("alert", ""), payload.get("details", ""), payload.get("reason", ""), *logs] if v
     )
 
     service = resolve_service_name(incident.get("service", "")) or incident.get("service", "unknown")
@@ -63,7 +63,8 @@ def extract_entities(incident: Dict[str, Any], collected: Dict[str, Any] | None 
         "dependencies": deps,
         "deployments": deployments,
         "error_types": error_types,
-        "symptom": str(payload.get("alert") or payload.get("details") or "")[:200],
+        "symptom": str(payload.get("alert") or payload.get("details") or payload.get("alarm_name")
+                       or payload.get("reason") or "")[:200],
         "timestamp": payload.get("last_seen_at") or incident.get("event_time") or incident.get("created_at"),
     }
 

@@ -19,6 +19,7 @@ import json
 import re
 import sqlite3
 import time
+from contextlib import contextmanager
 from typing import Any, Dict, List
 
 from app.db import dal
@@ -245,10 +246,15 @@ LEDGER_SQL = """CREATE TABLE IF NOT EXISTS mind_memory_writes(
   status TEXT NOT NULL, content TEXT, written_at TEXT NOT NULL)"""
 
 
-def _ledger() -> sqlite3.Connection:
+@contextmanager
+def _ledger():
     con = sqlite3.connect(dal.DB_FILE)
-    con.execute(LEDGER_SQL)
-    return con
+    try:
+        con.execute(LEDGER_SQL)
+        yield con
+        con.commit()
+    finally:
+        con.close()
 
 
 def _now() -> str:
@@ -321,7 +327,7 @@ def remember_resolution(incident: Dict[str, Any], resolution: Dict[str, Any],
     title, content, record = render_memory(incident, resolution, entities)
     try:
         created = client.create_entry(title=title, content=content, folder=config.MIND_FOLDER,
-                                      tags=["oncallai", "incident", entities["service"]])
+                                      tags=["oncallai", "incident", entities["service"], key])
     except Exception as exc:  # noqa: BLE001
         with _ledger() as con:
             con.execute("INSERT OR REPLACE INTO mind_memory_writes VALUES(?,?,?,?,?,?)",

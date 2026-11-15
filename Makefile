@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: run test simulate-alert poll-cloudwatch seed clean mind-demo mind-demo-live mind-test
+.PHONY: run test simulate-alert poll-cloudwatch seed clean mind-demo mind-demo-live mind-test console
 
 run:
 	$(PYTHON) app/runner.py
@@ -30,3 +30,6 @@ mind-demo:
 
 mind-demo-live:
 	$(PYTHON) scripts/mind_demo.py --live
+
+console:
+	$(PYTHON) -m app.web.server --simulate-mind
