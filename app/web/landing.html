@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OnCallAI: on-call triage that remembers</title>
+<meta name="description" content="OnCallAI turns a CloudWatch or Datadog alarm into a diagnosis from the logs that fired it, checks MIND for related past incidents, and stores the confirmed root cause for next time." />
+<link rel="stylesheet" href="/static/theme.css" />
+<style>
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+  header.top { display: flex; align-items: center; gap: 28px; padding: 22px 0; }
+  header.top nav { display: flex; gap: 22px; margin-left: auto; font-size: var(--t-s); }
+  header.top nav a { text-decoration: none; color: var(--petrol-70); }
+  header.top nav a:hover { color: var(--petrol); }
+
+  .hero { display: grid; grid-template-columns: .92fr 1.08fr; gap: 56px; align-items: center; padding: 56px 0 88px; }
+  .hero h1 { font-family: var(--cond); font-weight: 700; font-size: var(--t-xxl); line-height: 1.02; letter-spacing: -.012em; margin: 0 0 22px; max-width: 13ch; }
+  .hero p.lede { font-size: var(--t-m); line-height: 1.55; color: var(--petrol-70); max-width: 34em; margin: 0 0 30px; }
+  .hero .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero .works { margin-top: 26px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .scene { background: var(--paper); border-radius: 14px; padding: 18px 18px 14px; box-shadow: 0 1px 0 var(--petrol-15), 0 30px 60px -30px rgba(20,50,60,.35); }
+  .strip { display: grid; grid-template-columns: 6px 1fr auto; gap: 0 14px; align-items: center; background: var(--fog); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
+  .strip .edge { align-self: stretch; background: var(--sodium); }
+  .strip .who { padding: 10px 0; }
+  .strip .who b { font-family: var(--cond); font-size: 22px; font-weight: 700; display: block; line-height: 1.1; }
+  .strip .who span { font-size: var(--t-xs); color: var(--petrol-70); }
+  .strip .when { padding-right: 14px; display: flex; gap: 6px; }
+  .scene figcaption { font-size: var(--t-xs); color: var(--petrol-70); margin-top: 6px; }
+
+  section.band { background: var(--petrol); color: var(--paper); padding: 84px 0; }
+  section.band h2, section h2 { font-family: var(--cond); font-weight: 600; font-size: var(--t-xl); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.005em; }
+  section.band .intro { color: rgba(247,249,249,.72); max-width: 40em; margin: 0 0 44px; }
+  ol.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; counter-reset: s; }
+  ol.flow li { counter-increment: s; padding: 0 22px 0 0; position: relative; }
+  ol.flow li::before { content: counter(s); font-family: var(--cond); font-weight: 700; font-size: 44px; line-height: 1; display: block; margin-bottom: 12px; color: rgba(247,249,249,.28); }
+  ol.flow li:nth-child(1)::before { color: var(--sodium); }
+  ol.flow li:nth-child(4)::before { color: #9ea2ee; }
+  ol.flow li:nth-child(5)::before { color: #6cc3b1; }
+  ol.flow li::after { content: ""; position: absolute; left: 0; right: 22px; top: 54px; border-top: 1px solid rgba(247,249,249,.22); }
+  ol.flow h3 { font-family: var(--cond); font-size: 20px; font-weight: 600; margin: 22px 0 8px; }
+  ol.flow p { margin: 0; font-size: var(--t-s); color: rgba(247,249,249,.74); }
+
+  section.plain { padding: 88px 0; }
+  section.plain .intro { color: var(--petrol-70); max-width: 42em; margin: 0 0 40px; font-size: var(--t-m); }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 2px solid var(--petrol); }
+  .compare > div { padding: 26px 32px 8px 0; }
+  .compare > div + div { padding-left: 32px; border-left: 1px solid var(--petrol-15); }
+  .compare h3 { font-family: var(--cond); font-size: var(--t-l); font-weight: 600; margin: 0 0 4px; }
+  .compare .q { color: var(--petrol-70); font-size: var(--t-s); margin: 0 0 18px; }
+  .compare ul { list-style: none; margin: 0; padding: 0; }
+  .compare li { padding: 12px 0; border-top: 1px solid var(--petrol-15); display: grid; grid-template-columns: 112px 1fr; gap: 12px; }
+  .compare li .chip { justify-self: start; align-self: start; margin-top: 2px; }
+  .note { font-size: var(--t-xs); color: var(--petrol-70); margin-top: 22px; max-width: 60em; }
+
+  .sources { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .sources h3 { font-family: var(--cond); font-size: var(--t-l); font-weight: 600; margin: 0 0 8px; }
+  .sources p { color: var(--petrol-70); margin: 0 0 16px; }
+  pre { margin: 0; background: var(--petrol); color: #dfe8ea; font: 13px/1.6 var(--mono); padding: 16px 18px; border-radius: 8px; overflow-x: auto; }
+  pre .c { color: rgba(223,232,234,.55); }
+
+  dl.rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin: 0; }
+  dl.rules div { border-left: 3px solid var(--petrol); padding-left: 18px; }
+  dl.rules div:nth-child(1) { border-color: var(--sodium); }
+  dl.rules div:nth-child(2) { border-color: var(--iris); }
+  dl.rules div:nth-child(3) { border-color: var(--tide); }
+  dl.rules dt { font-family: var(--cond); font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  dl.rules dd { margin: 0; color: var(--petrol-70); }
+
+  section.run { padding: 0 0 96px; }
+  .run-card { background: var(--paper); border-radius: 14px; padding: 36px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 40px; align-items: center; }
+  .run-card h2 { margin-bottom: 10px; }
+  .run-card p { color: var(--petrol-70); margin: 0 0 22px; }
+  footer { border-top: 1px solid var(--petrol-15); padding: 26px 0 40px; font-size: var(--t-xs); color: var(--petrol-70); display: flex; gap: 20px; flex-wrap: wrap; }
+
+  @media (max-width: 980px) {
+    .hero, .run-card, .sources { grid-template-columns: minmax(0, 1fr); }
+    .wrap { padding: 0 20px; }
+    .run-card { padding: 24px; }
+    .hero h1 { font-size: 46px; }
+    ol.flow { grid-template-columns: 1fr; gap: 28px; }
+    ol.flow li::after { display: none; }
+    dl.rules, .compare { grid-template-columns: minmax(0, 1fr); }
+    .compare > div + div { padding-left: 0; border-left: 0; }
+    header.top nav { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="/" aria-label="OnCallAI home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#14323C"/><path d="M7 20.5l5-8 4 6 4.5-7.5" fill="none" stroke="#E3962B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.5" cy="11" r="2.6" fill="#9ea2ee"/></svg>
+      OnCallAI
+    </a>
+    <nav aria-label="Sections"><a href="#flow">How it works</a><a href="#memory">Memory</a><a href="#sources">Alert sources</a><a href="#run">Run it</a></nav>
+    <a class="btn solid" href="/console">Open the console</a>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1>On-call triage that remembers</h1>
+      <p class="lede">OnCallAI turns a CloudWatch or Datadog alarm into a diagnosis from the logs that fired it. Then it asks MIND which past incidents are connected, and keeps the confirmed root cause for the next person on call.</p>
+      <div class="actions">
+        <a class="btn solid" href="/console">Open the console</a>
+        <a class="btn" href="#flow">See what happens to an alarm</a>
+      </div>
+      <div class="works"><span class="chip live"><span class="pip"></span>CloudWatch via SQS</span><span class="chip live"><span class="pip"></span>Datadog webhooks</span><span class="chip mem"><span class="pip"></span>Memory by MIND</span></div>
+    </div>
+    <figure class="scene" style="margin:0">
+      <div class="strip"><span class="edge"></span><div class="who"><b>checkout-service</b><span>504s on cart submit after a payment-service deploy</span></div><div class="when"><span class="chip live">high</span><span class="chip">prod</span></div></div>
+      <div id="hero-graph"></div>
+      <figcaption>The checkout logs never mention payment-service. The relationship path finds the incidents that matter and leaves the lookalike disconnected.</figcaption>
+    </figure>
+  </section>
+</div>
+
+<section class="band" id="flow">
+  <div class="wrap">
+    <h2>What happens when an alarm fires</h2>
+    <p class="intro">Five steps, in order. The first three use only what is happening now. Memory comes fourth, so it can inform the diagnosis without replacing it.</p>
+    <ol class="flow">
+      <li><h3>The alarm arrives</h3><p>From CloudWatch through SNS and SQS, or from a Datadog monitor webhook. If OnCallAI is down, alarms wait in the queue.</p></li>
+      <li><h3>The logs are pulled</h3><p>The lines from the minutes before the alarm, from the failing service and the services it calls.</p></li>
+      <li><h3>A diagnosis from today's logs</h3><p>Rules and retrieval over those lines. This is the root cause the report leads with.</p></li>
+      <li><h3>Memory is checked</h3><p>MIND returns related past incidents. Each one counts only if today's logs show the same failure.</p></li>
+      <li><h3>The confirmed cause is kept</h3><p>When an engineer confirms what actually happened, it goes back to MIND, linked to the services involved.</p></li>
+    </ol>
+  </div>
+</section>
+
+<div class="wrap">
+  <section class="plain" id="memory">
+    <h2>Similar text is not the same as connected</h2>
+    <p class="intro">The same new checkout incident, looked up two ways. Text search asks what reads like this alarm. A graph walk asks what is connected to the services in it.</p>
+    <div class="compare">
+      <div>
+        <h3>Text similarity</h3>
+        <p class="q">What reads like “elevated error rate, latency spike, HTTP 504”?</p>
+        <ul>
+          <li><span class="chip">lookalike</span><span>Inventory memory leak. Same words in the alert, unrelated service.</span></li>
+          <li><span class="chip">by chance</span><span>Payment gateway timeout. Found because both mention timeouts.</span></li>
+          <li><span class="chip">missed</span><span>Checkout errors caused by payment slowness, the closest relative.</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Relationship walk</h3>
+        <p class="q">What touches checkout-service or what it calls?</p>
+        <ul>
+          <li><span class="chip mem">connected</span><span>Checkout errors caused by payment slowness. Same service.</span></li>
+          <li><span class="chip mem">one hop</span><span>Payment gateway timeout, reached through checkout calling payment.</span></li>
+          <li><span class="chip">left out</span><span>Inventory memory leak. Nothing links it to checkout.</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Measured with the built-in MIND simulator on synthetic incidents. Run <span class="mono">python3 scripts/mind_demo.py --live</span> to see how real MIND extraction behaves on the same data.</p>
+  </section>
+
+  <section class="plain" style="padding-top:0">
+    <h2>Three rules the memory follows</h2>
+    <p class="intro">Memory that is wrong is worse than no memory. These keep it honest.</p>
+    <dl class="rules">
+      <div><dt>Today's logs lead</dt><dd>History adds leads and checks to try. It never replaces the root cause found in current evidence, and it never raises confidence on its own.</dd></div>
+      <div><dt>Only confirmed causes are stored</dt><dd>The triage guess is never written back. An engineer confirms what happened, so memory does not learn its own mistakes.</dd></div>
+      <div><dt>Triage never waits on memory</dt><dd>If MIND is slow, down, or returns something unexpected, the incident is triaged exactly as before and the report says so.</dd></div>
+    </dl>
+  </section>
+
+  <section class="plain" id="sources" style="padding-top:0">
+    <h2>Alert sources</h2>
+    <p class="intro">Both feed the same pipeline. Neither needs an agent on your servers.</p>
+    <div class="sources">
+      <div>
+        <h3>AWS CloudWatch</h3>
+        <p>Alarm to SNS to SQS. OnCallAI pulls from the queue, so it runs on a laptop with no public URL, then reads CloudWatch Logs for the window before the alarm.</p>
+<pre><span class="c"># creates log groups, metric filter, alarm, topic, queue</span>
+bash scripts/aws_demo_setup.sh
+export CW_SQS_QUEUE_URL=https://sqs...
+python3 scripts/aws_emit_logs.py</pre>
+      </div>
+      <div>
+        <h3>Datadog</h3>
+        <p>Point a monitor webhook at OnCallAI. With an API and application key, it also pulls the matching logs through the Logs Search API.</p>
+<pre><span class="c"># Integrations, Webhooks, New</span>
+URL      https://your-host/api/webhooks/datadog
+Payload  {"title": "$EVENT_TITLE",
+          "transition": "$ALERT_TRANSITION",
+          "tags": "$TAGS", "date": "$DATE", ...}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="run" id="run">
+    <div class="run-card">
+      <div>
+        <h2>Run it in a minute</h2>
+        <p>No cloud account needed for the first look. A recorded CloudWatch alarm runs through the same code a real one would, and MIND is simulated until you add a key.</p>
+        <a class="btn solid" href="/console">Open the console</a>
+      </div>
+<pre>./scripts/start.sh                 <span class="c"># checks, tests, starts</span>
+<span class="c"># real MIND</span>
+MIND_ENABLED=true MIND_API_KEY=mind_... ./scripts/start.sh
+<span class="c"># real CloudWatch</span>
+CW_SQS_QUEUE_URL=https://sqs... ./scripts/start.sh</pre>
+    </div>
+  </section>
+
+  <footer><span>OnCallAI. Synthetic incident data only.</span><span>Memory by MIND from Astra AI.</span><a href="/console">Console</a></footer>
+</div>
+
+<script src="/static/graph.js"></script>
+<script>
+renderMemoryGraph(document.getElementById("hero-graph"), {
+  incident: { title: "504s on cart submit", service: "checkout-service", dependencies: ["payment-service"] },
+  past: [
+    { key: "oncallai-38245c8ce662", service: "checkout-service", cause: "Payment slowness cascaded", note: "same service, logs agree", corroborated: true },
+    { key: "oncallai-f5a58076521d", service: "payment-service", cause: "Gateway timeout set to 300ms", note: "one hop, different cause", corroborated: true },
+    { key: "oncallai-d308ca0e8df7", service: "inventory-service", cause: "Memory leak in sync worker", note: "similar words, no link", corroborated: false }
+  ]
+});
+</script>
+</body>
+</html>

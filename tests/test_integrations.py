@@ -5,6 +5,7 @@ import tempfile
 import threading
 import time
 import unittest
+import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -158,7 +159,13 @@ class ConsoleEndToEndTest(IntegrationTestCase):
                 return json.loads(r.read())
 
         try:
-            self.assertIn("Alert sources", urllib.request.urlopen(base + "/").read().decode())
+            self.assertIn("On-call triage that remembers", urllib.request.urlopen(base + "/").read().decode())
+            self.assertIn("Alert sources", urllib.request.urlopen(base + "/console").read().decode())
+            self.assertEqual(urllib.request.urlopen(base + "/static/theme.css").status, 200)
+            with self.assertRaises(urllib.error.HTTPError):
+                urllib.request.urlopen(base + "/static/../server.py")
+            with self.assertRaises(urllib.error.HTTPError):
+                urllib.request.urlopen(base + "/static/%2e%2e/server.py")
             seeded = call("/api/demo/history", {})["seeded"]
             self.assertTrue(all(s["status"] == "written" for s in seeded))
             inc_id = call("/api/demo/replay", {"scenario": "pool-exhaustion"})["incidents"][0]

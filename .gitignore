@@ -14,3 +14,4 @@ app/db/*.db
 .streamlit/secrets.toml
 Nextiva_GTM_AI_Intern_OnCallAI_Study_Guide.docx
 streamlit_app.py
+.venv-oncallai/

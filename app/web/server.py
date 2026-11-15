@@ -12,7 +12,8 @@ Live sources (both optional, both feed the same pipeline):
 Real MIND: MIND_ENABLED=true MIND_API_KEY=mind_xxx. Otherwise --simulate-mind.
 
 Routes:
-  GET  /                              console
+  GET  /                              product page
+  GET  /console                       console
   GET  /api/state                     sources, fetched logs, incidents, MIND status
   GET  /api/incidents/<id>            incident, timeline, report
   POST /api/incidents/<id>/resolve    confirm RCA, write to MIND
@@ -39,7 +40,11 @@ from typing import Any, Dict
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-CONSOLE = pathlib.Path(__file__).with_name("console.html")
+WEB = pathlib.Path(__file__).parent
+PAGES = {"/": WEB / "landing.html", "/index.html": WEB / "landing.html", "/console": WEB / "console.html"}
+STATIC = (WEB / "static").resolve()
+TYPES = {".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".woff2": "font/woff2",
+         ".txt": "text/plain; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png"}
 
 STATE: Dict[str, Any] = {"mind_mode": "off", "worker_errors": 0, "logs_root": ".local/live_logs"}
 
@@ -197,14 +202,24 @@ class Handler(BaseHTTPRequestHandler):
         n = int(self.headers.get("Content-Length") or 0)
         return json.loads(self.rfile.read(n) or b"{}") if n else {}
 
+    def _file(self, path: pathlib.Path, ctype: str, cache: bool = False):
+        body = path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "public, max-age=86400" if cache else "no-cache")
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
-        if self.path in ("/", "/index.html"):
-            body = CONSOLE.read_bytes()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+        path = self.path.split("?", 1)[0]
+        if path in PAGES:
+            self._file(PAGES[path], "text/html; charset=utf-8")
+        elif path.startswith("/static/"):
+            target = (STATIC / path[len("/static/"):]).resolve()
+            if STATIC not in target.parents or not target.is_file() or target.suffix not in TYPES:
+                return self._json(404, {"error": "not found"})
+            self._file(target, TYPES[target.suffix], cache=target.suffix == ".woff2")
         elif self.path == "/api/state":
             self._json(200, api_state())
         elif m := re.fullmatch(r"/api/incidents/([\w.-]+)", self.path):
@@ -266,7 +281,7 @@ def main():
         threading.Thread(target=sqs_loop, args=(stop,), daemon=True).start()
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     cw = STATE.get("cloudwatch")
-    print(f"OnCallAI console on http://{args.host}:{args.port}")
+    print(f"OnCallAI on http://{args.host}:{args.port}   console: http://{args.host}:{args.port}/console")
     print(f"  MIND: {STATE['mind_mode']}")
     print(f"  CloudWatch via SQS: {cw.queue_url if cw else 'off (set CW_SQS_QUEUE_URL)'}")
     print(f"  Datadog webhook: POST http://{args.host}:{args.port}/api/webhooks/datadog")

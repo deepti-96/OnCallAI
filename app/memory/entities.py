@@ -40,12 +40,15 @@ def extract_entities(incident: Dict[str, Any], collected: Dict[str, Any] | None 
     service = resolve_service_name(incident.get("service", "")) or incident.get("service", "unknown")
 
     deps: List[str] = []
+    known = _known_services()
     for dep in list(payload.get("dependencies", [])) + list(enrichment.get("dependencies", [])):
         deps.append(resolve_service_name(dep) or dep)
-    known = _known_services()
     for match in DEP_RE.findall(text):
-        name = resolve_service_name(match) or match.lower()
-        deps.append(name)
+        name = resolve_service_name(match)
+        if name not in known:
+            name = match.lower() if re.search(r"-(service|gateway|api|db|svc)$", match, re.I) else ""
+        if name:  # "waiting on downstream response" is prose, not a service
+            deps.append(name)
     for name in known:
         if name != service and re.search(rf"\b{re.escape(name)}\b", text, re.I):
             deps.append(name)

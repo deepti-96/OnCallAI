@@ -226,6 +226,7 @@ def apply_incident_memory(incident: Dict[str, Any], collected: Dict[str, Any],
         "latency_ms": recall["latency_ms"], "fallback_activated": recall["fallback_activated"],
         "historical_incidents": len(recall["items"]), "used_in_rca": used, "hypotheses": hypotheses,
         "partial_records": recall["partial_records"], "error": recall.get("error"),
+        "entities": {k: current.get(k) for k in ("service", "dependencies", "deployments", "error_types")},
     }
     dal.record_step(
         incident["id"], "memory", "recall",

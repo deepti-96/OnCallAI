@@ -2,9 +2,9 @@
 
 ## What runs
 
-`python3 -m app.web.server` starts one process on http://localhost:8787 with:
+`./scripts/start.sh` sets up a virtualenv, runs the tests, and starts one process on http://localhost:8787 with:
 
-- the console UI
+- a product page at `/` and the console at `/console`
 - the existing runner pipeline in a worker thread (collector, analyst, MIND recall, supervisor)
 - a CloudWatch-via-SQS poller, when `CW_SQS_QUEUE_URL` is set
 - a Datadog webhook receiver at `POST /api/webhooks/datadog`
@@ -98,3 +98,10 @@ Found while demoing, outside MIND:
 6. The existing analyst called a connection-pool incident "DB pod crashed / not ready" because its example matched "connection". Added a pool-exhaustion rule.
 
 Still noisy, left as is: the analyst appends fixes from loosely matched examples ("Add null checks") to every report. That is existing behaviour, worth tightening before a real demo.
+
+## Design
+
+One theme, fog and sodium, used on both pages. Each accent means one thing and never swaps roles:
+petrol `#14323C` for text and structure, sodium `#E3962B` for live or alerting, tide `#2B8A78` for resolved, iris `#5459C9` for memory from MIND.
+Type is IBM Plex Sans Condensed for service names and headings, Plex Sans for body, Plex Mono only for logs and memory keys. Fonts ship in `app/web/static/fonts` (SIL Open Font License), so the demo looks the same offline.
+The memory graph (`app/web/static/graph.js`) is the one bold element: solid iris edges are past incidents today's logs back up, dashed edges are reference only.

@@ -1,0 +1,82 @@
+/* OnCallAI theme: fog and sodium.
+   Four colors carry meaning and never swap roles:
+     petrol = structure and text, sodium = live or alerting,
+     tide = resolved or healthy, iris = memory from MIND. */
+
+@font-face { font-family: "Plex Sans"; src: url("/static/fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Plex Sans"; src: url("/static/fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Plex Sans"; src: url("/static/fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Plex Condensed"; src: url("/static/fonts/ibm-plex-sans-condensed-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Plex Condensed"; src: url("/static/fonts/ibm-plex-sans-condensed-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Plex Condensed"; src: url("/static/fonts/ibm-plex-sans-condensed-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Plex Mono"; src: url("/static/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Plex Mono"; src: url("/static/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+
+:root {
+  --fog: #E8EDEF;
+  --paper: #F7F9F9;
+  --petrol: #14323C;
+  --sodium: #E3962B;
+  --tide: #2B8A78;
+  --iris: #5459C9;
+
+  /* tints derived from the six, nothing else */
+  --petrol-70: rgba(20, 50, 60, .72);
+  --petrol-50: rgba(20, 50, 60, .52);
+  --petrol-15: rgba(20, 50, 60, .15);
+  --petrol-08: rgba(20, 50, 60, .08);
+  --sodium-15: rgba(227, 150, 43, .16);
+  --tide-15: rgba(43, 138, 120, .14);
+  --iris-15: rgba(84, 89, 201, .13);
+  --iris-30: rgba(84, 89, 201, .32);
+
+  --sans: "Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --cond: "Plex Condensed", "Arial Narrow", "Plex Sans", sans-serif;
+  --mono: "Plex Mono", Menlo, Consolas, monospace;
+
+  /* scale: 13 / 15 / 18 / 24 / 36 / 60 */
+  --t-xs: 13px; --t-s: 15px; --t-m: 18px; --t-l: 24px; --t-xl: 36px; --t-xxl: 60px;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--sans); font-size: var(--t-s); line-height: 1.5; color: var(--petrol); background: var(--fog); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+.mark { display: inline-flex; align-items: center; gap: 10px; font-family: var(--cond); font-weight: 700; font-size: 20px; letter-spacing: .01em; text-decoration: none; }
+.mark svg { width: 28px; height: 28px; display: block; }
+
+.btn { font: 500 var(--t-s)/1 var(--sans); display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border-radius: 8px;
+  border: 1px solid var(--petrol-15); background: var(--paper); color: var(--petrol); cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: var(--petrol-50); }
+.btn.solid { background: var(--petrol); color: var(--paper); border-color: var(--petrol); }
+.btn.solid:hover { background: #1d4552; }
+.btn:disabled { opacity: .45; cursor: default; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--sans); padding: 5px 8px; border-radius: 999px; background: var(--petrol-08); color: var(--petrol-70); white-space: nowrap; }
+.chip.live { background: var(--sodium-15); color: #8a5510; }
+.chip.ok { background: var(--tide-15); color: #1d6457; }
+.chip.mem { background: var(--iris-15); color: var(--iris); }
+.chip .pip { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.mono { font-family: var(--mono); }
+
+/* memory graph, shared by landing hero and console */
+.mg text { font-family: var(--sans); fill: var(--petrol); }
+.mg .n-inc rect { fill: var(--sodium); }
+.mg .n-inc text { fill: var(--petrol); font-weight: 600; }
+.mg .n-svc rect { fill: var(--paper); stroke: var(--petrol); stroke-width: 1.2; }
+.mg .n-svc text { font-family: var(--cond); font-weight: 600; font-size: 14px; }
+.mg .n-past rect { fill: var(--iris-15); stroke: var(--iris); stroke-width: 1.2; }
+.mg .n-past.off rect { fill: var(--paper); stroke: var(--petrol-50); stroke-dasharray: 3 3; }
+.mg .n-past text { font-size: 12.5px; }
+.mg .n-past .k { font-family: var(--mono); font-size: 11px; fill: var(--iris); }
+.mg .n-past.off .k { fill: var(--petrol-50); }
+.mg .e { fill: none; stroke-width: 1.6; }
+.mg .e-live { stroke: var(--sodium); }
+.mg .e-dep { stroke: var(--petrol); }
+.mg .e-mem { stroke: var(--iris); }
+.mg .e-off { stroke: var(--petrol-50); stroke-dasharray: 4 4; }
+.mg .lbl { font-size: 12px; fill: var(--petrol-70); }
